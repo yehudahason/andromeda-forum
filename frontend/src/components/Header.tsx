@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-
 export default function Header() {
   const baseUrl = import.meta.env.BASE_URL;
   const [tzurMenu, setTzurMenu] = useState<boolean>(false);
@@ -209,11 +207,11 @@ export default function Header() {
       </header>
       <nav className="flex justify-center gap-4 bg-neutral-600 h-12 p-2 w-full">
         <div className="flex max-w-[1280px]  p-4 flex-row justify-between w-full items-center">
-          <ul className="flex">
+          <ul className="flex items-center gap-2 text-white">
             <li>פורומים</li>
-            <li>מאמרים</li>
+            <li>מה חדש</li>
             <li>בלוגים</li>
-            <li>לוח שנה אסטרונומי</li>
+            <li>אודות</li>
           </ul>
           <div className="flex">
             <form className="relative w-full max-w-md">
