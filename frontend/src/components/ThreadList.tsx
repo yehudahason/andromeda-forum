@@ -87,6 +87,13 @@ export default function ThreadList({ threads }: ThreadListProps) {
           </div>
         </li>
       ))}
+      <li className="flex h-fit items-center justify-between border-b border-white/15 ">
+        <Pagination
+          total={5000}
+          currentPage={currentPage}
+          onPageChange={setCurrenpage}
+        />
+      </li>
     </ul>
   );
 }
