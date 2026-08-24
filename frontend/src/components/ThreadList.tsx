@@ -34,20 +34,16 @@ export default function ThreadList({ threads }: ThreadListProps) {
         <li
           key={thread.id}
           dir="rtl"
-          className="grid min-h-[120px] py-4 gap-4 grid-cols-1 sm:grid-cols-[1fr_100px_1fr] items-center border-b 
+          className="grid min-h-[120px] p-4 gap-4 grid-cols-1 sm:grid-cols-[1fr_100px_1fr] items-center border-b 
            border-white/15  last:border-b-0"
         >
           {/* Forum */}
           <div className="flex justify-start min-w-0 items-center gap-5 text-right">
-            {/* Menu */}
-            <button className="w-4 text-3xl leading-none text-black">⋮</button>
-            {/* Image */}
-
             {/* Text */}
             <div className="min-w-0">
               <a
                 href="#"
-                className="block flex-1 truncate text-[20px] font-medium text-[#0BD7FD] hover:underline"
+                className="block flex-1  truncate text-[20px] font-medium text-[#0BD7FD] hover:underline"
               >
                 {thread.title}
               </a>
@@ -59,14 +55,14 @@ export default function ThreadList({ threads }: ThreadListProps) {
           </div>
 
           {/* Messages */}
-          <div className="sm:text-center text-right px-8">
+          <div className="sm:text-center text-right px-2">
             <p className="text-2xl">{thread.messages_count.toLocaleString()}</p>
 
             <p className="text-sm text-white/90">הודעות</p>
           </div>
 
           {/* Last post */}
-          <div className="min-w-0 text-right px-8">
+          <div className="min-w-0 text-right px-2">
             {thread.last_post_title && (
               <a
                 href="#"

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 export default function Header() {
   const baseUrl = import.meta.env.BASE_URL;
   const [tzurMenu, setTzurMenu] = useState<boolean>(false);
@@ -10,15 +11,20 @@ export default function Header() {
     <div className="flex flex-col">
       <header className="bg-black w-full h-18">
         <div className="mx-auto max-w-[1280px] px-4 w-full justify-between flex flex-row items-center ">
-          <a href="" className="h-18">
+          <a href="/" className="h-18">
             <img
-              className="h-full object-cover"
+              className="h-full sm:w-full w-[15rem] object-cover"
               src={`${baseUrl}andrologo.png`}
               alt=""
             />
           </a>
-          <ul className=" items-center h-18 py-8 flex flex-row justify-end ">
-            <li className="group relative flex  border-l border-l-blue-200 px-3 text-white">
+          <img
+            className="md:hidden block"
+            src={`${baseUrl}account.png`}
+            alt=""
+          />
+          <ul className="md:flex  hidden items-center h-18 py-8  flex-row justify-end ">
+            <li className="group relative flex  border-l border-l-blue-200 px-2 text-white">
               <button
                 onClick={() => {
                   setNotiMenu(false);
@@ -54,7 +60,7 @@ export default function Header() {
                 <li>
                   <a
                     href="#"
-                    className="block  p-4 rounded-md text-white hover:bg-neutral-500"
+                    className="block  p-2 rounded-md text-white hover:bg-neutral-500"
                   >
                     נושא חדש
                   </a>
@@ -63,14 +69,14 @@ export default function Header() {
                 <li>
                   <a
                     href="#"
-                    className="block  rounded-md p-4 text-white hover:bg-neutral-500"
+                    className="block  rounded-md p-2 text-white hover:bg-neutral-500"
                   >
                     קובץ להורדה
                   </a>
                 </li>
               </ul>
             </li>
-            <li className="px-3 relative flex justify-center items-center">
+            <li className="px-2 relative flex justify-center items-center">
               <button
                 onClick={() => {
                   setTzurMenu(false);
@@ -131,7 +137,7 @@ export default function Header() {
               </ul>
             </li>
 
-            <li className="px-3 border-l border-l-blue-200  relative flex justify-center items-center">
+            <li className="px-2 border-l border-l-blue-200  relative flex justify-center items-center">
               <button
                 onClick={() => {
                   setNotiMenu(false);
@@ -191,13 +197,13 @@ export default function Header() {
               </ul>
             </li>
 
-            <li className="px-3 flex gap-3 text-white">
+            <li className="px-2 flex gap-3 text-white">
               <img
                 className="w-6  h-6 rounded-full"
                 src={`${baseUrl}Ypic.svg`}
                 alt=""
               />
-              <span className="flex ">
+              <span className="flex  truncate">
                 Yehuda hason <img src={`${baseUrl}arrowdown.png`} alt="" />
               </span>
             </li>
@@ -207,13 +213,25 @@ export default function Header() {
       </header>
       <nav className="flex justify-center gap-4 bg-neutral-600 h-12 p-2 w-full">
         <div className="flex max-w-[1280px]  p-4 flex-row justify-between w-full items-center">
-          <ul className="flex items-center gap-2 text-white">
-            <li>פורומים</li>
+          <img
+            className="sm:hidden block"
+            src={`${baseUrl}menu_sky.png`}
+            alt=""
+          />
+          <ul className="sm:flex hidden items-center gap-2 text-white">
+            <li>
+              <Link to="/forum/1">פורומים</Link>
+            </li>
             <li>מה חדש</li>
             <li>בלוגים</li>
             <li>אודות</li>
           </ul>
-          <div className="flex">
+          <img
+            className="md:hidden block"
+            src={`${baseUrl}search.png`}
+            alt=""
+          />
+          <div className="md:flex hidden">
             <form className="relative w-full max-w-md">
               <input
                 type="search"
