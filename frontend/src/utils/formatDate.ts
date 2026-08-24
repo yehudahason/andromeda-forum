@@ -1,5 +1,14 @@
-export function formatDate(dateString: string | null) {
+function isValidUTC(value: string): boolean {
+  if (!value.endsWith("Z")) return false;
+
+  const date = new Date(value);
+
+  return !Number.isNaN(date.getTime());
+}
+
+export function formatDate(dateString: string | null | undefined) {
   if (!dateString) return "";
+  if (!isValidUTC(dateString)) return "";
   const date = new Date(dateString);
   const now = new Date();
 

@@ -1,6 +1,8 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { formatDate } from "./formatDate";
-process.env.TZ = "Asia/Kolkata";
+beforeEach(() => {
+  vi.stubEnv("TZ", "Asia/Kolkata");
+});
 
 describe("formatDate", () => {
   afterEach(() => {

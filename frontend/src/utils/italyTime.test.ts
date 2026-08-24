@@ -1,8 +1,9 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { formatDate } from "./formatDate";
 
-process.env.TZ = "Europe/Rome";
-
+beforeEach(() => {
+  vi.stubEnv("TZ", "Europe/Rome");
+});
 describe("formatDate", () => {
   afterEach(() => {
     vi.useRealTimers();

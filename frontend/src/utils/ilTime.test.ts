@@ -1,6 +1,9 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { formatDate } from "./formatDate";
 
+beforeEach(() => {
+  vi.stubEnv("TZ", "Asia/Jerusalem");
+});
 describe("formatDate", () => {
   afterEach(() => {
     vi.useRealTimers();

@@ -1,8 +1,9 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { formatDate } from "./formatDate";
 
-process.env.TZ = "America/New_York";
-
+beforeEach(() => {
+  vi.stubEnv("TZ", "America/New_York");
+});
 describe("formatDate", () => {
   afterEach(() => {
     vi.useRealTimers();
@@ -91,9 +92,9 @@ describe("formatDate", () => {
   it("returns DD-MM for a date less than one year old", () => {
     setTestTime();
 
-    const date = "2026-07-15T12:00:00-04:00";
+    const date = new Date("2026-07-15T12:00:00-04:00");
 
-    expect(formatDate(date)).toBe("15-07");
+    expect(formatDate(date.toISOString())).toBe("15-07");
   });
 
   it("returns empty string for null", () => {
