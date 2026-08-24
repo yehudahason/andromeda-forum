@@ -1,57 +1,99 @@
-import { describe, expect, it, vi, afterEach, beforeEach } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { formatDate } from "./formatDate";
 
 describe("formatDate", () => {
-  beforeEach(() => {
-    // Lock timezone to UTC so tests behave identically locally and in CI
-    vi.stubEnv("TZ", "UTC");
-  });
-
   afterEach(() => {
     vi.useRealTimers();
-    vi.unstubAllEnvs();
   });
 
-  it("handles exactly 24 hours ago boundary correctly", () => {
+  const setTestTime = () => {
     vi.useFakeTimers();
-    const now = new Date(Date.UTC(2026, 7, 24, 21, 0));
+
+    // Israel local time: 24 Aug 2026, 21:00
+    const now = new Date("2026-08-24T21:00:00+03:00");
     vi.setSystemTime(now);
 
-    const exactly24HoursAgo = new Date(Date.UTC(2026, 7, 23, 21, 0));
+    return now;
+  };
 
-    // Verify whether 24h sharp should show HH:MM or DD-MMM
-    expect(formatDate(exactly24HoursAgo.toISOString())).toBe("23-08");
+  it("returns DD-MM on the exact one-year boundary", () => {
+    const now = setTestTime();
+
+    const date = new Date(now);
+    date.setFullYear(date.getFullYear() - 1);
+
+    expect(formatDate(date.toISOString())).toBe("24-08");
   });
 
-  it("returns an empty string when given null or empty input", () => {
-    expect(formatDate(null)).toBe("");
-    expect(formatDate("")).toBe("");
+  it("returns DD-MM-YY one millisecond before the one-year boundary", () => {
+    const now = setTestTime();
+
+    const date = new Date(now);
+    date.setFullYear(date.getFullYear() - 1);
+    date.setMilliseconds(date.getMilliseconds() - 1);
+
+    expect(formatDate(date.toISOString())).toBe("24-08-25");
+  });
+  it("returns local HH:MM for a date less than 24 hours ago", () => {
+    const now = setTestTime();
+
+    // 1 hour ago → 20:00 Israel
+    const date = new Date(now.getTime() - 1 * 60 * 60 * 1000);
+
+    expect(formatDate(date.toISOString())).toBe("20:00");
   });
 
-  it("returns HH:MM for a date less than 24 hours ago", () => {
-    vi.useFakeTimers();
-    const now = new Date(Date.UTC(2026, 7, 24, 21, 0));
-    vi.setSystemTime(now);
+  it("returns HH:MM for exactly 23 hours ago", () => {
+    const now = setTestTime();
 
-    const oneHourAgo = new Date(Date.UTC(2026, 7, 24, 20, 0));
-    expect(formatDate(oneHourAgo.toISOString())).toBe("20:00");
+    const date = new Date(now.getTime() - 23 * 60 * 60 * 1000);
+
+    expect(formatDate(date.toISOString())).toBe("22:00");
   });
 
-  it("returns DD-MMM for a date older than 24 hours but less than a year", () => {
-    vi.useFakeTimers();
-    const now = new Date(Date.UTC(2026, 7, 24, 21, 0));
-    vi.setSystemTime(now);
+  it("returns DD-MM for exactly 25 hours ago", () => {
+    const now = setTestTime();
 
-    const date = new Date(Date.UTC(2026, 7, 20, 10, 30));
-    expect(formatDate(date.toISOString())).toBe("20-08");
+    const date = new Date(now.getTime() - 25 * 60 * 60 * 1000);
+
+    expect(formatDate(date.toISOString())).toBe("23-08");
   });
 
-  it("returns DD-MMM-YY for a date older than one year", () => {
-    vi.useFakeTimers();
-    const now = new Date(Date.UTC(2026, 7, 24, 21, 0));
-    vi.setSystemTime(now);
+  it("returns DD-MM for exactly 364 days ago", () => {
+    const now = setTestTime();
 
-    const date = new Date(Date.UTC(2025, 6, 15, 10, 30));
+    const date = new Date(now);
+    date.setDate(date.getDate() - 364);
+
+    expect(formatDate(date.toISOString())).toBe("25-08");
+  });
+
+  it("returns DD-MM-YY for exactly 366 days ago", () => {
+    const now = setTestTime();
+
+    const date = new Date(now);
+    date.setDate(date.getDate() - 366);
+
+    expect(formatDate(date.toISOString())).toBe("23-08-25");
+  });
+
+  it("returns DD-MM-YY for more than one year ago", () => {
+    const now = setTestTime();
+
+    const date = new Date("2025-07-15T12:00:00+03:00");
+
     expect(formatDate(date.toISOString())).toBe("15-07-25");
+  });
+
+  it("returns DD-MM for a date less than one year old", () => {
+    setTestTime();
+
+    const date = "2026-07-15T12:00:00Z";
+
+    expect(formatDate(date)).toBe("15-07");
+  });
+
+  it("returns empty string for null", () => {
+    expect(formatDate(null)).toBe("");
   });
 });
