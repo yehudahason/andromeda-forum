@@ -1,6 +1,5 @@
 services:
-  frontend:
-    container_name: forum
+  forum-f:
     build:
       context: .
       dockerfile: Dockerfile

@@ -1,0 +1,112 @@
+[
+  {
+    "id": "1",
+    "title": "איך מתחילים ללמוד תכנות מאפס?",
+    "author": "יוסי123",
+    "messages_count": 24,
+    "last_post_title": "ממליץ להתחיל עם JavaScript",
+    "last_post_author": "דני",
+    "last_post_date": "2026-08-24T10:32:00Z",
+    "image_url": null,
+    "post": "אני רוצה להתחיל ללמוד תכנות מאפס. מאיפה הכי כדאי להתחיל?"
+  },
+  {
+    "id": "2",
+    "title": "מה עדיף ללמוד: React או Vue?",
+    "author": "נועה",
+    "messages_count": 18,
+    "last_post_title": "לדעתי React מתאים יותר לשוק העבודה",
+    "last_post_author": "אורי",
+    "last_post_date": "2026-08-24T09:15:00Z",
+    "image_url": null,
+    "post": "אני מתלבטת בין React ל-Vue ורוצה לדעת מה עדיף ללמוד."
+  },
+  {
+    "id": "3",
+    "title": "עזרה עם Docker ו-Docker Compose",
+    "author": "מיכאל",
+    "messages_count": 37,
+    "last_post_title": "מצאתי את הבעיה בקובץ compose",
+    "last_post_author": "רון",
+    "last_post_date": "2026-08-23T21:45:00Z",
+    "image_url": null,
+    "post": "יש לי בעיה עם Docker Compose והקונטיינרים לא מתקשרים ביניהם."
+  },
+  {
+    "id": "4",
+    "title": "איזו שפת תכנות הכי כדאי ללמוד ב-2026?",
+    "author": "אלעד",
+    "messages_count": 52,
+    "last_post_title": "Go נהייתה מאוד פופולרית לאחרונה",
+    "last_post_author": "תומר",
+    "last_post_date": "2026-08-23T18:20:00Z",
+    "image_url": null,
+    "post": "איזו שפת תכנות לדעתכם הכי משתלמת ללמידה בשנת 2026?"
+  },
+  {
+    "id": "5",
+    "title": "איך לבנות API עם Node.js?",
+    "author": "שחר",
+    "messages_count": 12,
+    "last_post_title": "Express היא בחירה טובה להתחלה",
+    "last_post_author": "יונתן",
+    "last_post_date": "2026-08-23T16:05:00Z",
+    "image_url": null,
+    "post": "אני רוצה לבנות API ראשון עם Node.js. האם כדאי להשתמש ב-Express?"
+  },
+  {
+    "id": "6",
+    "title": "שאלות על PostgreSQL ויחסים בין טבלאות",
+    "author": "איתי",
+    "messages_count": 31,
+    "last_post_title": "מומלץ להשתמש ב-Foreign Key",
+    "last_post_author": "עמית",
+    "last_post_date": "2026-08-22T14:40:00Z",
+    "image_url": null,
+    "post": "אני בונה מסד נתונים לפורום ולא בטוח איך להגדיר את היחסים בין הטבלאות."
+  },
+  {
+    "id": "7",
+    "title": "טיפים לראיון עבודה ראשון בתכנות",
+    "author": "מאיה",
+    "messages_count": 46,
+    "last_post_title": "הכי חשוב להבין את הבסיס",
+    "last_post_author": "גל",
+    "last_post_date": "2026-08-22T11:10:00Z",
+    "image_url": null,
+    "post": "יש לי ראיון עבודה ראשון למשרת פיתוח. אשמח לטיפים איך להתכונן."
+  },
+  {
+    "id": "8",
+    "title": "מה היתרונות של TypeScript?",
+    "author": "דוד",
+    "messages_count": 20,
+    "last_post_title": "הטיפוסים חוסכים הרבה באגים",
+    "last_post_author": "עידן",
+    "last_post_date": "2026-08-21T19:30:00Z",
+    "image_url": null,
+    "post": "אני משתמש ב-JavaScript ורוצה להבין מה TypeScript מוסיף לפרויקט."
+  },
+  {
+    "id": "9",
+    "title": "מישהו כאן עובד עם AWS?",
+    "author": "רועי",
+    "messages_count": 15,
+    "last_post_title": "התחלתי עם EC2 ו-S3",
+    "last_post_author": "אדם",
+    "last_post_date": "2026-08-21T13:25:00Z",
+    "image_url": null,
+    "post": "אני מתחיל ללמוד AWS ורוצה לדעת אילו שירותים כדאי להכיר קודם."
+  },
+  {
+    "id": "10",
+    "title": "איך מתמודדים עם באגים בפרויקט גדול?",
+    "author": "דניאל",
+    "messages_count": 63,
+    "last_post_title": "לוגים טובים הם הדבר הראשון שהייתי מוסיף",
+    "last_post_author": "אבי",
+    "last_post_date": "2026-08-20T22:15:00Z",
+    "image_url": null,
+    "post": "הפרויקט שלי התחיל לגדול וקשה לי למצוא באגים. איך אתם מתמודדים עם זה?"
+  }
+]
