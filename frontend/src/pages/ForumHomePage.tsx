@@ -11,7 +11,7 @@ export default function ForumHomePage() {
           פתח נושא חדש
         </Link>
       </div>
-      <ThreadList threads={threads} />
+      <ThreadList threads={threads} current={id ?? "1"} />
     </section>
   );
 }

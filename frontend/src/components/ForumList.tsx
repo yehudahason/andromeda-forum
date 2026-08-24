@@ -1,14 +1,6 @@
-type ForumType = {
-  id: string;
-  name: string;
-  description: string;
-  messages_count: number;
-  last_post_title: string | null;
-  last_post_author: string | null;
-  last_post_date: string | null;
-  image_url: string | null;
-};
+import { formatDate } from "../utils/formatDate";
 
+import type { ForumType } from "../types";
 type ForumListProps = {
   forums: ForumType[];
 };
@@ -70,7 +62,7 @@ export default function ForumList({ forums }: ForumListProps) {
               ,
               {forum.last_post_date && (
                 <p className="text-sm mt-1 text-white">
-                  {forum.last_post_date}
+                  {formatDate(forum.last_post_date)}
                 </p>
               )}
             </div>

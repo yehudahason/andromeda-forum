@@ -7,6 +7,7 @@
     "last_post_title": "ממליץ להתחיל עם JavaScript",
     "last_post_author": "דני",
     "last_post_date": "2026-08-24T10:32:00Z",
+    "created_at": "2026-08-24T16:33:00Z",
     "image_url": null,
     "post": "אני רוצה להתחיל ללמוד תכנות מאפס. מאיפה הכי כדאי להתחיל?"
   },
@@ -18,6 +19,7 @@
     "last_post_title": "לדעתי React מתאים יותר לשוק העבודה",
     "last_post_author": "אורי",
     "last_post_date": "2026-08-24T09:15:00Z",
+    "created_at": "2024-08-17T14:30:00Z",
     "image_url": null,
     "post": "אני מתלבטת בין React ל-Vue ורוצה לדעת מה עדיף ללמוד."
   },
@@ -29,6 +31,7 @@
     "last_post_title": "מצאתי את הבעיה בקובץ compose",
     "last_post_author": "רון",
     "last_post_date": "2026-08-23T21:45:00Z",
+    "created_at": "2026-08-15T11:20:00Z",
     "image_url": null,
     "post": "יש לי בעיה עם Docker Compose והקונטיינרים לא מתקשרים ביניהם."
   },
@@ -40,6 +43,7 @@
     "last_post_title": "Go נהייתה מאוד פופולרית לאחרונה",
     "last_post_author": "תומר",
     "last_post_date": "2026-08-23T18:20:00Z",
+    "created_at": "2026-08-10T09:45:00Z",
     "image_url": null,
     "post": "איזו שפת תכנות לדעתכם הכי משתלמת ללמידה בשנת 2026?"
   },
@@ -51,6 +55,7 @@
     "last_post_title": "Express היא בחירה טובה להתחלה",
     "last_post_author": "יונתן",
     "last_post_date": "2026-08-23T16:05:00Z",
+    "created_at": "2026-08-19T16:10:00Z",
     "image_url": null,
     "post": "אני רוצה לבנות API ראשון עם Node.js. האם כדאי להשתמש ב-Express?"
   },
@@ -62,6 +67,7 @@
     "last_post_title": "מומלץ להשתמש ב-Foreign Key",
     "last_post_author": "עמית",
     "last_post_date": "2026-08-22T14:40:00Z",
+    "created_at": "2026-08-12T13:25:00Z",
     "image_url": null,
     "post": "אני בונה מסד נתונים לפורום ולא בטוח איך להגדיר את היחסים בין הטבלאות."
   },
@@ -73,6 +79,7 @@
     "last_post_title": "הכי חשוב להבין את הבסיס",
     "last_post_author": "גל",
     "last_post_date": "2026-08-22T11:10:00Z",
+    "created_at": "2026-08-09T17:50:00Z",
     "image_url": null,
     "post": "יש לי ראיון עבודה ראשון למשרת פיתוח. אשמח לטיפים איך להתכונן."
   },
@@ -84,6 +91,7 @@
     "last_post_title": "הטיפוסים חוסכים הרבה באגים",
     "last_post_author": "עידן",
     "last_post_date": "2026-08-21T19:30:00Z",
+    "created_at": "2026-08-16T10:05:00Z",
     "image_url": null,
     "post": "אני משתמש ב-JavaScript ורוצה להבין מה TypeScript מוסיף לפרויקט."
   },
@@ -95,6 +103,7 @@
     "last_post_title": "התחלתי עם EC2 ו-S3",
     "last_post_author": "אדם",
     "last_post_date": "2026-08-21T13:25:00Z",
+    "created_at": "2026-08-20T07:40:00Z",
     "image_url": null,
     "post": "אני מתחיל ללמוד AWS ורוצה לדעת אילו שירותים כדאי להכיר קודם."
   },
@@ -106,6 +115,7 @@
     "last_post_title": "לוגים טובים הם הדבר הראשון שהייתי מוסיף",
     "last_post_author": "אבי",
     "last_post_date": "2026-08-20T22:15:00Z",
+    "created_at": "2026-08-05T12:30:00Z",
     "image_url": null,
     "post": "הפרויקט שלי התחיל לגדול וקשה לי למצוא באגים. איך אתם מתמודדים עם זה?"
   }

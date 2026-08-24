@@ -1,24 +1,22 @@
 import { useState } from "react";
 import Pagination from "./Paginatiom";
+import { formatDate } from "../utils/formatDate";
+import { useNavigate } from "react-router-dom";
 
-type ThreadType = {
-  id: string;
-  title: string;
-  author: string;
-  post: string;
-  messages_count: number;
-  last_post_title: string | null;
-  last_post_author: string | null;
-  last_post_date: string | null;
-  image_url: string | null;
-};
-
+import type { ThreadType } from "../types";
 type ThreadListProps = {
   threads: ThreadType[];
+  current: string;
 };
 
-export default function ThreadList({ threads }: ThreadListProps) {
-  const [currentPage, setCurrenpage] = useState(1);
+export default function ThreadList({ threads, current }: ThreadListProps) {
+  const navigate = useNavigate();
+  const [currentPage, setCurrenpage] = useState(+current);
+
+  function handlePage(page: number) {
+    setCurrenpage(page);
+    navigate(`/forum/${page}`);
+  }
   return (
     <ul className="w-full overflow-hidden rounded-md bg-[#555] text-white">
       {/* Header */}
@@ -26,7 +24,7 @@ export default function ThreadList({ threads }: ThreadListProps) {
         <Pagination
           total={5000}
           currentPage={currentPage}
-          onPageChange={setCurrenpage}
+          onPageChange={handlePage}
         />
       </li>
 
@@ -49,7 +47,10 @@ export default function ThreadList({ threads }: ThreadListProps) {
               </a>
 
               <p className="truncate text-[16px] text-white">
-                נפתח על ידי -{thread.author}
+                <span>נפתח על ידי -</span>
+                <span>
+                  {thread.author} {formatDate(thread.created_at)}
+                </span>
               </p>
             </div>
           </div>
@@ -80,7 +81,7 @@ export default function ThreadList({ threads }: ThreadListProps) {
               ,
               {thread.last_post_date && (
                 <p className="text-sm mt-1 text-white">
-                  {thread.last_post_date}
+                  {formatDate(thread.last_post_date)}
                 </p>
               )}
             </div>
