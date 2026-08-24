@@ -1,19 +1,19 @@
 import { useMemo } from "react";
 
 type PaginationProps = {
-  totalThreads: number;
+  total: number;
   currentPage: number;
   onPageChange: (page: number) => void;
 };
 
-const THREADS_PER_PAGE = 14;
+const PER_PAGE = 14;
 
 export default function Pagination({
-  totalThreads,
+  total,
   currentPage,
   onPageChange,
 }: PaginationProps) {
-  const totalPages = Math.ceil(totalThreads / THREADS_PER_PAGE);
+  const totalPages = Math.ceil(total / PER_PAGE);
 
   const pages = useMemo(() => {
     if (totalPages <= 7) {

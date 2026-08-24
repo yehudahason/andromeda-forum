@@ -16,13 +16,6 @@ type ForumListProps = {
 export default function ForumList({ forums }: ForumListProps) {
   return (
     <ul className="w-full overflow-hidden rounded-md bg-[#555] text-white">
-      {/* Header */}
-      <li className="flex h-[61px] items-center justify-between border-b border-white/15 px-7">
-        <h1 className="text-xl font-bold">אנדרומדה - פורום אסטרונומיה וחלל</h1>
-
-        <button className="text-3xl text-white/30">⌄</button>
-      </li>
-
       {forums.map((forum) => (
         <li
           key={forum.id}

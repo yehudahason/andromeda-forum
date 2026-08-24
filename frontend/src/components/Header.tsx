@@ -14,7 +14,7 @@ export default function Header() {
           <a href="/" className="h-18">
             <img
               className="h-full sm:w-full w-[15rem] object-cover"
-              src={`${baseUrl}andrologo.png`}
+              src={`${baseUrl}pitron2.png`}
               alt=""
             />
           </a>
@@ -24,7 +24,7 @@ export default function Header() {
             alt=""
           />
           <ul className="md:flex  hidden items-center h-18 py-8  flex-row justify-end ">
-            <li className="group relative flex  border-l border-l-blue-200 px-2 text-white">
+            <li className="group relative flex  border-l border-l-blue-200 px-3 text-white">
               <button
                 onClick={() => {
                   setNotiMenu(false);
@@ -35,7 +35,6 @@ export default function Header() {
               >
                 <img src={`${baseUrl}add.png`} alt="" />
                 <span>צור</span>
-                <img src={`${baseUrl}arrowdown.png`} alt="" />
               </button>
 
               <ul
@@ -218,7 +217,7 @@ export default function Header() {
             src={`${baseUrl}menu_sky.png`}
             alt=""
           />
-          <ul className="sm:flex hidden items-center gap-2 text-white">
+          <ul className="sm:flex hidden items-center gap-4 text-lg font-medium text-white">
             <li>
               <Link to="/forum/1">פורומים</Link>
             </li>
