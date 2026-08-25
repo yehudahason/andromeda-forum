@@ -9,12 +9,12 @@ export default function Header() {
 
   return (
     <div className="flex flex-col">
-      <header className="bg-black w-full h-18">
+      <header className="bg-black w-full h-20">
         <div className="mx-auto max-w-[1280px] px-4 w-full justify-between flex flex-row items-center ">
-          <a href="/" className="h-18">
+          <a href="/" className="h-20">
             <img
               className="h-full sm:w-full w-[15rem] object-cover"
-              src={`${baseUrl}pitron2.png`}
+              src={`${baseUrl}pm.png`}
               alt=""
             />
           </a>

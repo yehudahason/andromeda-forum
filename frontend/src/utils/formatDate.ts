@@ -20,7 +20,7 @@ export function formatDate(dateString: string | null | undefined) {
 
   const pad = (value: number) => String(value).padStart(2, "0");
 
-  const getMonthName = (month: number) => {
+  const padMonth = (month: number) => {
     return String(month).padStart(2, "0");
   };
 
@@ -31,11 +31,11 @@ export function formatDate(dateString: string | null | undefined) {
 
   // Older than a year → DD-MMM-YY
   if (date < oneYear) {
-    return `${pad(date.getDate())}-${getMonthName(
+    return `${pad(date.getDate())}-${padMonth(
       date.getMonth() + 1,
     )}-${String(date.getFullYear()).slice(-2)}`;
   }
 
   // Otherwise → DD-MMM
-  return `${pad(date.getDate())}-${getMonthName(date.getMonth() + 1)}`;
+  return `${pad(date.getDate())}-${padMonth(date.getMonth() + 1)}`;
 }

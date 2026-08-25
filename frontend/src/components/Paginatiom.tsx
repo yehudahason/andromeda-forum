@@ -52,7 +52,7 @@ export default function Pagination({
   return (
     <nav
       dir="rtl"
-      className="flex flex-col items-center gap-3 px-4 py-4 text-white sm:flex-row sm:justify-between sm:px-6"
+      className="flex flex-col items-center gap-3 px-2 py-4 text-white sm:flex-row sm:justify-between sm:px-6"
     >
       {/* Page info */}
       <div className="flex items-center gap-2 text-sm">

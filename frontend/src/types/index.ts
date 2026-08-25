@@ -11,6 +11,25 @@ export type ThreadType = {
   created_at: string;
 };
 
+export type ReplyType = {
+  id: string;
+  title: string;
+  author: User;
+  post: string;
+  image_url: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type User = {
+  id: string;
+  name: string;
+  image_url: string | null;
+  replies_counts: number;
+  created_at: string;
+  role: string;
+};
+
 export type ForumType = {
   id: string;
   name: string;

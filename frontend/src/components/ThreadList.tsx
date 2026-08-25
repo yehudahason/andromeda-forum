@@ -7,15 +7,20 @@ import type { ThreadType } from "../types";
 type ThreadListProps = {
   threads: ThreadType[];
   current: string;
+  forum: string;
 };
 
-export default function ThreadList({ threads, current }: ThreadListProps) {
+export default function ThreadList({
+  forum,
+  threads,
+  current,
+}: ThreadListProps) {
   const navigate = useNavigate();
   const [currentPage, setCurrenpage] = useState(+current);
 
   function handlePage(page: number) {
     setCurrenpage(page);
-    navigate(`/forum/${page}`);
+    navigate(`/forum/${forum}/?page=${page}`);
   }
   return (
     <ul className="w-full overflow-hidden rounded-md bg-[#555] text-white">
