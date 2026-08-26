@@ -14,13 +14,17 @@ export type User = NonNullable<
   Awaited<ReturnType<typeof authClient.getSession>>["data"]
 >["user"];
 
-export default function Login() {
+type LoginProps = {
+  setIsLogin: (value: boolean) => void;
+  signUp: boolean;
+};
+export default function Login({ setIsLogin, signUp }: LoginProps) {
   const navigate = useNavigate();
   const { session, setSession } = useSessionStore((state) => state);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(signUp);
   const [openLogin, setOpenLogin] = useState(true);
   const [msg, setMsg] = useState<string | undefined>("");
   const [username, setUserName] = useState<string | undefined>(undefined);
@@ -43,6 +47,7 @@ export default function Login() {
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setOpenLogin(false);
+        setIsLogin(false);
       }
     }
 
@@ -51,7 +56,7 @@ export default function Login() {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
+  }, [setIsLogin]);
 
   // Keyboard navigation: Close modal on Escape press
   useEffect(() => {
