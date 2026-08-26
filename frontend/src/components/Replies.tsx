@@ -58,9 +58,9 @@ export default function Replies({ id, forum, replies, current }: RepliesProp) {
               <div className=" border-b  border-b-gray-500">
                 <h2 className="mb-2 text-lg font-medium">{reply.title}</h2>
 
-                <p className="text-base mb-6 leading-8 wrap-anywhere text-gray-100">
+                <span className="text-base mb-6 leading-8 wrap-anywhere text-gray-100">
                   <pre className="whitespace-pre-wrap">{reply.post}</pre>
-                </p>
+                </span>
               </div>
 
               {/* Footer */}

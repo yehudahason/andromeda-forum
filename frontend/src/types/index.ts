@@ -24,7 +24,7 @@ export type ReplyType = {
 export type User = {
   id: string;
   name: string;
-  email: string;
+  email: string | null;
   image_url: string | null;
   replies_counts: number;
   created_at: string;

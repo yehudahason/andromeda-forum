@@ -1,5 +1,5 @@
 import { useSearchParams, useParams, Link } from "react-router-dom";
-import replies from "../assets/dummyreplies.json";
+import replies from "../assets/threads_with_author_email.json";
 import Replies from "../components/Replies";
 export default function ThreadPage() {
   const { f, id } = useParams();

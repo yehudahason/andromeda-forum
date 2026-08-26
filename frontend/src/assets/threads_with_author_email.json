@@ -1,0 +1,563 @@
+[
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440001",
+    "title": "מחשבה מעניינת",
+    "author": {
+      "id": "7f3a1c92-5d84-4b67-9a21-83e5d4c6b102",
+      "name": "יוסי כהן",
+      "image_url": null,
+      "replies_counts": 24,
+      "created_at": "2026-07-12T10:20:00Z",
+      "role": "user",
+      "email": "yossi.cohen@example.com"
+    },
+    "post": "Hello\n    this is 7777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777indented\n\nAnother line",
+    "image_url": null,
+    "created_at": "2026-08-20T09:15:00Z",
+    "updated_at": "2026-08-20T09:15:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440002",
+    "title": "מסכים איתך",
+    "author": {
+      "id": "c2b4e781-93a6-4f25-8d17-5e9b3c6a7104",
+      "name": "דוד לוי",
+      "image_url": null,
+      "replies_counts": 17,
+      "created_at": "2026-06-18T14:30:00Z",
+      "role": "user",
+      "email": "david.levi@example.com"
+    },
+    "post": "מסכים לגמרי, גם אני נתקלתי באותה הבעיה לאחרונה.",
+    "image_url": null,
+    "created_at": "2026-08-20T11:42:00Z",
+    "updated_at": "2026-08-20T11:42:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440003",
+    "title": "יש פתרון אחר",
+    "author": {
+      "id": "a91d6f42-7c35-4e89-b218-64f3a8d9c507",
+      "name": "נועה אברהם",
+      "image_url": null,
+      "replies_counts": 38,
+      "created_at": "2026-05-22T08:10:00Z",
+      "role": "moderator",
+      "email": "noa.avraham@example.com"
+    },
+    "post": "אפשר לנסות גישה אחרת שתהיה פשוטה יותר לתחזוקה.",
+    "image_url": null,
+    "created_at": "2026-08-20T13:05:00Z",
+    "updated_at": "2026-08-20T13:05:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440004",
+    "title": "שאלה בנושא",
+    "author": {
+      "id": "e4c8b291-6a73-4d15-9f82-37b5e1c60409",
+      "name": "מאיה ישראלי",
+      "image_url": null,
+      "replies_counts": 31,
+      "created_at": "2026-07-01T16:45:00Z",
+      "role": "user",
+      "email": "maya.yisraeli@example.com"
+    },
+    "post": "מישהו יכול להסביר למה זה קורה דווקא במצב הזה?",
+    "image_url": null,
+    "created_at": "2026-08-20T14:22:00Z",
+    "updated_at": "2026-08-20T14:22:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440005",
+    "title": "ניסיון אישי",
+    "author": {
+      "id": "b73f5c18-2e94-4a61-8d37-c905e2b14610",
+      "name": "אורי פרץ",
+      "image_url": null,
+      "replies_counts": 12,
+      "created_at": "2026-06-09T12:00:00Z",
+      "role": "user",
+      "email": "uri.peretz@example.com"
+    },
+    "post": "ניסיתי את זה בעצמי וזה באמת עבד בצורה טובה.",
+    "image_url": null,
+    "created_at": "2026-08-20T16:10:00Z",
+    "updated_at": "2026-08-20T16:10:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440006",
+    "title": "רעיון טוב",
+    "author": {
+      "id": "f6a2d839-1b57-4c74-a905-28e3b691d412",
+      "name": "רועי שמעוני",
+      "image_url": null,
+      "replies_counts": 45,
+      "created_at": "2026-04-15T09:25:00Z",
+      "role": "moderator",
+      "email": "roi.shimoni@example.com"
+    },
+    "post": "זה נשמע כמו רעיון טוב, במיוחד אם רוצים לשמור על הקוד פשוט.",
+    "image_url": null,
+    "created_at": "2026-08-21T08:30:00Z",
+    "updated_at": "2026-08-21T08:30:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440007",
+    "title": "תודה על ההסבר",
+    "author": {
+      "id": "d8e1a472-5c39-4b86-91f7-63a2c5e80415",
+      "name": "שרה מזרחי",
+      "image_url": null,
+      "replies_counts": 29,
+      "created_at": "2026-03-28T11:15:00Z",
+      "role": "user",
+      "email": "sara.mizrahi@example.com"
+    },
+    "post": "תודה על ההסבר המפורט, עכשיו הדברים הרבה יותר ברורים.",
+    "image_url": null,
+    "created_at": "2026-08-21T10:45:00Z",
+    "updated_at": "2026-08-21T10:45:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440008",
+    "title": "אפשר לשפר",
+    "author": {
+      "id": "91c5e7a3-4d28-4f61-b902-76e1a8c53419",
+      "name": "דן רפפורט",
+      "image_url": null,
+      "replies_counts": 19,
+      "created_at": "2026-07-20T07:40:00Z",
+      "role": "user",
+      "email": "dan.rapaport@example.com"
+    },
+    "post": "לדעתי אפשר לשפר את הפתרון בעזרת פונקציה נפרדת.",
+    "image_url": null,
+    "created_at": "2026-08-21T12:18:00Z",
+    "updated_at": "2026-08-21T12:18:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440009",
+    "title": "בדקתי את זה",
+    "author": {
+      "id": "63b9d1e5-8a47-4c26-b701-95f3e2d68420",
+      "name": "איתי בן דוד",
+      "image_url": null,
+      "replies_counts": 53,
+      "created_at": "2026-02-11T15:20:00Z",
+      "role": "admin",
+      "email": "itai.bendavid@example.com"
+    },
+    "post": "בדקתי את הקוד אצלי והוא עובד כמו שצריך.",
+    "image_url": null,
+    "created_at": "2026-08-21T14:50:00Z",
+    "updated_at": "2026-08-21T14:50:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440010",
+    "title": "נקודה חשובה",
+    "author": {
+      "id": "28f4c6b1-9e53-4a72-8d16-57c3b905e421",
+      "name": "תמר לנדאו",
+      "image_url": null,
+      "replies_counts": 27,
+      "created_at": "2026-05-03T13:10:00Z",
+      "role": "user",
+      "email": "tamar.landau@example.com"
+    },
+    "post": "חשוב לזכור שגם במקרה הזה צריך לטפל בשגיאות.",
+    "image_url": null,
+    "created_at": "2026-08-21T16:05:00Z",
+    "updated_at": "2026-08-21T16:05:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440011",
+    "title": "עובד מצוין",
+    "author": {
+      "id": "7f3a1c92-5d84-4b67-9a21-83e5d4c6b102",
+      "name": "יוסי כהן",
+      "image_url": null,
+      "replies_counts": 24,
+      "created_at": "2026-07-12T10:20:00Z",
+      "role": "user",
+      "email": "yossi.cohen@example.com"
+    },
+    "post": "אחרי כמה בדיקות הפתרון עובד אצלי מצוין.",
+    "image_url": null,
+    "created_at": "2026-08-22T08:12:00Z",
+    "updated_at": "2026-08-22T08:12:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440012",
+    "title": "יש לי שאלה",
+    "author": {
+      "id": "e4c8b291-6a73-4d15-9f82-37b5e1c60409",
+      "name": "מאיה ישראלי",
+      "image_url": null,
+      "replies_counts": 31,
+      "created_at": "2026-07-01T16:45:00Z",
+      "role": "user",
+      "email": "maya.yisraeli@example.com"
+    },
+    "post": "איך הייתם ממליצים להתמודד עם המקרה הזה בפרויקט גדול?",
+    "image_url": null,
+    "created_at": "2026-08-22T09:40:00Z",
+    "updated_at": "2026-08-22T09:40:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440013",
+    "title": "מסכים",
+    "author": {
+      "id": "f6a2d839-1b57-4c74-a905-28e3b691d412",
+      "name": "רועי שמעוני",
+      "image_url": null,
+      "replies_counts": 45,
+      "created_at": "2026-04-15T09:25:00Z",
+      "role": "moderator",
+      "email": "roi.shimoni@example.com"
+    },
+    "post": "מסכים, זו כנראה הדרך הנכונה ביותר לעשות את זה.",
+    "image_url": null,
+    "created_at": "2026-08-22T10:25:00Z",
+    "updated_at": "2026-08-22T10:25:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440014",
+    "title": "תודה",
+    "author": {
+      "id": "c2b4e781-93a6-4f25-8d17-5e9b3c6a7104",
+      "name": "דוד לוי",
+      "image_url": null,
+      "replies_counts": 17,
+      "created_at": "2026-06-18T14:30:00Z",
+      "role": "user",
+      "email": "david.levi@example.com"
+    },
+    "post": "תודה רבה, זה בדיוק מה שחיפשתי.",
+    "image_url": null,
+    "created_at": "2026-08-22T11:15:00Z",
+    "updated_at": "2026-08-22T11:15:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440015",
+    "title": "פתרון מעניין",
+    "author": {
+      "id": "63b9d1e5-8a47-4c26-b701-95f3e2d68420",
+      "name": "איתי בן דוד",
+      "image_url": null,
+      "replies_counts": 53,
+      "created_at": "2026-02-11T15:20:00Z",
+      "role": "admin",
+      "email": "itai.bendavid@example.com"
+    },
+    "post": "אהבתי את הפתרון הזה, הוא גם קריא וגם קל להבנה.",
+    "image_url": null,
+    "created_at": "2026-08-22T12:30:00Z",
+    "updated_at": "2026-08-22T12:30:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440016",
+    "title": "בדיקה נוספת",
+    "author": {
+      "id": "d8e1a472-5c39-4b86-91f7-63a2c5e80415",
+      "name": "שרה מזרחי",
+      "image_url": null,
+      "replies_counts": 29,
+      "created_at": "2026-03-28T11:15:00Z",
+      "role": "user",
+      "email": "sara.mizrahi@example.com"
+    },
+    "post": "כדאי לבצע עוד כמה בדיקות לפני שמכניסים את זה לפרודקשן.",
+    "image_url": null,
+    "created_at": "2026-08-22T14:10:00Z",
+    "updated_at": "2026-08-22T14:10:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440017",
+    "title": "נשמע טוב",
+    "author": {
+      "id": "a91d6f42-7c35-4e89-b218-64f3a8d9c507",
+      "name": "נועה אברהם",
+      "image_url": null,
+      "replies_counts": 38,
+      "created_at": "2026-05-22T08:10:00Z",
+      "role": "moderator",
+      "email": "noa.avraham@example.com"
+    },
+    "post": "נשמע טוב. אני אנסה את זה בפרויקט שלי.",
+    "image_url": null,
+    "created_at": "2026-08-22T15:45:00Z",
+    "updated_at": "2026-08-22T15:45:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440018",
+    "title": "הערה קטנה",
+    "author": {
+      "id": "28f4c6b1-9e53-4a72-8d16-57c3b905e421",
+      "name": "תמר לנדאו",
+      "image_url": null,
+      "replies_counts": 27,
+      "created_at": "2026-05-03T13:10:00Z",
+      "role": "user",
+      "email": "tamar.landau@example.com"
+    },
+    "post": "רק שים לב שבמקרה של null צריך לטפל בזה בנפרד.",
+    "image_url": null,
+    "created_at": "2026-08-22T17:20:00Z",
+    "updated_at": "2026-08-22T17:20:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440019",
+    "title": "עובד אצלי",
+    "author": {
+      "id": "b73f5c18-2e94-4a61-8d37-c905e2b14610",
+      "name": "אורי פרץ",
+      "image_url": null,
+      "replies_counts": 12,
+      "created_at": "2026-06-09T12:00:00Z",
+      "role": "user",
+      "email": "uri.peretz@example.com"
+    },
+    "post": "עשיתי בדיוק את מה שהצעת וזה פתר את הבעיה.",
+    "image_url": null,
+    "created_at": "2026-08-23T08:05:00Z",
+    "updated_at": "2026-08-23T08:05:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440020",
+    "title": "רעיון נוסף",
+    "author": {
+      "id": "91c5e7a3-4d28-4f61-b902-76e1a8c53419",
+      "name": "דן רפפורט",
+      "image_url": null,
+      "replies_counts": 19,
+      "created_at": "2026-07-20T07:40:00Z",
+      "role": "user",
+      "email": "dan.rapaport@example.com"
+    },
+    "post": "אפשר גם להשתמש בגישה הזאת אם רוצים להימנע מקוד כפול.",
+    "image_url": null,
+    "created_at": "2026-08-23T09:30:00Z",
+    "updated_at": "2026-08-23T09:30:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440021",
+    "title": "מעניין מאוד",
+    "author": {
+      "id": "7f3a1c92-5d84-4b67-9a21-83e5d4c6b102",
+      "name": "יוסי כהן",
+      "image_url": null,
+      "replies_counts": 24,
+      "created_at": "2026-07-12T10:20:00Z",
+      "role": "user",
+      "email": "yossi.cohen@example.com"
+    },
+    "post": "לא חשבתי על זה ככה. תודה ששיתפת את הפתרון.",
+    "image_url": null,
+    "created_at": "2026-08-23T11:10:00Z",
+    "updated_at": "2026-08-23T11:10:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440022",
+    "title": "שווה לנסות",
+    "author": {
+      "id": "f6a2d839-1b57-4c74-a905-28e3b691d412",
+      "name": "רועי שמעוני",
+      "image_url": null,
+      "replies_counts": 45,
+      "created_at": "2026-04-15T09:25:00Z",
+      "role": "moderator",
+      "email": "roi.shimoni@example.com"
+    },
+    "post": "לדעתי שווה לנסות את זה ולראות אם הביצועים משתפרים.",
+    "image_url": null,
+    "created_at": "2026-08-23T12:45:00Z",
+    "updated_at": "2026-08-23T12:45:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440023",
+    "title": "תוצאה טובה",
+    "author": {
+      "id": "63b9d1e5-8a47-4c26-b701-95f3e2d68420",
+      "name": "איתי בן דוד",
+      "image_url": null,
+      "replies_counts": 53,
+      "created_at": "2026-02-11T15:20:00Z",
+      "role": "admin",
+      "email": "itai.bendavid@example.com"
+    },
+    "post": "אחרי השינוי התוצאה הרבה יותר טובה.",
+    "image_url": null,
+    "created_at": "2026-08-23T14:20:00Z",
+    "updated_at": "2026-08-23T14:20:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440024",
+    "title": "יש עוד אפשרויות",
+    "author": {
+      "id": "a91d6f42-7c35-4e89-b218-64f3a8d9c507",
+      "name": "נועה אברהם",
+      "image_url": null,
+      "replies_counts": 38,
+      "created_at": "2026-05-22T08:10:00Z",
+      "role": "moderator",
+      "email": "noa.avraham@example.com"
+    },
+    "post": "יש עוד כמה דרכים לעשות את זה, תלוי במה שהפרויקט דורש.",
+    "image_url": null,
+    "created_at": "2026-08-23T15:55:00Z",
+    "updated_at": "2026-08-23T15:55:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440025",
+    "title": "שימושי מאוד",
+    "author": {
+      "id": "e4c8b291-6a73-4d15-9f82-37b5e1c60409",
+      "name": "מאיה ישראלי",
+      "image_url": null,
+      "replies_counts": 31,
+      "created_at": "2026-07-01T16:45:00Z",
+      "role": "user",
+      "email": "maya.yisraeli@example.com"
+    },
+    "post": "זה יכול להיות שימושי מאוד גם במקרים אחרים.",
+    "image_url": null,
+    "created_at": "2026-08-24T08:25:00Z",
+    "updated_at": "2026-08-24T08:25:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440026",
+    "title": "נקודה טובה",
+    "author": {
+      "id": "c2b4e781-93a6-4f25-8d17-5e9b3c6a7104",
+      "name": "דוד לוי",
+      "image_url": null,
+      "replies_counts": 17,
+      "created_at": "2026-06-18T14:30:00Z",
+      "role": "user",
+      "email": "david.levi@example.com"
+    },
+    "post": "נקודה טובה, לא לקחתי את זה בחשבון קודם.",
+    "image_url": null,
+    "created_at": "2026-08-24T09:50:00Z",
+    "updated_at": "2026-08-24T09:50:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440027",
+    "title": "תודה על השיתוף",
+    "author": {
+      "id": "d8e1a472-5c39-4b86-91f7-63a2c5e80415",
+      "name": "שרה מזרחי",
+      "image_url": null,
+      "replies_counts": 29,
+      "created_at": "2026-03-28T11:15:00Z",
+      "role": "user",
+      "email": "sara.mizrahi@example.com"
+    },
+    "post": "תודה על השיתוף, בהחלט למדתי משהו חדש.",
+    "image_url": null,
+    "created_at": "2026-08-24T11:35:00Z",
+    "updated_at": "2026-08-24T11:35:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440028",
+    "title": "פתרון פשוט",
+    "author": {
+      "id": "28f4c6b1-9e53-4a72-8d16-57c3b905e421",
+      "name": "תמר לנדאו",
+      "image_url": null,
+      "replies_counts": 27,
+      "created_at": "2026-05-03T13:10:00Z",
+      "role": "user",
+      "email": "tamar.landau@example.com"
+    },
+    "post": "לפעמים הפתרון הפשוט הוא גם הפתרון הטוב ביותר.",
+    "image_url": null,
+    "created_at": "2026-08-24T13:15:00Z",
+    "updated_at": "2026-08-24T13:15:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440029",
+    "title": "מסכים בהחלט",
+    "author": {
+      "id": "91c5e7a3-4d28-4f61-b902-76e1a8c53419",
+      "name": "דן רפפורט",
+      "image_url": null,
+      "replies_counts": 19,
+      "created_at": "2026-07-20T07:40:00Z",
+      "role": "user",
+      "email": "dan.rapaport@example.com"
+    },
+    "post": "מסכים בהחלט. זאת גם הגישה שאני בדרך כלל מעדיף.",
+    "image_url": null,
+    "created_at": "2026-08-24T15:00:00Z",
+    "updated_at": "2026-08-24T15:00:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440030",
+    "title": "שאלה נוספת",
+    "author": {
+      "id": "b73f5c18-2e94-4a61-8d37-c905e2b14610",
+      "name": "אורי פרץ",
+      "image_url": null,
+      "replies_counts": 12,
+      "created_at": "2026-06-09T12:00:00Z",
+      "role": "user",
+      "email": "uri.peretz@example.com"
+    },
+    "post": "ומה היית עושה אם מספר המשתמשים היה גדול פי עשר?",
+    "image_url": null,
+    "created_at": "2026-08-24T16:40:00Z",
+    "updated_at": "2026-08-24T16:40:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440031",
+    "title": "נראה מצוין",
+    "author": {
+      "id": "7f3a1c92-5d84-4b67-9a21-83e5d4c6b102",
+      "name": "יוסי כהן",
+      "image_url": null,
+      "replies_counts": 24,
+      "created_at": "2026-07-12T10:20:00Z",
+      "role": "user",
+      "email": "yossi.cohen@example.com"
+    },
+    "post": "נראה מצוין. הקוד גם הרבה יותר מסודר עכשיו.",
+    "image_url": null,
+    "created_at": "2026-08-25T08:20:00Z",
+    "updated_at": "2026-08-25T08:20:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440032",
+    "title": "בדקתי גם",
+    "author": {
+      "id": "63b9d1e5-8a47-4c26-b701-95f3e2d68420",
+      "name": "איתי בן דוד",
+      "image_url": null,
+      "replies_counts": 53,
+      "created_at": "2026-02-11T15:20:00Z",
+      "role": "admin",
+      "email": "itai.bendavid@example.com"
+    },
+    "post": "בדקתי גם את המקרה הזה והוא עובד ללא בעיות.",
+    "image_url": null,
+    "created_at": "2026-08-25T10:15:00Z",
+    "updated_at": "2026-08-25T10:15:00Z"
+  },
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440033",
+    "title": "סיכום טוב",
+    "author": {
+      "id": "a91d6f42-7c35-4e89-b218-64f3a8d9c507",
+      "name": "נועה אברהם",
+      "image_url": null,
+      "replies_counts": 38,
+      "created_at": "2026-05-22T08:10:00Z",
+      "role": "moderator",
+      "email": "noa.avraham@example.com"
+    },
+    "post": "בסך הכול זה מסכם את הנושא בצורה טובה וברורה.",
+    "image_url": null,
+    "created_at": "2026-08-25T12:05:00Z",
+    "updated_at": "2026-08-25T12:05:00Z"
+  }
+]
