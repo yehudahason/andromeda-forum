@@ -1,7 +1,8 @@
 import type { User } from "../types";
 
-export function getAvatar(user: User) {
-  if (user.image_url) {
+export function GetAvatar(user: User | null) {
+  if (!user) return;
+  if (user?.image_url) {
     return (
       <img
         src={user.image_url}
@@ -21,7 +22,6 @@ export function getAvatar(user: User) {
     "bg-indigo-500",
     "bg-orange-500",
   ];
-
   // Generate a consistent color based on the user's name
   const index =
     [...user.name].reduce((sum, char) => sum + char.charCodeAt(0), 0) %
@@ -31,7 +31,7 @@ export function getAvatar(user: User) {
 
   return (
     <div
-      className={`w-13 h-13 rounded-full ${colors[index]} flex items-center justify-center text-white text-sm font-semibold`}
+      className={`w-7 h-7 rounded-full ${colors[index]} flex items-center justify-center text-white text-sm font-semibold`}
     >
       {letter}
     </div>

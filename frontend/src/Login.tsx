@@ -23,6 +23,7 @@ export default function Login() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [openLogin, setOpenLogin] = useState(true);
   const [msg, setMsg] = useState<string | undefined>("");
+  const [username, setUserName] = useState<string | undefined>(undefined);
 
   const baseUrl = import.meta.env.BASE_URL;
   const menuRef = useRef<HTMLDivElement>(null);
@@ -79,7 +80,7 @@ export default function Login() {
     try {
       const result = isSignUp
         ? await authClient.signUp.email({
-            name: email.split("@")[0] || "User",
+            name: username ?? (email.split("@")[0] || "User"),
             email,
             password,
           })
@@ -152,23 +153,44 @@ export default function Login() {
             id="modal-title"
             className="sm:text-3xl text-xl font-bold tracking-tight text-gray-900"
           >
-            {isSignUp ? "Create an account" : "Welcome back"}
+            {isSignUp ? "צור חשבון" : "כניסה"}
           </h1>
 
           <p id="modal-description" className="mt-2 text-sm text-gray-500">
-            {isSignUp
-              ? "Sign up to get started"
-              : "Sign in to continue to your account"}
+            {isSignUp ? "הרשם לפורום" : "הכנס לפורום"}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-2 mt-4">
+          {isSignUp && (
+            <div>
+              <label
+                htmlFor="name"
+                className="mb-2 block text-sm font-medium text-gray-700"
+              >
+                שם משתמש
+              </label>
+
+              <input
+                id="name"
+                type="text"
+                placeholder="John Doe"
+                value={username}
+                onChange={(e) => setUserName(e.target.value)}
+                required
+                aria-required="true"
+                aria-invalid={msg ? "true" : "false"}
+                aria-describedby={msg ? "auth-error-message" : undefined}
+                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10"
+              />
+            </div>
+          )}
           <div>
             <label
               htmlFor="email"
               className="mb-2 block text-sm font-medium text-gray-700"
             >
-              Email address
+              כתובת אימייל
             </label>
 
             <input
@@ -190,7 +212,7 @@ export default function Login() {
               htmlFor="password"
               className="mb-2 block text-sm font-medium text-gray-700"
             >
-              Password
+              ססמה
             </label>
 
             <input
@@ -227,7 +249,7 @@ export default function Login() {
             type="submit"
             className="cursor-pointer w-full rounded-lg bg-gray-900 px-4 py-2.5 font-semibold text-white transition hover:bg-gray-800 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
           >
-            {isSignUp ? "Create account" : "Sign in"}
+            {isSignUp ? "צור חשבון" : "כניסה לרשומים"}
           </button>
 
           <button
@@ -235,6 +257,7 @@ export default function Login() {
             onClick={handleGoogleLogin}
             className="flex cursor-pointer w-full items-center justify-center gap-3 rounded-lg border border-gray-300 bg-white px-4 py-2.5 font-medium text-gray-700 transition hover:bg-gray-50 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
           >
+            המשך עם גוגל
             <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
               <path
                 fill="#4285F4"
@@ -253,7 +276,6 @@ export default function Login() {
                 d="M12 6.13c1.43 0 2.72.49 3.74 1.45l2.8-2.8C16.84 3.21 14.63 2.25 12 2.25a9.75 9.75 0 0 0-8.73 5.39l3.24 2.53C7.29 7.85 9.45 6.13 12 6.13Z"
               />
             </svg>
-            Continue with Google
           </button>
         </form>
 
@@ -262,24 +284,24 @@ export default function Login() {
         <p className="mt-6 text-center text-sm text-gray-500">
           {isSignUp ? (
             <>
-              Already have an account?{" "}
+              יש לך כבר חשבון?
               <button
                 type="button"
                 onClick={() => setIsSignUp(false)}
-                className="cursor-pointer font-semibold text-gray-900 hover:underline focus:outline-none focus:ring-2 focus:ring-gray-900 rounded"
+                className="px-2 cursor-pointer font-semibold text-gray-900 hover:underline focus:outline-none focus:ring-2 focus:ring-gray-900 rounded"
               >
-                Sign in
+                הכנס.
               </button>
             </>
           ) : (
             <>
-              Don't have an account?{" "}
+              אין לך חשבון ?
               <button
                 type="button"
                 onClick={() => setIsSignUp(true)}
-                className="cursor-pointer font-semibold text-gray-900 hover:underline focus:outline-none focus:ring-2 focus:ring-gray-900 rounded"
+                className="px-2 cursor-pointer font-semibold text-gray-900 hover:underline focus:outline-none focus:ring-2 focus:ring-gray-900 rounded"
               >
-                Sign up
+                הרשם.
               </button>
             </>
           )}

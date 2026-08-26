@@ -2,7 +2,7 @@ import { useState } from "react";
 import Pagination from "./Paginatiom";
 import { formatDateFull } from "../utils/formatDateFull";
 import { useNavigate } from "react-router-dom";
-import { getAvatar } from "../utils/getAvatar";
+import { GetAvatar } from "../utils/GetAvatar";
 import type { ReplyType } from "../types";
 type RepliesProp = {
   replies: ReplyType[];
@@ -41,7 +41,7 @@ export default function Replies({ id, forum, replies, current }: RepliesProp) {
           <div className="w-full flex gap-4">
             <div className="flex w-30 flex-col justify-start pt-6 gap-6 items-center">
               <span className="text-center">{reply.author.name}</span>
-              {getAvatar(reply.author)}
+              {GetAvatar(reply.author)}
 
               {/* Replies count */}
               <span className="flex items-center gap-1 text-sm">

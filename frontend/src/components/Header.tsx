@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { getMe } from "../utils/getMe";
+import { GetAvatar } from "../utils/GetAvatar.tsx";
 import { authClient } from "../lib/auth";
 import { useUserStore } from "../stores/userStore";
 import { useSessionStore } from "../stores/sessionStore";
@@ -8,7 +9,7 @@ export default function Header() {
   const [tzurMenu, setTzurMenu] = useState<boolean>(false);
   const [notiMenu, setNotiMenu] = useState<boolean>(false);
   const [mailMenu, setMailMenu] = useState<boolean>(false);
-  //   const [mailMenu, setMailMenu] = useState<boolean>(false);
+  const [isMenu, setIsMenu] = useState<boolean>(false);
 
   const baseUrl = import.meta.env.BASE_URL;
   const { user, setUser } = useUserStore((state) => state);
@@ -246,18 +247,40 @@ export default function Header() {
               </ul>
             </li>
 
-            <li className="px-2 flex gap-3 text-white">
-              <img
-                className="w-6  h-6 rounded-full"
-                src={`${baseUrl}Ypic.svg`}
-                alt=""
-              />
+            <li className="px-2 flex gap-3 text-white relative">
+              {user && <GetAvatar {...user} />}
               <span className="flex  truncate">
                 {user?.name}
-                <img src={`${baseUrl}arrowdown.png`} alt="" />
+                <button onClick={() => setIsMenu(!isMenu)}>
+                  <img src={`${baseUrl}arrowdown.png`} alt="" />
+                </button>
               </span>
+
+              <div
+                className={`${isMenu ? "visible translate-y-2" : "invisible  opacity-0"} z-10 bg-gray-700 transition-transform 
+                w-fit min-w-40 p-4 min-h-16 rounded-xl flex absolute top-14 left-0  items-center justify-center flex-col text-white gap-4`}
+              >
+                {user ? (
+                  <>
+                    <h3 className="text-center border-b border-b-blue-300">
+                      Hello {user?.role}:
+                    </h3>
+                    <p className="border-b text-center border-b-blue-300">
+                      {user?.name}
+                    </p>
+                    <button onClick={getS}>GET session</button>
+                    <button
+                      onClick={handleSignOut}
+                      className="w-fit rounded-lg bg-gray-900 px-4 p-2 font-medium text-white transition hover:bg-gray-800"
+                    >
+                      Sign Out
+                    </button>
+                  </>
+                ) : (
+                  <p className="text-center">NOT SIGN IN</p>
+                )}
+              </div>
             </li>
-            <li></li>
           </ul>
         </div>
       </header>
