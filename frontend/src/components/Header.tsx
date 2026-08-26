@@ -1,11 +1,60 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { getMe } from "../utils/getMe";
+import { authClient } from "../lib/auth";
+import { useUserStore } from "../stores/userStore";
+import { useSessionStore } from "../stores/sessionStore";
 export default function Header() {
-  const baseUrl = import.meta.env.BASE_URL;
   const [tzurMenu, setTzurMenu] = useState<boolean>(false);
   const [notiMenu, setNotiMenu] = useState<boolean>(false);
   const [mailMenu, setMailMenu] = useState<boolean>(false);
   //   const [mailMenu, setMailMenu] = useState<boolean>(false);
+
+  const baseUrl = import.meta.env.BASE_URL;
+  const { user, setUser } = useUserStore((state) => state);
+  const setSession = useSessionStore((state) => state.setSession);
+  const handleSignOut = async () => {
+    console.log("1. sign out clicked");
+
+    try {
+      console.log("2. calling Better Auth");
+
+      const result = await authClient.signOut();
+
+      console.log("3. signOut result:", result);
+
+      if (result.error) {
+        console.error("Sign out failed:", result.error);
+        return;
+      }
+
+      setSession(null);
+      setUser(null);
+
+      console.log("4. signed out");
+
+      window.location.href = "/";
+    } catch (error) {
+      console.error("5. signOut exception:", error);
+    }
+  };
+
+  async function getS() {
+    try {
+      const res = await getMe();
+      console.log(res);
+      return res;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  useEffect(() => {
+    async function loadUser() {
+      const user = await getMe();
+      setUser(user);
+    }
+    loadUser();
+  }, [setUser]);
 
   return (
     <div className="flex flex-col">
@@ -30,6 +79,7 @@ export default function Header() {
                   setNotiMenu(false);
                   setMailMenu(false);
                   setTzurMenu(!tzurMenu);
+                  getS();
                 }}
                 className="cursor-pointer flex items-center gap-1"
               >
@@ -203,7 +253,8 @@ export default function Header() {
                 alt=""
               />
               <span className="flex  truncate">
-                Yehuda hason <img src={`${baseUrl}arrowdown.png`} alt="" />
+                {user?.name}
+                <img src={`${baseUrl}arrowdown.png`} alt="" />
               </span>
             </li>
             <li></li>

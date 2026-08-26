@@ -24,6 +24,7 @@ export type ReplyType = {
 export type User = {
   id: string;
   name: string;
+  email: string;
   image_url: string | null;
   replies_counts: number;
   created_at: string;
@@ -40,3 +41,14 @@ export type ForumType = {
   last_post_date: string | null;
   image_url: string | null;
 };
+
+export type User2 = {
+  id: string;
+  task: string;
+  name: string;
+  email: string;
+  completed: boolean;
+  deleting: boolean;
+};
+
+export type Users = User[];

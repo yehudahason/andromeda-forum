@@ -1,0 +1,118 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"net/http"
+	"os"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/joho/godotenv"
+
+	"github.com/MicahParks/keyfunc"
+)
+
+var jwks *keyfunc.JWKS
+
+// PostgreSQL connection pool.
+var db *pgxpool.Pool
+
+func initJWKS() error {
+	var err error
+
+	jwks, err = keyfunc.Get(os.Getenv("JWKS_URL"), keyfunc.Options{})
+	if err != nil {
+		return fmt.Errorf("failed to load JWKS: %w", err)
+	}
+
+	return nil
+}
+func main() {
+	if err := godotenv.Load(); err != nil {
+		log.Fatal("failed to load .env:", err)
+	}
+	if err := initJWKS(); err != nil {
+		log.Fatal(err)
+	}
+	ctx := context.Background()
+
+	// Initialize PostgreSQL connection pool
+	var err error
+
+	db, err = pgxpool.New(ctx, os.Getenv("DATABASE_URL"))
+	if err != nil {
+		log.Fatal("failed to connect to database:", err)
+	}
+	defer db.Close()
+
+	// Verify the connection
+	if err := db.Ping(ctx); err != nil {
+		log.Fatal("failed to ping database:", err)
+	}
+	_, err = db.Exec(ctx, `
+	CREATE TABLE IF NOT EXISTS tasks (
+		id UUID PRIMARY KEY,
+		auth_user_id UUID  NOT NULL,
+		name TEXT NOT NULL,
+		email TEXT NOT NULL,
+		task TEXT NOT NULL,
+		completed BOOLEAN
+	)
+`)
+	if err != nil {
+		log.Fatal("failed to create users table:", err)
+	}
+	log.Println("Connected to PostgreSQL")
+
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("GET /tasks", getTasks)
+	mux.HandleFunc("POST /tasks", createTask)
+	mux.HandleFunc("GET /tasks/{id}", getTask)
+	mux.HandleFunc("GET /tasks/me", meHandler)
+	mux.HandleFunc("PUT /tasks/{id}", updateTask)
+	mux.HandleFunc("DELETE /tasks/{id}", deleteTask)
+
+	server := http.Server{
+		Addr:    ":4000",
+		Handler: corsMiddleware(mux),
+	}
+
+	log.Println("Server running on http://localhost:4000")
+
+	if err := server.ListenAndServe(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func corsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		allowedOrigins := map[string]bool{
+			"http://localhost:5173":          true,
+			"https://lab.pitron-halomot.org": true,
+		}
+
+		origin := r.Header.Get("Origin")
+
+		if allowedOrigins[origin] {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
+			w.Header().Set(
+				"Access-Control-Allow-Methods",
+				"GET, POST, PUT, DELETE, OPTIONS",
+			)
+			w.Header().Set(
+				"Access-Control-Allow-Headers",
+				"Content-Type, Authorization",
+			)
+		}
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}

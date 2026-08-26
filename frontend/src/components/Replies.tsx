@@ -39,7 +39,7 @@ export default function Replies({ id, forum, replies, current }: RepliesProp) {
           {/* Header */}
 
           <div className="w-full flex gap-4">
-            <div className="flex w-30 flex-col justify-center gap-6 items-center">
+            <div className="flex w-30 flex-col justify-start pt-6 gap-6 items-center">
               <span className="text-center">{reply.author.name}</span>
               {getAvatar(reply.author)}
 
