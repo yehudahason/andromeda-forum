@@ -31,7 +31,8 @@ func getTasks(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	user, err := getUserID(r)
 	if err != nil {
-		log.Fatal(err.Error())
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
 	}
 	var rows pgx.Rows
 
