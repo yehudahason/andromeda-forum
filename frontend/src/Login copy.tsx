@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { authClient } from "./lib/auth.ts";
 import { useSessionStore } from "./stores/sessionStore.ts";
 import { loadSession } from "./lib/loadSession.ts";
@@ -18,7 +18,6 @@ type LoginProps = {
   setIsLogin: (value: boolean) => void;
   signUp: boolean;
 };
-
 export default function Login({ setIsLogin, signUp }: LoginProps) {
   const navigate = useNavigate();
   const { session, setSession } = useSessionStore((state) => state);
@@ -28,16 +27,10 @@ export default function Login({ setIsLogin, signUp }: LoginProps) {
   const [isSignUp, setIsSignUp] = useState(signUp);
   const [openLogin, setOpenLogin] = useState(true);
   const [msg, setMsg] = useState<string | undefined>("");
-  const [username, setUserName] = useState<string>("");
+  const [username, setUserName] = useState<string | undefined>(undefined);
 
   const baseUrl = import.meta.env.BASE_URL;
   const menuRef = useRef<HTMLDivElement>(null);
-  const previousFocusRef = useRef<HTMLElement | null>(null);
-
-  const handleClose = useCallback(() => {
-    setOpenLogin(false);
-    setIsLogin(false);
-  }, [setIsLogin]);
 
   const handleGoogleLogin = async () => {
     await authClient.signIn.social({
@@ -50,60 +43,39 @@ export default function Login({ setIsLogin, signUp }: LoginProps) {
     loadSession();
   }, []);
 
-  // Save current active element to restore focus when modal unmounts/closes
-  useEffect(() => {
-    previousFocusRef.current = document.activeElement as HTMLElement;
-    return () => {
-      previousFocusRef.current?.focus();
-    };
-  }, []);
-
-  // Handle outside click & Keyboard navigation (Escape & Focus Trap)
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        handleClose();
-      }
-    }
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (!openLogin) return;
-
-      if (event.key === "Escape") {
-        handleClose();
-        return;
-      }
-
-      // Focus Trap Implementation
-      if (event.key === "Tab" && menuRef.current) {
-        const focusableElements = menuRef.current.querySelectorAll<HTMLElement>(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-        );
-        const firstElement = focusableElements[0];
-        const lastElement = focusableElements[focusableElements.length - 1];
-
-        if (event.shiftKey && document.activeElement === firstElement) {
-          event.preventDefault();
-          lastElement?.focus();
-        } else if (!event.shiftKey && document.activeElement === lastElement) {
-          event.preventDefault();
-          firstElement?.focus();
-        }
+        setOpenLogin(false);
+        setIsLogin(false);
       }
     }
 
     document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("keydown", handleKeyDown);
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [setIsLogin]);
+
+  // Keyboard navigation: Close modal on Escape press
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape" && openLogin) {
+        setOpenLogin(false);
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [openLogin, handleClose]);
+  }, [openLogin]);
 
   useEffect(() => {
     if (session) {
       navigate("/");
+      console.log(getMe());
     }
   }, [session, navigate]);
 
@@ -113,7 +85,7 @@ export default function Login({ setIsLogin, signUp }: LoginProps) {
     try {
       const result = isSignUp
         ? await authClient.signUp.email({
-            name: username || email.split("@")[0] || "User",
+            name: username ?? (email.split("@")[0] || "User"),
             email,
             password,
           })
@@ -140,44 +112,48 @@ export default function Login({ setIsLogin, signUp }: LoginProps) {
     }
   };
 
-  if (!openLogin) return null;
-
   return (
     <>
-      {/* Backdrop overlay */}
-      <div
-        className="fixed inset-0 bg-black/40 z-40 transition-opacity"
-        aria-hidden="true"
-        onClick={handleClose}
-      />
+      {/* Backdrop overlay for focus management and screen reader context */}
+      {openLogin && (
+        <div
+          className="fixed inset-0 bg-black/20 z-40"
+          aria-hidden="true"
+          onClick={() => getMe()}
+        />
+      )}
 
       <div
         ref={menuRef}
         role="dialog"
         aria-modal="true"
+        aria-hidden={!openLogin}
         aria-labelledby="modal-title"
         aria-describedby="modal-description"
-        dir="rtl"
-        tabIndex={-1}
-        className="fixed left-1/2 top-1/2 z-50 w-full max-w-[87%] sm:max-w-md
-          rounded-2xl bg-white p-6 shadow-lg
-          -translate-x-1/2 -translate-y-1/2 transition-all duration-300 focus:outline-none"
+        className={`fixed left-1/2 top-1/2 z-50 w-full max-w-[87%] sm:max-w-md
+  rounded-2xl bg-white p-4 sm:px-6 shadow-lg
+  -translate-x-1/2 transition-all duration-300
+  ${
+    openLogin
+      ? "visible translate-y-[-50%] opacity-100"
+      : "invisible translate-y-[-60%] opacity-0 pointer-events-none"
+  }
+`}
       >
         <div className="text-center relative">
           <button
             type="button"
-            onClick={handleClose}
-            aria-label="סגור חלונית"
-            className="absolute top-0 left-0 cursor-pointer p-1 rounded-md text-gray-400 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-900"
+            onClick={() => setOpenLogin(false)}
+            aria-label="Close modal"
+            className="absolute top-1 cursor-pointer right-1 h-6 w-6 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-900"
           >
             <img
-              className="w-5 h-5"
+              className="w-full h-auto"
               src={`${baseUrl}close.png`}
               alt=""
               aria-hidden="true"
             />
           </button>
-
           <h1
             id="modal-title"
             className="sm:text-3xl text-xl font-bold tracking-tight text-gray-900"
@@ -190,12 +166,12 @@ export default function Login({ setIsLogin, signUp }: LoginProps) {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3 mt-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-2 mt-4">
           {isSignUp && (
             <div>
               <label
                 htmlFor="name"
-                className="mb-1 block text-sm font-medium text-gray-700"
+                className="mb-2 block text-sm font-medium text-gray-700"
               >
                 שם משתמש
               </label>
@@ -203,7 +179,7 @@ export default function Login({ setIsLogin, signUp }: LoginProps) {
               <input
                 id="name"
                 type="text"
-                placeholder="ישראל ישראלי"
+                placeholder="John Doe"
                 value={username}
                 onChange={(e) => setUserName(e.target.value)}
                 required
@@ -214,11 +190,10 @@ export default function Login({ setIsLogin, signUp }: LoginProps) {
               />
             </div>
           )}
-
           <div>
             <label
               htmlFor="email"
-              className="mb-1 block text-sm font-medium text-gray-700"
+              className="mb-2 block text-sm font-medium text-gray-700"
             >
               כתובת אימייל
             </label>
@@ -240,9 +215,9 @@ export default function Login({ setIsLogin, signUp }: LoginProps) {
           <div>
             <label
               htmlFor="password"
-              className="mb-1 block text-sm font-medium text-gray-700"
+              className="mb-2 block text-sm font-medium text-gray-700"
             >
-              סיסמה
+              ססמה
             </label>
 
             <input
@@ -259,10 +234,11 @@ export default function Login({ setIsLogin, signUp }: LoginProps) {
             />
           </div>
 
+          {/* Error Message Announcement for Screen Readers */}
           <div
             aria-live="assertive"
             aria-atomic="true"
-            className="min-h-[1.25rem]"
+            className="min-h-[1.5rem]"
           >
             {msg && (
               <span
@@ -286,7 +262,7 @@ export default function Login({ setIsLogin, signUp }: LoginProps) {
             onClick={handleGoogleLogin}
             className="flex cursor-pointer w-full items-center justify-center gap-3 rounded-lg border border-gray-300 bg-white px-4 py-2.5 font-medium text-gray-700 transition hover:bg-gray-50 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
           >
-            <span>המשך עם גוגל</span>
+            המשך עם גוגל
             <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
               <path
                 fill="#4285F4"
@@ -313,22 +289,22 @@ export default function Login({ setIsLogin, signUp }: LoginProps) {
         <p className="mt-6 text-center text-sm text-gray-500">
           {isSignUp ? (
             <>
-              יש לך כבר חשבון?{" "}
+              יש לך כבר חשבון?
               <button
                 type="button"
                 onClick={() => setIsSignUp(false)}
-                className="cursor-pointer font-semibold text-gray-900 hover:underline focus:outline-none focus:ring-2 focus:ring-gray-900 rounded px-1"
+                className="px-2 cursor-pointer font-semibold text-gray-900 hover:underline focus:outline-none focus:ring-2 focus:ring-gray-900 rounded"
               >
                 הכנס.
               </button>
             </>
           ) : (
             <>
-              אין לך חשבון?{" "}
+              אין לך חשבון ?
               <button
                 type="button"
                 onClick={() => setIsSignUp(true)}
-                className="cursor-pointer font-semibold text-gray-900 hover:underline focus:outline-none focus:ring-2 focus:ring-gray-900 rounded px-1"
+                className="px-2 cursor-pointer font-semibold text-gray-900 hover:underline focus:outline-none focus:ring-2 focus:ring-gray-900 rounded"
               >
                 הרשם.
               </button>
