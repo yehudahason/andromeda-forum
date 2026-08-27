@@ -360,7 +360,9 @@ export default function Header() {
             <li>
               <Link to="/forum/1">פורומים</Link>
             </li>
-            <li>מה חדש</li>
+            <li>
+              <Link to="/forum/1/25">מה חדש</Link>
+            </li>
             <li>בלוגים</li>
             <li>אודות</li>
           </ul>

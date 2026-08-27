@@ -4,7 +4,6 @@ import { useSessionStore } from "./stores/sessionStore.ts";
 import { loadSession } from "./lib/loadSession.ts";
 import { useNavigate } from "react-router-dom";
 import Or from "./components/Or.tsx";
-import { getMe } from "./utils/getMe.ts";
 
 export type Session = NonNullable<
   Awaited<ReturnType<typeof authClient.getSession>>["data"]
