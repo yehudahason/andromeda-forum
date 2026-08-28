@@ -4,6 +4,7 @@ import { formatDateFull } from "../utils/formatDateFull";
 import { useNavigate } from "react-router-dom";
 import { GetAvatar } from "../utils/GetAvatar";
 import type { ReplyType } from "../types";
+import { formatDate } from "../utils/formatDate";
 type RepliesProp = {
   replies: ReplyType[];
   current: string;
@@ -22,12 +23,47 @@ export default function Replies({ id, forum, replies, current }: RepliesProp) {
   return (
     <ul className="w-full flex flex-col gap-8">
       {/* Header */}
-      <li className="flex h-fit items-center justify-between border-b border-white/15 ">
+      <li className="flex h-fit items-center justify-between  border-b border-white/15 ">
         <Pagination
           total={5000}
           currentPage={currentPage}
           onPageChange={handlePage}
         />
+      </li>
+
+      <li
+        key={replies[0].id}
+        dir="rtl"
+        className=" rounded-md bg-[#555] sm:px-7 p-1 py-5 text-white"
+      >
+        {/* Header */}
+
+        <div className="w-full flex flex-col gap-4">
+          <div className="pb-4 border-b border-b-neutral-500 text-right text-2xl">
+            {replies[0].title}
+          </div>
+          <div className="flex justify-between items-center">
+            <div className="flex  items-center gap-4">
+              <span className="">{GetAvatar(replies[0].author)}</span>
+              <div className="flex flex-col">
+                <span className="font-medium flex gap-2">
+                  <p>על ידי </p>
+                  <p>{replies[0].author.name}</p>
+                </span>
+                <span className="flex gap-2">
+                  <p>{formatDate(replies[0].created_at)}</p>
+                  <p> ב פורום אסטרונומיה</p>
+                </span>
+              </div>
+            </div>
+            <div className="flex gap-4 justify-center items-center">
+              <button className="py-2 px-4 bg-none rounded-lg">שתף</button>
+              <button className="py-2 px-4 bg-gray-300 text-black rounded-lg">
+                עקוב
+              </button>
+            </div>
+          </div>
+        </div>
       </li>
 
       {replies.map((reply) => (

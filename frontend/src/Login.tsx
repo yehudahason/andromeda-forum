@@ -3,7 +3,9 @@ import { authClient } from "./lib/auth.ts";
 import { useSessionStore } from "./stores/sessionStore.ts";
 import { loadSession } from "./lib/loadSession.ts";
 import { useNavigate } from "react-router-dom";
+import { useUserStore } from "./stores/userStore";
 import Or from "./components/Or.tsx";
+import { getMe } from "./utils/getMe.ts";
 
 export type Session = NonNullable<
   Awaited<ReturnType<typeof authClient.getSession>>["data"]
@@ -32,7 +34,7 @@ export default function Login({ setIsLogin, signUp }: LoginProps) {
   const baseUrl = import.meta.env.BASE_URL;
   const menuRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
-
+  const setUser = useUserStore((state) => state.setUser);
   const handleClose = useCallback(() => {
     setOpenLogin(false);
     setIsLogin(false);
@@ -43,6 +45,7 @@ export default function Login({ setIsLogin, signUp }: LoginProps) {
       provider: "google",
       callbackURL: "/",
     });
+    setUser(await getMe());
   };
 
   useEffect(() => {
@@ -131,6 +134,7 @@ export default function Login({ setIsLogin, signUp }: LoginProps) {
       if (sessionResult.data?.session && sessionResult.data?.user) {
         setSession(sessionResult.data.session);
       }
+      setUser(await getMe());
     } catch (e) {
       if (e instanceof Error) {
         console.log(e);

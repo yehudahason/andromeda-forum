@@ -16,7 +16,7 @@ export default function Header() {
 
   const baseUrl = import.meta.env.BASE_URL;
   const { user, setUser } = useUserStore((state) => state);
-  const { setSession, session } = useSessionStore((state) => state);
+  const { setSession } = useSessionStore((state) => state);
   const handleSignOut = async () => {
     console.log("1. sign out clicked");
 
@@ -54,12 +54,23 @@ export default function Header() {
   }
   useEffect(() => {
     async function loadUser() {
-      const user = await getMe();
-      setUser(user);
-    }
-    loadUser();
-  }, [setUser, session]);
+      try {
+        const result = await getMe();
+        console.log("getMe:", result);
 
+        if (result) {
+          setUser(result);
+        } else {
+          setUser(null);
+        }
+      } catch (error) {
+        console.error("loadUser:", error);
+        setUser(null);
+      }
+    }
+
+    loadUser();
+  }, [setUser]);
   return (
     <div className="flex flex-col">
       <header className="bg-black w-full h-20">

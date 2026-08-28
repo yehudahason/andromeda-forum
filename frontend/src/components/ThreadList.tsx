@@ -23,83 +23,88 @@ export default function ThreadList({
     navigate(`/forum/${forum}/?page=${page}`);
   }
   return (
-    <ul className="w-full overflow-hidden rounded-md bg-[#555] text-white">
-      {/* Header */}
-      <li className="flex h-fit items-center justify-between border-b border-white/15 ">
+    <>
+      <div className="flex h-fit items-center justify-between border-b mb-4 border-white/15 ">
         <Pagination
           total={5000}
           currentPage={currentPage}
           onPageChange={handlePage}
         />
-      </li>
+      </div>
+      <ul className="w-full overflow-hidden rounded-md bg-[#555] text-white">
+        {/* Header */}
+        <li className="flex h-fit items-center justify-between border-b border-white/15 "></li>
 
-      {threads.map((thread) => (
-        <li
-          key={thread.id}
-          dir="rtl"
-          className="grid min-h-[120px] p-4 gap-4 grid-cols-1 sm:grid-cols-[1fr_100px_1fr] items-center border-b 
+        {threads.map((thread) => (
+          <li
+            key={thread.id}
+            dir="rtl"
+            className="grid min-h-[120px] p-4 gap-4 grid-cols-1 sm:grid-cols-[1fr_100px_1fr] items-center border-b 
            border-white/15  last:border-b-0"
-        >
-          {/* Forum */}
-          <div className="flex justify-start min-w-0 items-center gap-5 text-right">
-            {/* Text */}
-            <div className="min-w-0">
-              <a
-                href="#"
-                className="block flex-1  truncate text-[20px] font-medium text-[#0BD7FD] hover:underline"
-              >
-                {thread.title}
-              </a>
+          >
+            {/* Forum */}
+            <div className="flex justify-start min-w-0 items-center gap-5 text-right">
+              {/* Text */}
+              <div className="min-w-0">
+                <a
+                  href="#"
+                  className="block flex-1  truncate text-[20px] font-medium text-[#0BD7FD] hover:underline"
+                >
+                  {thread.title}
+                </a>
 
-              <p className="truncate text-[16px] text-white">
-                <span>נפתח על ידי -</span>
-                <span>
-                  {thread.author} {formatDate(thread.created_at)}
-                </span>
+                <p className="truncate text-[16px] text-white">
+                  <span>נפתח על ידי -</span>
+                  <span>
+                    {thread.author} {formatDate(thread.created_at)}
+                  </span>
+                </p>
+              </div>
+            </div>
+
+            {/* Messages */}
+            <div className="sm:text-center text-right px-2">
+              <p className="text-2xl">
+                {thread.messages_count.toLocaleString()}
               </p>
+
+              <p className="text-sm text-white/90">הודעות</p>
             </div>
-          </div>
 
-          {/* Messages */}
-          <div className="sm:text-center text-right px-2">
-            <p className="text-2xl">{thread.messages_count.toLocaleString()}</p>
-
-            <p className="text-sm text-white/90">הודעות</p>
-          </div>
-
-          {/* Last post */}
-          <div className="min-w-0 text-right px-2">
-            {thread.last_post_title && (
-              <a
-                href="#"
-                className="block truncate text-[18px] text-[#0BD7FD] hover:underline"
-              >
-                {thread.last_post_title}
-              </a>
-            )}
-            <div className="flex items-center gap-1">
-              {thread.last_post_author && (
-                <p className="mt-1 text-sm text-white">
-                  על-ידי {thread.last_post_author}
-                </p>
+            {/* Last post */}
+            <div className="min-w-0 text-right px-2">
+              {thread.last_post_title && (
+                <a
+                  href="#"
+                  className="block truncate text-[18px] text-[#0BD7FD] hover:underline"
+                >
+                  {thread.last_post_title}
+                </a>
               )}
-              ,
-              {thread.last_post_date && (
-                <p className="text-sm mt-1 text-white">
-                  {formatDate(thread.last_post_date)}
-                </p>
-              )}
+              <div className="flex items-center gap-1">
+                {thread.last_post_author && (
+                  <p className="mt-1 text-sm text-white">
+                    על-ידי {thread.last_post_author}
+                  </p>
+                )}
+                ,
+                {thread.last_post_date && (
+                  <p className="text-sm mt-1 text-white">
+                    {formatDate(thread.last_post_date)}
+                  </p>
+                )}
+              </div>
             </div>
-          </div>
-        </li>
-      ))}
-      <li className="flex h-fit items-center justify-between border-b border-white/15 ">
+          </li>
+        ))}
+      </ul>
+      <div className="flex h-fit items-center justify-between border-b border-white/15 ">
         <Pagination
           total={5000}
           currentPage={currentPage}
           onPageChange={setCurrenpage}
         />
-      </li>
-    </ul>
+      </div>
+    </>
   );
 }
