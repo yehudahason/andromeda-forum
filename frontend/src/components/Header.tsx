@@ -21,23 +21,21 @@ export default function Header() {
     console.log("1. sign out clicked");
 
     try {
-      console.log("2. calling Better Auth");
+      // console.log("2. calling Better Auth");
 
       const result = await authClient.signOut();
 
-      console.log("3. signOut result:", result);
+      // console.log("3. signOut result:", result);
 
       if (result.error) {
         console.error("Sign out failed:", result.error);
         return;
       }
 
-      setSession(null);
       setUser(null);
-
-      console.log("4. signed out");
-
-      window.location.href = "/";
+      setSession(null);
+      setIsLogin(false);
+      // console.log("4. signed out");
     } catch (error) {
       console.error("5. signOut exception:", error);
     }

@@ -43,7 +43,7 @@ export default function Login({ setIsLogin, signUp }: LoginProps) {
   const handleGoogleLogin = async () => {
     await authClient.signIn.social({
       provider: "google",
-      callbackURL: "/",
+      callbackURL: "/forum/1",
     });
     setUser(await getMe());
   };
@@ -105,7 +105,7 @@ export default function Login({ setIsLogin, signUp }: LoginProps) {
 
   useEffect(() => {
     if (session) {
-      navigate("/");
+      navigate("/forum/1");
     }
   }, [session, navigate]);
 
