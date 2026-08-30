@@ -6,9 +6,7 @@ export default function NewThread() {
     <div>
       <PostComposer
         mode="thread"
-        onSubmit={(item) =>
-          console.log(item.content, item.files, item.title, item.notify)
-        }
+        onSubmit={(item) => console.log(item.content, item.title, item.notify)}
       />
     </div>
   );
