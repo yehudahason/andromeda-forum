@@ -1,7 +1,11 @@
-import React, { memo, Suspense, useCallback, useEffect, useState } from "react";
-import { EditorContent, useEditor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import CodeBlock from "@tiptap/extension-code-block";
+import React, {
+  useRef,
+  useState,
+  useEffect,
+  useCallback,
+  memo,
+  Suspense,
+} from "react";
 
 // Lazy load heavy emoji picker bundle
 const EmojiPicker = React.lazy(() => import("emoji-picker-react"));
@@ -14,16 +18,10 @@ type PostComposerProps = {
     notify: boolean;
   }) => void;
   submitText?: string;
-  initialContent?: string;
 };
 
 type BlockMode = "normal" | "h2" | "h3";
 type ListMode = "none" | "bullet" | "numbered";
-
-const CODE_CLASS =
-  "bg-[#222] text-[#09bcdc] text-left [direction:ltr] " +
-  "[unicode-bidi:plaintext] block w-full max-w-full overflow-x-auto " +
-  "whitespace-pre align-middle px-2 py-0.5 rounded font-mono text-[14px]";
 
 const EDITOR_CLASSES = `
   min-h-[225px]
@@ -54,42 +52,34 @@ const EDITOR_CLASSES = `
   [&_a]:text-cyan-300
   [&_a]:underline
 
-  [&_pre]:m-0
-  [&_pre]:my-2
-  [&_pre]:max-w-full
-  [&_pre]:overflow-x-auto
-  [&_pre]:rounded
-  [&_pre]:bg-[#222]
-  [&_pre]:p-0
-
-  [&_pre_code]:block
-  [&_pre_code]:w-full
-  [&_pre_code]:max-w-full
-  [&_pre_code]:overflow-x-auto
-  [&_pre_code]:whitespace-pre
-  [&_pre_code]:rounded
-  [&_pre_code]:bg-[#222]
-  [&_pre_code]:px-2
-  [&_pre_code]:py-0.5
-  [&_pre_code]:font-mono
-  [&_pre_code]:text-[14px]
-  [&_pre_code]:text-[#09bcdc]
-  [&_pre_code]:text-left
-  [&_pre_code]:[direction:ltr]
-  [&_pre_code]:[unicode-bidi:plaintext]
+  [&_code]:bg-[#222]
+  [&_code]:text-[#09bcdc]
+  [&_code]:text-left
+  [&_code]:[direction:ltr]
+  [&_code]:[unicode-bidi:plaintext]
+  [&_code]:inline-block
+  [&_code]:max-w-full
+  [&_code]:overflow-x-auto
+  [&_code]:whitespace-pre
+  [&_code]:align-middle
+  [&_code]:px-2
+  [&_code]:py-0.5
+  [&_code]:rounded
+  [&_code]:font-mono
+  [&_code]:text-[14px]
 `;
 
 export default function PostComposer({
   mode,
   onSubmit,
   submitText,
-  initialContent = "",
 }: PostComposerProps) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [title, setTitle] = useState("");
-  const [content, setContent] = useState(initialContent);
+  const [content, setContent] = useState("");
   const [notify, setNotify] = useState(false);
   const [preview, setPreview] = useState(false);
+  const [isCodeActive, setIsCodeActive] = useState(false);
 
   // Active toolbar states
   const [bold, setBold] = useState(false);
@@ -97,7 +87,6 @@ export default function PostComposer({
   const [underline, setUnderline] = useState(false);
   const [blockMode, setBlockMode] = useState<BlockMode>("normal");
   const [listMode, setListMode] = useState<ListMode>("none");
-  const [isCodeActive, setIsCodeActive] = useState(false);
 
   // Custom Link Modal State
   const [showLinkModal, setShowLinkModal] = useState(false);
@@ -105,258 +94,114 @@ export default function PostComposer({
   const [linkInputText, setLinkInputText] = useState("");
   const [hasSelection, setHasSelection] = useState(false);
 
+  const editorRef = useRef<HTMLDivElement>(null);
+  const savedRangeRef = useRef<Range | null>(null);
+
   const isThread = mode === "thread";
 
-  const editor = useEditor({
-    extensions: [
-      StarterKit.configure({
-        // We configure CodeBlock separately below so its HTML attributes
-        // and keyboard behavior are explicit.
-        codeBlock: false,
-      }),
-      CodeBlock.configure({
-        HTMLAttributes: {
-          class: CODE_CLASS,
-          dir: "ltr",
-        },
-        exitOnTripleEnter: true,
-        exitOnArrowDown: true,
-        exitOnArrowUp: true,
-        enableTabIndentation: true,
-        tabSize: 2,
-      }),
-    ],
-    content: initialContent,
-    shouldRerenderOnTransaction: false,
-    onUpdate: ({ editor: currentEditor }) => {
-      setContent(currentEditor.getHTML());
-    },
-    onSelectionUpdate: ({ editor: currentEditor }) => {
-      setBold(currentEditor.isActive("bold"));
-      setItalic(currentEditor.isActive("italic"));
-      setUnderline(currentEditor.isActive("underline"));
+  const updateToolbarStates = useCallback(() => {
+    setBold(document.queryCommandState("bold"));
+    setItalic(document.queryCommandState("italic"));
+    setUnderline(document.queryCommandState("underline"));
 
-      if (currentEditor.isActive("heading", { level: 2 })) {
-        setBlockMode("h2");
-      } else if (currentEditor.isActive("heading", { level: 3 })) {
-        setBlockMode("h3");
-      } else {
-        setBlockMode("normal");
-      }
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
 
-      if (currentEditor.isActive("bulletList")) {
-        setListMode("bullet");
-      } else if (currentEditor.isActive("orderedList")) {
-        setListMode("numbered");
-      } else {
-        setListMode("none");
-      }
+    const range = selection.getRangeAt(0);
+    const currentElement =
+      range.commonAncestorContainer.nodeType === Node.ELEMENT_NODE
+        ? (range.commonAncestorContainer as HTMLElement)
+        : range.commonAncestorContainer.parentElement;
 
-      setIsCodeActive(currentEditor.isActive("codeBlock"));
-    },
-  });
+    if (!currentElement) return;
 
-  // If the component is ever given DB content through state before the
-  // editor exists, this effect keeps Tiptap in sync without resetting the
-  // user's selection on every keystroke.
-  useEffect(() => {
-    if (!editor) return;
+    const h2 = currentElement.closest("h2");
+    const h3 = currentElement.closest("h3");
+    const ul = currentElement.closest("ul");
+    const ol = currentElement.closest("ol");
+    const codeNode = currentElement.closest("code");
 
-    const currentHtml = editor.getHTML();
+    if (h2) setBlockMode("h2");
+    else if (h3) setBlockMode("h3");
+    else setBlockMode("normal");
 
-    async function init() {
-      if (initialContent !== currentHtml) {
-        editor.commands.setContent(initialContent, {
-          emitUpdate: false,
-          parseOptions: {
-            preserveWhitespace: "full",
-          },
-        });
-        setContent(initialContent);
-      }
+    if (ul) setListMode("bullet");
+    else if (ol) setListMode("numbered");
+    else setListMode("none");
+
+    setIsCodeActive(Boolean(codeNode && editorRef.current?.contains(codeNode)));
+  }, []);
+
+  const saveSelection = useCallback(() => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+
+    const range = selection.getRangeAt(0);
+    if (editorRef.current?.contains(range.commonAncestorContainer)) {
+      savedRangeRef.current = range.cloneRange();
     }
-    init();
-  }, [editor, initialContent]);
+
+    updateToolbarStates();
+  }, [updateToolbarStates]);
+
+  const restoreSelection = useCallback((): Range | null => {
+    const editor = editorRef.current;
+    if (!editor) return null;
+
+    editor.focus();
+    const selection = window.getSelection();
+    if (!selection) return null;
+
+    if (savedRangeRef.current) {
+      selection.removeAllRanges();
+      selection.addRange(savedRangeRef.current);
+      return savedRangeRef.current;
+    }
+
+    return null;
+  }, []);
 
   const syncContentState = useCallback(() => {
-    if (!editor) return;
-    setContent(editor.getHTML());
-  }, [editor]);
-
-  const updateToolbarStates = useCallback(() => {
-    if (!editor) return;
-
-    setBold(editor.isActive("bold"));
-    setItalic(editor.isActive("italic"));
-    setUnderline(editor.isActive("underline"));
-
-    if (editor.isActive("heading", { level: 2 })) {
-      setBlockMode("h2");
-    } else if (editor.isActive("heading", { level: 3 })) {
-      setBlockMode("h3");
-    } else {
-      setBlockMode("normal");
+    if (editorRef.current) {
+      setContent(editorRef.current.innerHTML);
     }
-
-    if (editor.isActive("bulletList")) {
-      setListMode("bullet");
-    } else if (editor.isActive("orderedList")) {
-      setListMode("numbered");
-    } else {
-      setListMode("none");
-    }
-
-    setIsCodeActive(editor.isActive("codeBlock"));
-  }, [editor]);
+  }, []);
 
   const executeCommand = useCallback(
-    (command: () => boolean) => {
-      if (!editor || preview) return;
-
-      editor.chain().focus();
-      command();
+    (command: string, value: string | undefined = undefined) => {
+      editorRef.current?.focus();
+      restoreSelection();
+      document.execCommand(command, false, value);
       syncContentState();
       updateToolbarStates();
     },
-    [editor, preview, syncContentState, updateToolbarStates],
+    [restoreSelection, syncContentState, updateToolbarStates],
   );
 
-  const insertEmoji = useCallback(
-    (emoji: string) => {
-      if (!editor || preview) return;
+  const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
 
-      editor.chain().focus().insertContent(emoji).run();
-      syncContentState();
-      updateToolbarStates();
-    },
-    [editor, preview, syncContentState, updateToolbarStates],
-  );
+    const range = selection.getRangeAt(0);
+    const container =
+      range.commonAncestorContainer.nodeType === Node.TEXT_NODE
+        ? range.commonAncestorContainer.parentElement
+        : (range.commonAncestorContainer as HTMLElement);
 
-  const toggleCode = useCallback(() => {
-    if (!editor || preview) return;
+    const codeNode = container?.closest("code");
 
-    editor.chain().focus().toggleCodeBlock().run();
-    syncContentState();
-    updateToolbarStates();
-  }, [editor, preview, syncContentState, updateToolbarStates]);
-
-  const clearFormatting = useCallback(() => {
-    if (!editor || preview) return;
-
-    editor.chain().focus().unsetAllMarks().clearNodes().run();
-
-    syncContentState();
-    updateToolbarStates();
-  }, [editor, preview, syncContentState, updateToolbarStates]);
-
-  const toggleHeading = useCallback(
-    (heading: "h2" | "h3") => {
-      if (!editor || preview) return;
-
-      const level = heading === "h2" ? 2 : 3;
-
-      editor.chain().focus().toggleHeading({ level }).run();
-
-      syncContentState();
-      updateToolbarStates();
-    },
-    [editor, preview, syncContentState, updateToolbarStates],
-  );
-
-  const toggleList = useCallback(
-    (list: "bullet" | "numbered") => {
-      if (!editor || preview) return;
-
-      const chain = editor.chain().focus();
-
-      if (list === "bullet") {
-        chain.toggleBulletList().run();
-      } else {
-        chain.toggleOrderedList().run();
-      }
-
-      syncContentState();
-      updateToolbarStates();
-    },
-    [editor, preview, syncContentState, updateToolbarStates],
-  );
-
-  const openLinkModal = useCallback(() => {
-    if (!editor || preview) return;
-
-    const { from, to } = editor.state.selection;
-    const selectedText = editor.state.doc.textBetween(from, to, " ");
-
-    setHasSelection(from !== to);
-    setLinkInputUrl("");
-    setLinkInputText(selectedText);
-    setShowLinkModal(true);
-  }, [editor, preview]);
-
-  const handleLinkSubmit = useCallback(
-    (e: React.FormEvent) => {
+    if (codeNode && editorRef.current?.contains(codeNode)) {
       e.preventDefault();
-
-      if (!editor || preview) return;
-
-      const trimmedUrl = linkInputUrl.trim();
-      if (!trimmedUrl) return;
-
-      if (hasSelection) {
-        editor
-          .chain()
-          .focus()
-          .setLink({
-            href: trimmedUrl,
-            target: "_blank",
-            rel: "noopener noreferrer",
-          })
-          .run();
-      } else {
-        const displayText = linkInputText.trim() || trimmedUrl;
-
-        editor
-          .chain()
-          .focus()
-          .insertContent({
-            type: "text",
-            text: displayText,
-            marks: [
-              {
-                type: "link",
-                attrs: {
-                  href: trimmedUrl,
-                  target: "_blank",
-                  rel: "noopener noreferrer",
-                },
-              },
-            ],
-          })
-          .insertContent(" ")
-          .run();
-      }
-
+      const text = e.clipboardData.getData("text/plain");
+      document.execCommand("insertText", false, text);
       syncContentState();
       updateToolbarStates();
-      setShowLinkModal(false);
-    },
-    [
-      editor,
-      preview,
-      linkInputUrl,
-      linkInputText,
-      hasSelection,
-      syncContentState,
-      updateToolbarStates,
-    ],
-  );
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!editor) return;
-
-    const currentHtml = editor.getHTML();
+    const currentHtml = editorRef.current?.innerHTML ?? content;
 
     onSubmit({
       title: isThread ? title : undefined,
@@ -365,24 +210,203 @@ export default function PostComposer({
     });
   };
 
-  const togglePreview = () => {
-    if (!editor) return;
+  const insertEmoji = (emoji: string) => {
+    executeCommand("insertText", emoji);
+  };
 
-    if (!preview) {
-      setContent(editor.getHTML());
-      setShowEmojiPicker(false);
+  const insertCode = () => {
+    const editor = editorRef.current;
+    if (!editor || preview) return;
+
+    const range = restoreSelection();
+    if (!range) return;
+
+    const selection = window.getSelection();
+    if (!selection) return;
+
+    const codeElement = document.createElement("code");
+    codeElement.setAttribute("dir", "ltr");
+    codeElement.style.direction = "ltr";
+    codeElement.style.unicodeBidi = "plaintext";
+    codeElement.style.textAlign = "left";
+
+    codeElement.className =
+      "bg-bg text-[#09bcdc] text-left " +
+      "[direction:ltr] [unicode-bidi:plaintext] " +
+      "inline-block w-full overflow-x-auto " +
+      "whitespace-pre align-middle px-2 py-0.5 " +
+      "rounded font-mono text-[14px]";
+
+    if (!range.collapsed) {
+      const selectedContent = range.extractContents();
+      codeElement.appendChild(selectedContent);
+      range.insertNode(codeElement);
+
+      const newRange = document.createRange();
+      newRange.selectNodeContents(codeElement);
+      newRange.collapse(false);
+      selection.removeAllRanges();
+      selection.addRange(newRange);
     } else {
-      editor.commands.setContent(content, {
-        emitUpdate: false,
-        parseOptions: {
-          preserveWhitespace: "full",
-        },
-      });
-      editor.commands.focus();
-      updateToolbarStates();
+      const emptyText = document.createTextNode("\u200B");
+      codeElement.appendChild(emptyText);
+      range.insertNode(codeElement);
+
+      // Focus at the START of the code element
+      const newRange = document.createRange();
+      newRange.setStart(emptyText, 0);
+      newRange.collapse(true);
+
+      selection.removeAllRanges();
+      selection.addRange(newRange);
+    }
+    savedRangeRef.current = selection.getRangeAt(0).cloneRange();
+    setIsCodeActive(true);
+    syncContentState();
+    updateToolbarStates();
+  };
+
+  const focusAtEnd = (editor: HTMLElement) => {
+    editor.focus();
+
+    const range = document.createRange();
+    const selection = window.getSelection();
+
+    range.selectNodeContents(editor);
+    range.collapse(false);
+
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+  };
+
+  const escapeCode = () => {
+    const editor = editorRef.current;
+    if (!editor || preview) return;
+
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+
+    const range = selection.getRangeAt(0);
+
+    const container =
+      range.commonAncestorContainer.nodeType === Node.TEXT_NODE
+        ? range.commonAncestorContainer.parentElement
+        : (range.commonAncestorContainer as HTMLElement);
+
+    const codeElement = container?.closest("code");
+
+    if (!codeElement || !editor.contains(codeElement)) {
+      setIsCodeActive(false);
+      return;
     }
 
-    setPreview((prev) => !prev);
+    // Clean trailing break inside code tag if present
+    if (codeElement.lastChild && codeElement.lastChild.nodeName === "BR") {
+      codeElement.removeChild(codeElement.lastChild);
+    }
+
+    // Create a new line immediately AFTER the code element
+    const newLine = document.createElement("div");
+
+    // Zero-width character gives the div a real text position
+    const caretNode = document.createTextNode("\u200B");
+    newLine.appendChild(caretNode);
+
+    if (codeElement.nextSibling) {
+      codeElement.parentNode?.insertBefore(newLine, codeElement.nextSibling);
+    } else {
+      codeElement.parentNode?.appendChild(newLine);
+    }
+
+    // Put caret at the end of the new line
+    const newRange = document.createRange();
+    newRange.selectNodeContents(newLine);
+    newRange.collapse(false);
+
+    selection.removeAllRanges();
+    selection.addRange(newRange);
+
+    savedRangeRef.current = newRange.cloneRange();
+
+    // Make sure editor remains focused
+    editor.focus();
+
+    // Re-apply the caret after focus
+    selection.removeAllRanges();
+    selection.addRange(newRange);
+
+    setIsCodeActive(false);
+    syncContentState();
+    updateToolbarStates();
+
+    requestAnimationFrame(() => {
+      const editor = editorRef.current;
+      if (editor) {
+        focusAtEnd(editor);
+        savedRangeRef.current =
+          window.getSelection()?.getRangeAt(0).cloneRange() ?? null;
+      }
+    });
+  };
+  const toggleCode = () => {
+    if (isCodeActive) {
+      escapeCode();
+    } else {
+      insertCode();
+    }
+  };
+
+  useEffect(() => {
+    if (!preview && editorRef.current) {
+      editorRef.current.innerHTML = content;
+    }
+  }, [preview, content]);
+
+  const clearFormatting = () => {
+    executeCommand("removeFormat");
+    executeCommand("formatBlock", "<div>");
+    setBlockMode("normal");
+    setListMode("none");
+    setIsCodeActive(false);
+  };
+
+  const toggleHeading = (heading: "h2" | "h3") => {
+    const targetTag = blockMode === heading ? "<div>" : `<${heading}>`;
+    executeCommand("formatBlock", targetTag);
+  };
+
+  const toggleList = (list: "bullet" | "numbered") => {
+    const cmd = list === "bullet" ? "insertUnorderedList" : "insertOrderedList";
+    executeCommand(cmd);
+  };
+
+  const openLinkModal = () => {
+    saveSelection();
+    const selection = window.getSelection();
+    const isTextSelected = Boolean(selection && !selection.isCollapsed);
+
+    setHasSelection(isTextSelected);
+    setLinkInputUrl("");
+    setLinkInputText(isTextSelected ? selection?.toString() || "" : "");
+    setShowLinkModal(true);
+  };
+
+  const handleLinkSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmedUrl = linkInputUrl.trim();
+    if (!trimmedUrl) return;
+
+    if (hasSelection) {
+      executeCommand("createLink", trimmedUrl);
+    } else {
+      const displayText = linkInputText.trim() || trimmedUrl;
+      executeCommand(
+        "insertHTML",
+        `<a class="text-cyan-300 underline" href="${trimmedUrl}" target="_blank" rel="noopener noreferrer">${displayText}</a> `,
+      );
+    }
+
+    setShowLinkModal(false);
   };
 
   return (
@@ -393,7 +417,6 @@ export default function PostComposer({
 
           <div
             className={`w-full max-w-[1280px] rounded-lg min-h-fit bg-[#505050] ${EDITOR_CLASSES}`}
-            dir="rtl"
             dangerouslySetInnerHTML={{
               __html: content,
             }}
@@ -502,10 +525,7 @@ export default function PostComposer({
               <EditorButton
                 onClick={() => {
                   setPreview(false);
-                  executeCommand(
-                    () => editor?.chain().focus().toggleBold().run() ?? false,
-                  );
-                  updateToolbarStates();
+                  executeCommand("bold");
                 }}
                 title="Bold"
                 active={bold}
@@ -517,10 +537,7 @@ export default function PostComposer({
               <EditorButton
                 onClick={() => {
                   setPreview(false);
-                  executeCommand(
-                    () => editor?.chain().focus().toggleItalic().run() ?? false,
-                  );
-                  updateToolbarStates();
+                  executeCommand("italic");
                 }}
                 title="Italic"
                 active={italic}
@@ -532,11 +549,7 @@ export default function PostComposer({
               <EditorButton
                 onClick={() => {
                   setPreview(false);
-                  executeCommand(
-                    () =>
-                      editor?.chain().focus().toggleUnderline().run() ?? false,
-                  );
-                  updateToolbarStates();
+                  executeCommand("underline");
                 }}
                 title="Underline"
                 active={underline}
@@ -575,6 +588,7 @@ export default function PostComposer({
                 <EditorButton
                   onClick={() => {
                     setPreview(false);
+                    saveSelection();
                     setShowEmojiPicker((prev) => !prev);
                   }}
                   title="Emoji"
@@ -586,7 +600,6 @@ export default function PostComposer({
                   <div className="absolute -left-6 sm:left-0 top-full z-50 mt-2">
                     <Suspense fallback={null}>
                       <EmojiPicker
-                        theme="dark"
                         width={340}
                         onEmojiClick={(emojiData) => {
                           insertEmoji(emojiData.emoji);
@@ -600,14 +613,17 @@ export default function PostComposer({
 
               {/* Code toggle */}
               <EditorButton
-                onClick={() => {
-                  setPreview(false);
-                  toggleCode();
-                }}
+                onClick={toggleCode}
                 title={isCodeActive ? "Exit code" : "Code"}
                 active={isCodeActive}
               >
-                <span dir="ltr" className="[direction:ltr] inline-block">
+                <span
+                  dir="ltr"
+                  className="
+                    [direction:ltr]
+                    inline-block
+                  "
+                >
                   {"</>"}
                 </span>
               </EditorButton>
@@ -624,8 +640,17 @@ export default function PostComposer({
               </EditorButton>
             </div>
 
-            {!preview && editor && (
-              <EditorContent editor={editor} className={EDITOR_CLASSES} />
+            {!preview && (
+              <div
+                ref={editorRef}
+                contentEditable
+                suppressContentEditableWarning
+                onPaste={handlePaste}
+                onKeyUp={saveSelection}
+                onMouseUp={saveSelection}
+                onBlur={saveSelection}
+                className={EDITOR_CLASSES}
+              />
             )}
           </div>
         </div>
@@ -702,7 +727,13 @@ export default function PostComposer({
 
           <button
             type="button"
-            onClick={togglePreview}
+            onClick={() => {
+              if (!preview && editorRef.current) {
+                setContent(editorRef.current.innerHTML);
+              }
+              setShowEmojiPicker(false);
+              setPreview((prev) => !prev);
+            }}
             title="Preview"
             className="
               cursor-pointer
@@ -837,7 +868,6 @@ const EditorButton = memo(function EditorButton({
       type="button"
       title={title}
       onMouseDown={(e) => {
-        // Prevent the toolbar button from stealing the editor selection.
         e.preventDefault();
       }}
       onClick={onClick}
