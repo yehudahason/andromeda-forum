@@ -286,9 +286,12 @@ export default function PostComposer({
       return;
     }
 
+    // Clean trailing break inside code tag if present
+    if (codeElement.lastChild && codeElement.lastChild.nodeName === "BR") {
+      codeElement.removeChild(codeElement.lastChild);
+    }
+
     // Create a new line immediately AFTER the code element.
-    // The zero-width space gives the browser a real caret position
-    // outside of <code>, on the following line.
     const newLine = document.createElement("div");
     const caretNode = document.createTextNode("\u200B");
     newLine.appendChild(caretNode);
@@ -299,10 +302,10 @@ export default function PostComposer({
       codeElement.parentNode?.appendChild(newLine);
     }
 
-    // Move the cursor to the new line, outside of <code>.
+    // Move the cursor to the end of the newly created line outside of <code>
     const newRange = document.createRange();
-    newRange.setStart(caretNode, 1);
-    newRange.collapse(true);
+    newRange.selectNodeContents(newLine);
+    newRange.collapse(false);
 
     selection.removeAllRanges();
     selection.addRange(newRange);
@@ -313,6 +316,7 @@ export default function PostComposer({
     syncContentState();
     updateToolbarStates();
   };
+
   const toggleCode = () => {
     if (isCodeActive) {
       escapeCode();
