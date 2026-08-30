@@ -265,15 +265,28 @@ export default function PostComposer({
     updateToolbarStates();
   };
 
+  const focusAtEnd = (editor: HTMLElement) => {
+    editor.focus();
+
+    const range = document.createRange();
+    const selection = window.getSelection();
+
+    range.selectNodeContents(editor);
+    range.collapse(false);
+
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+  };
+
   const escapeCode = () => {
     const editor = editorRef.current;
     if (!editor || preview) return;
 
-    editor.focus();
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) return;
 
     const range = selection.getRangeAt(0);
+
     const container =
       range.commonAncestorContainer.nodeType === Node.TEXT_NODE
         ? range.commonAncestorContainer.parentElement
@@ -291,8 +304,10 @@ export default function PostComposer({
       codeElement.removeChild(codeElement.lastChild);
     }
 
-    // Create a new line immediately AFTER the code element.
+    // Create a new line immediately AFTER the code element
     const newLine = document.createElement("div");
+
+    // Zero-width character gives the div a real text position
     const caretNode = document.createTextNode("\u200B");
     newLine.appendChild(caretNode);
 
@@ -302,7 +317,7 @@ export default function PostComposer({
       codeElement.parentNode?.appendChild(newLine);
     }
 
-    // Move the cursor to the end of the newly created line outside of <code>
+    // Put caret at the end of the new line
     const newRange = document.createRange();
     newRange.selectNodeContents(newLine);
     newRange.collapse(false);
@@ -312,11 +327,26 @@ export default function PostComposer({
 
     savedRangeRef.current = newRange.cloneRange();
 
+    // Make sure editor remains focused
+    editor.focus();
+
+    // Re-apply the caret after focus
+    selection.removeAllRanges();
+    selection.addRange(newRange);
+
     setIsCodeActive(false);
     syncContentState();
     updateToolbarStates();
-  };
 
+    requestAnimationFrame(() => {
+      const editor = editorRef.current;
+      if (editor) {
+        focusAtEnd(editor);
+        savedRangeRef.current =
+          window.getSelection()?.getRangeAt(0).cloneRange() ?? null;
+      }
+    });
+  };
   const toggleCode = () => {
     if (isCodeActive) {
       escapeCode();
