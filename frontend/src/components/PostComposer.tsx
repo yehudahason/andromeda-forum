@@ -1,9 +1,12 @@
 import React, { memo, Suspense, useCallback, useEffect, useState } from "react";
+
+import type { Editor } from "@tiptap/core";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import Underline from "@tiptap/extension-underline";
+import Link from "@tiptap/extension-link";
 import CodeBlock from "@tiptap/extension-code-block";
 
-// Lazy load heavy emoji picker bundle
 const EmojiPicker = React.lazy(() => import("emoji-picker-react"));
 
 type PostComposerProps = {
@@ -28,55 +31,85 @@ const CODE_CLASS =
 const EDITOR_CLASSES = `
   min-h-[225px]
   bg-[#505050]
-  p-[15px]
-  text-right
-  text-[16px]
-  leading-[1.6]
   text-white
   outline-none
   break-words
   [overflow-wrap:anywhere]
 
-  [&_h2]:my-2
-  [&_h2]:text-2xl
-  [&_h2]:font-bold
+  [&_.ProseMirror]:min-h-[225px]
+  [&_.ProseMirror]:bg-[#505050]
+  [&_.ProseMirror]:p-[15px]
+  [&_.ProseMirror]:text-[16px]
+  [&_.ProseMirror]:leading-[1.6]
+  [&_.ProseMirror]:text-white
+  [&_.ProseMirror]:outline-none
+  [&_.ProseMirror]:break-words
+  [&_.ProseMirror]:[overflow-wrap:anywhere]
 
-  [&_h3]:my-2
-  [&_h3]:text-xl
-  [&_h3]:font-bold
+  [&_.ProseMirror_h2]:my-2
+  [&_.ProseMirror_h2]:text-2xl
+  [&_.ProseMirror_h2]:font-bold
 
-  [&_ul]:mr-6
-  [&_ul]:list-disc
+  [&_.ProseMirror_h3]:my-2
+  [&_.ProseMirror_h3]:text-xl
+  [&_.ProseMirror_h3]:font-bold
 
-  [&_ol]:mr-6
-  [&_ol]:list-decimal
+  [&_.ProseMirror_ul]:mr-6
+  [&_.ProseMirror_ul]:list-disc
 
-  [&_a]:text-cyan-300
-  [&_a]:underline
+  [&_.ProseMirror_ol]:mr-6
+  [&_.ProseMirror_ol]:list-decimal
 
-  [&_pre]:m-0
-  [&_pre]:my-2
-  [&_pre]:max-w-full
-  [&_pre]:overflow-x-auto
-  [&_pre]:rounded
-  [&_pre]:bg-[#222]
-  [&_pre]:p-0
+  [&_.ProseMirror_a]:text-cyan-300
+  [&_.ProseMirror_a]:underline
 
-  [&_pre_code]:block
-  [&_pre_code]:w-full
-  [&_pre_code]:max-w-full
-  [&_pre_code]:overflow-x-auto
-  [&_pre_code]:whitespace-pre
-  [&_pre_code]:rounded
-  [&_pre_code]:bg-[#222]
-  [&_pre_code]:px-2
-  [&_pre_code]:py-0.5
-  [&_pre_code]:font-mono
-  [&_pre_code]:text-[14px]
-  [&_pre_code]:text-[#09bcdc]
-  [&_pre_code]:text-left
-  [&_pre_code]:[direction:ltr]
-  [&_pre_code]:[unicode-bidi:plaintext]
+  [&_.ProseMirror_pre]:m-0
+  [&_.ProseMirror_pre]:my-2
+  [&_.ProseMirror_pre]:max-w-full
+  [&_.ProseMirror_pre]:overflow-x-auto
+  [&_.ProseMirror_pre]:rounded
+  [&_.ProseMirror_pre]:bg-[#222]
+  [&_.ProseMirror_pre]:px-2
+  [&_.ProseMirror_pre]:py-0.5
+  [&_.ProseMirror_pre]:text-left
+  [&_.ProseMirror_pre]:[direction:ltr]
+  [&_.ProseMirror_pre]:[unicode-bidi:plaintext]
+
+  [&_.ProseMirror_pre_code]:block
+  [&_.ProseMirror_pre_code]:w-full
+  [&_.ProseMirror_pre_code]:max-w-none
+  [&_.ProseMirror_pre_code]:overflow-visible
+  [&_.ProseMirror_pre_code]:whitespace-pre
+  [&_.ProseMirror_pre_code]:bg-transparent
+  [&_.ProseMirror_pre_code]:p-0
+  [&_.ProseMirror_pre_code]:font-mono
+  [&_.ProseMirror_pre_code]:text-[14px]
+  [&_.ProseMirror_pre_code]:text-[#09bcdc]
+  [&_.ProseMirror_pre_code]:text-left
+  [&_.ProseMirror_pre_code]:[direction:ltr]
+  [&_.ProseMirror_pre_code]:[unicode-bidi:plaintext]
+`;
+
+const FORCE_CODE_LTR_CSS = `
+  .tiptap-custom-editor pre,
+  .tiptap-custom-editor pre code {
+    direction: ltr !important;
+    text-align: left !important;
+    unicode-bidi: plaintext !important;
+    white-space: pre !important;
+  }
+
+  .tiptap-custom-editor .ProseMirror {
+    caret-color: white;
+  }
+
+  .tiptap-custom-editor .ProseMirror p.is-editor-empty:first-child::before {
+    color: #aaa;
+    content: attr(data-placeholder);
+    float: right;
+    pointer-events: none;
+    height: 0;
+  }
 `;
 
 export default function PostComposer({
@@ -87,32 +120,68 @@ export default function PostComposer({
 }: PostComposerProps) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [title, setTitle] = useState("");
-  const [content, setContent] = useState(initialContent);
   const [notify, setNotify] = useState(false);
-  const [preview, setPreview] = useState(false);
-
-  // Active toolbar states
   const [bold, setBold] = useState(false);
   const [italic, setItalic] = useState(false);
   const [underline, setUnderline] = useState(false);
+  const [isLinkActive, setIsLinkActive] = useState(false);
   const [blockMode, setBlockMode] = useState<BlockMode>("normal");
   const [listMode, setListMode] = useState<ListMode>("none");
   const [isCodeActive, setIsCodeActive] = useState(false);
+  const [direction, setDirection] = useState<"rtl" | "ltr">("rtl");
 
-  // Custom Link Modal State
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [linkInputUrl, setLinkInputUrl] = useState("");
   const [linkInputText, setLinkInputText] = useState("");
   const [hasSelection, setHasSelection] = useState(false);
-
+  const [savedLinkSelection, setSavedLinkSelection] = useState<{
+    from: number;
+    to: number;
+  } | null>(null);
+  const baseUrl = import.meta.env.BASE_URL;
   const isThread = mode === "thread";
+
+  const updateToolbarStates = useCallback((currentEditor: Editor) => {
+    if (!currentEditor) return;
+
+    setBold(currentEditor.isActive("bold"));
+    setItalic(currentEditor.isActive("italic"));
+    setUnderline(currentEditor.isActive("underline"));
+    setIsLinkActive(currentEditor.isActive("link"));
+
+    if (currentEditor.isActive("heading", { level: 2 })) {
+      setBlockMode("h2");
+    } else if (currentEditor.isActive("heading", { level: 3 })) {
+      setBlockMode("h3");
+    } else {
+      setBlockMode("normal");
+    }
+
+    if (currentEditor.isActive("bulletList")) {
+      setListMode("bullet");
+    } else if (currentEditor.isActive("orderedList")) {
+      setListMode("numbered");
+    } else {
+      setListMode("none");
+    }
+
+    setIsCodeActive(currentEditor.isActive("codeBlock"));
+  }, []);
 
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        // We configure CodeBlock separately below so its HTML attributes
-        // and keyboard behavior are explicit.
         codeBlock: false,
+      }),
+      Underline,
+      Link.configure({
+        openOnClick: false,
+        autolink: false,
+        linkOnPaste: true,
+        HTMLAttributes: {
+          target: "_blank",
+          rel: "noopener noreferrer",
+        },
       }),
       CodeBlock.configure({
         HTMLAttributes: {
@@ -121,292 +190,186 @@ export default function PostComposer({
         },
         exitOnTripleEnter: true,
         exitOnArrowDown: true,
-        exitOnArrowUp: true,
         enableTabIndentation: true,
         tabSize: 2,
       }),
     ],
     content: initialContent,
-    shouldRerenderOnTransaction: false,
-    onUpdate: ({ editor: currentEditor }) => {
-      setContent(currentEditor.getHTML());
+    editorProps: {
+      attributes: {
+        class: "tiptap",
+        dir: "rtl",
+        "data-placeholder": "Enter text or type '/' for commands",
+      },
     },
     onSelectionUpdate: ({ editor: currentEditor }) => {
-      setBold(currentEditor.isActive("bold"));
-      setItalic(currentEditor.isActive("italic"));
-      setUnderline(currentEditor.isActive("underline"));
-
-      if (currentEditor.isActive("heading", { level: 2 })) {
-        setBlockMode("h2");
-      } else if (currentEditor.isActive("heading", { level: 3 })) {
-        setBlockMode("h3");
-      } else {
-        setBlockMode("normal");
-      }
-
-      if (currentEditor.isActive("bulletList")) {
-        setListMode("bullet");
-      } else if (currentEditor.isActive("orderedList")) {
-        setListMode("numbered");
-      } else {
-        setListMode("none");
-      }
-
-      setIsCodeActive(currentEditor.isActive("codeBlock"));
+      updateToolbarStates(currentEditor);
+    },
+    onTransaction: ({ editor: currentEditor }) => {
+      updateToolbarStates(currentEditor);
     },
   });
 
-  // If the component is ever given DB content through state before the
-  // editor exists, this effect keeps Tiptap in sync without resetting the
-  // user's selection on every keystroke.
   useEffect(() => {
-    if (!editor) return;
-
-    const currentHtml = editor.getHTML();
-
-    async function init() {
-      if (initialContent !== currentHtml) {
-        editor.commands.setContent(initialContent, {
-          emitUpdate: false,
-          parseOptions: {
-            preserveWhitespace: "full",
-          },
-        });
-        setContent(initialContent);
-      }
+    if (editor && initialContent !== editor.getHTML()) {
+      editor.commands.setContent(initialContent, {
+        emitUpdate: false,
+      });
     }
-    init();
   }, [editor, initialContent]);
 
-  const syncContentState = useCallback(() => {
-    if (!editor) return;
-    setContent(editor.getHTML());
-  }, [editor]);
+  const executeStyle = useCallback(
+    (style: "bold" | "italic" | "underline") => {
+      if (!editor) return;
 
-  const updateToolbarStates = useCallback(() => {
-    if (!editor) return;
-
-    setBold(editor.isActive("bold"));
-    setItalic(editor.isActive("italic"));
-    setUnderline(editor.isActive("underline"));
-
-    if (editor.isActive("heading", { level: 2 })) {
-      setBlockMode("h2");
-    } else if (editor.isActive("heading", { level: 3 })) {
-      setBlockMode("h3");
-    } else {
-      setBlockMode("normal");
-    }
-
-    if (editor.isActive("bulletList")) {
-      setListMode("bullet");
-    } else if (editor.isActive("orderedList")) {
-      setListMode("numbered");
-    } else {
-      setListMode("none");
-    }
-
-    setIsCodeActive(editor.isActive("codeBlock"));
-  }, [editor]);
-
-  const executeCommand = useCallback(
-    (command: () => boolean) => {
-      if (!editor || preview) return;
-
-      editor.chain().focus();
-      command();
-      syncContentState();
-      updateToolbarStates();
+      const chain = editor.chain().focus();
+      if (style === "bold") chain.toggleBold().run();
+      if (style === "italic") chain.toggleItalic().run();
+      if (style === "underline") chain.toggleUnderline().run();
     },
-    [editor, preview, syncContentState, updateToolbarStates],
+    [editor],
   );
 
   const insertEmoji = useCallback(
     (emoji: string) => {
-      if (!editor || preview) return;
-
+      if (!editor) return;
       editor.chain().focus().insertContent(emoji).run();
-      syncContentState();
-      updateToolbarStates();
     },
-    [editor, preview, syncContentState, updateToolbarStates],
+    [editor],
   );
-
-  const toggleCode = useCallback(() => {
-    if (!editor || preview) return;
-
-    editor.chain().focus().toggleCodeBlock().run();
-    syncContentState();
-    updateToolbarStates();
-  }, [editor, preview, syncContentState, updateToolbarStates]);
-
-  const clearFormatting = useCallback(() => {
-    if (!editor || preview) return;
-
-    editor.chain().focus().unsetAllMarks().clearNodes().run();
-
-    syncContentState();
-    updateToolbarStates();
-  }, [editor, preview, syncContentState, updateToolbarStates]);
 
   const toggleHeading = useCallback(
     (heading: "h2" | "h3") => {
-      if (!editor || preview) return;
-
+      if (!editor) return;
       const level = heading === "h2" ? 2 : 3;
-
       editor.chain().focus().toggleHeading({ level }).run();
-
-      syncContentState();
-      updateToolbarStates();
     },
-    [editor, preview, syncContentState, updateToolbarStates],
+    [editor],
   );
 
   const toggleList = useCallback(
     (list: "bullet" | "numbered") => {
-      if (!editor || preview) return;
-
-      const chain = editor.chain().focus();
-
+      if (!editor) return;
       if (list === "bullet") {
-        chain.toggleBulletList().run();
+        editor.chain().focus().toggleBulletList().run();
       } else {
-        chain.toggleOrderedList().run();
+        editor.chain().focus().toggleOrderedList().run();
       }
-
-      syncContentState();
-      updateToolbarStates();
     },
-    [editor, preview, syncContentState, updateToolbarStates],
+    [editor],
   );
+
+  const toggleCode = useCallback(() => {
+    if (!editor) return;
+    editor.chain().focus().toggleCodeBlock().run();
+  }, [editor]);
+
+  const clearFormatting = useCallback(() => {
+    if (!editor) return;
+    editor.chain().focus().unsetAllMarks().clearNodes().run();
+  }, [editor]);
 
   const openLinkModal = useCallback(() => {
-    if (!editor || preview) return;
+    if (!editor) return;
 
-    const { from, to } = editor.state.selection;
+    // Save the exact selection before the modal receives focus.
+    const { empty, from, to } = editor.state.selection;
+    const previousUrl = editor.getAttributes("link").href ?? "";
     const selectedText = editor.state.doc.textBetween(from, to, " ");
 
-    setHasSelection(from !== to);
-    setLinkInputUrl("");
+    setSavedLinkSelection({ from, to });
+    setHasSelection(!empty);
+    setLinkInputUrl(previousUrl);
     setLinkInputText(selectedText);
     setShowLinkModal(true);
-  }, [editor, preview]);
+  }, [editor]);
 
-  const handleLinkSubmit = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-
-      if (!editor || preview) return;
-
-      const trimmedUrl = linkInputUrl.trim();
-      if (!trimmedUrl) return;
-
-      if (hasSelection) {
-        editor
-          .chain()
-          .focus()
-          .setLink({
-            href: trimmedUrl,
-            target: "_blank",
-            rel: "noopener noreferrer",
-          })
-          .run();
-      } else {
-        const displayText = linkInputText.trim() || trimmedUrl;
-
-        editor
-          .chain()
-          .focus()
-          .insertContent({
-            type: "text",
-            text: displayText,
-            marks: [
-              {
-                type: "link",
-                attrs: {
-                  href: trimmedUrl,
-                  target: "_blank",
-                  rel: "noopener noreferrer",
-                },
-              },
-            ],
-          })
-          .insertContent(" ")
-          .run();
-      }
-
-      syncContentState();
-      updateToolbarStates();
-      setShowLinkModal(false);
-    },
-    [
-      editor,
-      preview,
-      linkInputUrl,
-      linkInputText,
-      hasSelection,
-      syncContentState,
-      updateToolbarStates,
-    ],
-  );
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleLinkSubmit = useCallback(() => {
     if (!editor) return;
 
-    const currentHtml = editor.getHTML();
+    const trimmedUrl = linkInputUrl.trim();
+    if (!trimmedUrl) return;
 
-    onSubmit({
-      title: isThread ? title : undefined,
-      content: currentHtml,
-      notify,
-    });
-  };
-
-  const togglePreview = () => {
-    if (!editor) return;
-
-    if (!preview) {
-      setContent(editor.getHTML());
-      setShowEmojiPicker(false);
-    } else {
-      editor.commands.setContent(content, {
-        emitUpdate: false,
-        parseOptions: {
-          preserveWhitespace: "full",
-        },
-      });
-      editor.commands.focus();
-      updateToolbarStates();
+    // The URL input has focus now, so restore the selection that existed
+    // when the Link toolbar button was clicked.
+    if (savedLinkSelection) {
+      editor.commands.setTextSelection(savedLinkSelection);
     }
 
-    setPreview((prev) => !prev);
-  };
+    if (hasSelection && savedLinkSelection) {
+      editor
+        .chain()
+        .focus()
+        .setLink({
+          href: trimmedUrl,
+          target: "_blank",
+          rel: "noopener noreferrer",
+        })
+        .run();
+    } else {
+      const displayText = linkInputText.trim() || trimmedUrl;
+
+      editor
+        .chain()
+        .focus()
+        .insertContent({
+          type: "text",
+          text: displayText,
+          marks: [
+            {
+              type: "link",
+              attrs: {
+                href: trimmedUrl,
+                target: "_blank",
+                rel: "noopener noreferrer",
+              },
+            },
+          ],
+        })
+        .insertContent(" ")
+        .run();
+    }
+
+    setShowLinkModal(false);
+    setSavedLinkSelection(null);
+  }, [editor, linkInputUrl, linkInputText, hasSelection, savedLinkSelection]);
+
+  const handleUnlink = useCallback(() => {
+    if (!editor) return;
+
+    editor.chain().focus().unsetLink().run();
+    setShowLinkModal(false);
+  }, [editor]);
+
+  const toggleDirection = useCallback(() => {
+    if (!editor) return;
+
+    setDirection((current) => (current === "rtl" ? "ltr" : "rtl"));
+  }, [editor]);
+
+  const handleSubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!editor) return;
+
+      onSubmit({
+        title: isThread ? title : undefined,
+        content: editor.getHTML(),
+        notify,
+      });
+    },
+    [editor, isThread, notify, onSubmit, title],
+  );
 
   return (
-    <div className="flex mt-4 w-full max-w-[1280px] mx-auto flex-col gap-4 justify-between items-center">
-      {preview && (
-        <>
-          <p className="text-white">תצוגה מקדימה</p>
-
-          <div
-            className={`w-full max-w-[1280px] rounded-lg min-h-fit bg-[#505050] ${EDITOR_CLASSES}`}
-            dir="rtl"
-            dangerouslySetInnerHTML={{
-              __html: content,
-            }}
-          />
-        </>
-      )}
+    <>
+      <style>{FORCE_CODE_LTR_CSS}</style>
 
       <form
         onSubmit={handleSubmit}
         dir="rtl"
-        className="mx-auto mt-8 w-full max-w-[1280px] rounded-lg bg-[#505050] px-4 py-8 text-white"
+        className="mx-auto mt-8 w-full max-w-[1280px] rounded-lg bg-[#505050] sm:px-4 px-1 py-8 text-white"
       >
-        {/* Title */}
         {isThread && (
           <div className="mb-[22px]">
             <label htmlFor="post-title" className="mb-2 block text-[15px]">
@@ -420,228 +383,199 @@ export default function PostComposer({
               onChange={(e) => setTitle(e.target.value)}
               required
               className="
-                box-border
-                h-[60px]
-                w-full
-                rounded-[5px]
-                border
-                border-[#888]
-                bg-[#505050]
-                px-2.5
-                py-2
-                text-[17px]
-                text-white
-                outline-none
-                focus:border-[#aaa]
-              "
+                  box-border
+                  h-[60px]
+                  w-full
+                  rounded-[5px]
+                  border
+                  border-[#888]
+                  bg-[#505050]
+                  px-2.5
+                  py-2
+                  text-[17px]
+                  text-white
+                  outline-none
+                  focus:border-[#aaa]
+                "
             />
           </div>
         )}
 
-        {/* Content */}
         <div className="mb-[22px]">
           <label className="mb-2 block text-[15px]">
             תוכן <span className="mr-1.5 text-red-700">חובה</span>
           </label>
+          <p dir="ltr" className="text-left mb-2">
+            To exit code block enter new line 3 times.
+          </p>
 
-          <div className="rounded-[5px] border border-[#888]">
-            {/* Toolbar */}
+          <div className="relative rounded-[5px] border border-[#888] bg-[#222]">
             <div
               className="
-                flex
-                h-fit
-                items-center
-                flex-wrap
-                relative
-                gap-[3px]
-                border-b
-                border-[#111]
-                bg-gradient-to-b
-                from-[#333]
-                to-[#222]
-                p-3
-              "
+                    flex
+                    h-fit
+                    flex-col
+                    sm:flex-row
+                    items-center
+                    justify-center
+                    gap-2
+                    relative
+                    border-b
+                    border-[#111]
+                    bg-gradient-to-b
+                    from-[#333]
+                    to-[#222]
+                    p-3
+                  "
             >
-              <EditorButton
-                onClick={() => {
-                  clearFormatting();
-                  setPreview(false);
-                }}
-                title="Clear formatting"
-              >
-                Tx
-              </EditorButton>
-
-              <EditorButton
-                onClick={() => {
-                  toggleHeading("h3");
-                  setPreview(false);
-                }}
-                title="Heading 3"
-                active={blockMode === "h3"}
-              >
-                H3
-              </EditorButton>
-
-              <EditorButton
-                onClick={() => {
-                  toggleHeading("h2");
-                  setPreview(false);
-                }}
-                title="Heading 2"
-                active={blockMode === "h2"}
-              >
-                H2
-              </EditorButton>
-
-              <ToolbarSeparator />
-
-              <div className="flex-1" />
-
-              {/* Bold */}
-              <EditorButton
-                onClick={() => {
-                  setPreview(false);
-                  executeCommand(
-                    () => editor?.chain().focus().toggleBold().run() ?? false,
-                  );
-                  updateToolbarStates();
-                }}
-                title="Bold"
-                active={bold}
-              >
-                <b>B</b>
-              </EditorButton>
-
-              {/* Italic */}
-              <EditorButton
-                onClick={() => {
-                  setPreview(false);
-                  executeCommand(
-                    () => editor?.chain().focus().toggleItalic().run() ?? false,
-                  );
-                  updateToolbarStates();
-                }}
-                title="Italic"
-                active={italic}
-              >
-                <i>I</i>
-              </EditorButton>
-
-              {/* Underline */}
-              <EditorButton
-                onClick={() => {
-                  setPreview(false);
-                  executeCommand(
-                    () =>
-                      editor?.chain().focus().toggleUnderline().run() ?? false,
-                  );
-                  updateToolbarStates();
-                }}
-                title="Underline"
-                active={underline}
-              >
-                <u>U</u>
-              </EditorButton>
-
-              {/* Bullet list */}
-              <EditorButton
-                onClick={() => {
-                  setPreview(false);
-                  toggleList("bullet");
-                }}
-                title="Bullet list"
-                active={listMode === "bullet"}
-              >
-                ☷
-              </EditorButton>
-
-              {/* Numbered list */}
-              <EditorButton
-                onClick={() => {
-                  setPreview(false);
-                  toggleList("numbered");
-                }}
-                title="Numbered list"
-                active={listMode === "numbered"}
-              >
-                1.
-              </EditorButton>
-
-              <ToolbarSeparator />
-
-              {/* Emoji */}
-              <div>
+              <div className="flex sm:gap-3 gap-1">
                 <EditorButton
-                  onClick={() => {
-                    setPreview(false);
-                    setShowEmojiPicker((prev) => !prev);
-                  }}
-                  title="Emoji"
+                  onClick={clearFormatting}
+                  title="Clear formatting"
                 >
-                  ☺
+                  Tx
                 </EditorButton>
 
-                {showEmojiPicker && (
-                  <div className="absolute -left-6 sm:left-0 top-full z-50 mt-2">
-                    <Suspense fallback={null}>
-                      <EmojiPicker
-                        theme="dark"
-                        width={340}
-                        onEmojiClick={(emojiData) => {
-                          insertEmoji(emojiData.emoji);
-                          setShowEmojiPicker(false);
-                        }}
-                      />
-                    </Suspense>
-                  </div>
-                )}
+                <EditorButton
+                  onClick={() => toggleHeading("h3")}
+                  title="Heading 3"
+                  active={blockMode === "h3"}
+                >
+                  H3
+                </EditorButton>
+
+                <EditorButton
+                  onClick={() => toggleHeading("h2")}
+                  title="Heading 2"
+                  active={blockMode === "h2"}
+                >
+                  H2
+                </EditorButton>
+
+                <ToolbarSeparator />
+
+                <div className="flex-1" />
+
+                <EditorButton
+                  onClick={toggleDirection}
+                  title={
+                    direction === "rtl" ? "Switch to LTR" : "Switch to RTL"
+                  }
+                >
+                  <span dir="ltr">
+                    {direction === "rtl" ? "RTL → LTR" : "LTR → RTL"}
+                  </span>
+                </EditorButton>
+
+                <EditorButton
+                  onClick={() => executeStyle("bold")}
+                  title="Bold"
+                  active={bold}
+                >
+                  <b>B</b>
+                </EditorButton>
               </div>
+              <div className="flex sm:gap-3 gap-1">
+                <EditorButton
+                  onClick={() => executeStyle("italic")}
+                  title="Italic"
+                  active={italic}
+                >
+                  <i>I</i>
+                </EditorButton>
 
-              {/* Code toggle */}
-              <EditorButton
-                onClick={() => {
-                  setPreview(false);
-                  toggleCode();
-                }}
-                title={isCodeActive ? "Exit code" : "Code"}
-                active={isCodeActive}
-              >
-                <span dir="ltr" className="[direction:ltr] inline-block">
-                  {"</>"}
-                </span>
-              </EditorButton>
+                <EditorButton
+                  onClick={() => executeStyle("underline")}
+                  title="Underline"
+                  active={underline}
+                >
+                  <u>U</u>
+                </EditorButton>
 
-              {/* Link */}
-              <EditorButton
-                onClick={() => {
-                  setPreview(false);
-                  openLinkModal();
-                }}
-                title="Link"
-              >
-                🔗
-              </EditorButton>
+                <EditorButton
+                  onClick={() => toggleList("bullet")}
+                  title="Bullet list"
+                  active={listMode === "bullet"}
+                >
+                  ☷
+                </EditorButton>
+
+                <EditorButton
+                  onClick={() => toggleList("numbered")}
+                  title="Numbered list"
+                  active={listMode === "numbered"}
+                >
+                  1.
+                </EditorButton>
+
+                <ToolbarSeparator />
+
+                <div>
+                  <EditorButton
+                    onClick={() => setShowEmojiPicker((prev) => !prev)}
+                    title="Emoji"
+                  >
+                    <img className="h-6" src={`${baseUrl}mood.png`} alt="" />
+                  </EditorButton>
+
+                  {showEmojiPicker && (
+                    <div className="absolute sm:left-16 left-0 top-[120%] z-50 mt-2">
+                      <Suspense fallback={null}>
+                        <EmojiPicker
+                          width={340}
+                          onEmojiClick={(emojiData) => {
+                            insertEmoji(emojiData.emoji);
+                            setShowEmojiPicker(false);
+                          }}
+                        />
+                      </Suspense>
+                    </div>
+                  )}
+                </div>
+
+                <EditorButton
+                  onClick={toggleCode}
+                  title={isCodeActive ? "Exit code" : "Code"}
+                  active={isCodeActive}
+                >
+                  <span dir="ltr" className="[direction:ltr] inline-block">
+                    {"</>"}
+                  </span>
+                </EditorButton>
+
+                <EditorButton
+                  onClick={openLinkModal}
+                  title="Link"
+                  active={isLinkActive}
+                >
+                  🔗
+                </EditorButton>
+              </div>
             </div>
 
-            {!preview && editor && (
+            <div
+              style={{ display: "block" }}
+              dir={direction}
+              className={`tiptap-custom-editor ${
+                direction === "rtl" ? "text-right" : "text-left"
+              }`}
+            >
               <EditorContent editor={editor} className={EDITOR_CLASSES} />
-            )}
+            </div>
           </div>
         </div>
 
-        {/* Notification */}
         <div
           className="
-            flex
-            min-h-[65px]
-            items-center
-            justify-start
-            gap-2.5
-            border-b
-            border-[#666]
-            px-2.5
-          "
+              flex
+              min-h-[65px]
+              items-center
+              justify-start
+              gap-2.5
+              border-b
+              border-[#666]
+              px-2.5
+            "
         >
           <label className="relative inline-block h-[22px] w-[42px]">
             <input
@@ -653,75 +587,53 @@ export default function PostComposer({
 
             <span
               className="
-                absolute
-                inset-0
-                cursor-pointer
-                rounded-full
-                bg-[#777]
-                transition
-              "
+                  absolute
+                  inset-0
+                  cursor-pointer
+                  rounded-full
+                  bg-[#777]
+                  transition
+                "
             />
 
             <span
               className="
-                absolute
-                left-[2px]
-                top-[2px]
-                h-[18px]
-                w-[18px]
-                rounded-full
-                bg-white
-                transition
-                peer-checked:translate-x-[20px]
-              "
+                  absolute
+                  left-[2px]
+                  top-[2px]
+                  h-[18px]
+                  w-[18px]
+                  rounded-full
+                  bg-white
+                  transition
+                  peer-checked:translate-x-[20px]
+                "
             />
           </label>
 
           <span>שלח התראה על תגובות חדשות</span>
         </div>
 
-        {/* Submit */}
         <div className="flex justify-center gap-3 py-[22px]">
           <button
             type="submit"
             className="
-              cursor-pointer
-              rounded-[5px]
-              border-0
-              bg-[#09bcdc]
-              px-[25px]
-              py-[14px]
-              text-[16px]
-              text-[#111]
-              transition
-              hover:bg-[#19c8e5]
-            "
+                cursor-pointer
+                rounded-[5px]
+                border-0
+                bg-[#09bcdc]
+                px-[25px]
+                py-[14px]
+                text-[16px]
+                text-[#111]
+                transition
+                hover:bg-[#19c8e5]
+              "
           >
             {submitText ?? (isThread ? "פרסם נושא" : "שלח תגובה")}
           </button>
-
-          <button
-            type="button"
-            onClick={togglePreview}
-            title="Preview"
-            className="
-              cursor-pointer
-              rounded-[5px]
-              border-0
-              bg-[#333]
-              px-[20px]
-              py-[14px]
-              text-[16px]
-              text-white
-              transition
-              hover:bg-[#444]
-            "
-          >
-            {preview ? "ערוך" : "תצוגה מקדימה"}
-          </button>
         </div>
 
-        {/* Custom Link Modal Overlay */}
         {showLinkModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
             <div className="w-full max-w-md rounded-lg border border-[#666] bg-[#333] p-6 text-white shadow-xl">
@@ -733,23 +645,24 @@ export default function PostComposer({
                 </label>
 
                 <input
-                  type="text"
+                  type="url"
                   placeholder="https://example.com"
                   value={linkInputUrl}
                   onChange={(e) => setLinkInputUrl(e.target.value)}
+                  required
                   autoFocus
                   className="
-                    w-full
-                    rounded
-                    border
-                    border-[#666]
-                    bg-[#222]
-                    p-2
-                    text-sm
-                    text-white
-                    outline-none
-                    focus:border-[#09bcdc]
-                  "
+                      w-full
+                      rounded
+                      border
+                      border-[#666]
+                      bg-[#222]
+                      p-2
+                      text-sm
+                      text-white
+                      outline-none
+                      focus:border-[#09bcdc]
+                    "
                 />
               </div>
 
@@ -765,59 +678,80 @@ export default function PostComposer({
                     value={linkInputText}
                     onChange={(e) => setLinkInputText(e.target.value)}
                     className="
-                      w-full
-                      rounded
-                      border
-                      border-[#666]
-                      bg-[#222]
-                      p-2
-                      text-sm
-                      text-white
-                      outline-none
-                      focus:border-[#09bcdc]
-                    "
+                        w-full
+                        rounded
+                        border
+                        border-[#666]
+                        bg-[#222]
+                        p-2
+                        text-sm
+                        text-white
+                        outline-none
+                        focus:border-[#09bcdc]
+                      "
                   />
                 </div>
               )}
 
-              <div className="flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowLinkModal(false)}
-                  className="
-                    rounded
-                    bg-[#505050]
-                    px-4
-                    py-2
-                    text-sm
-                    hover:bg-[#606060]
-                  "
-                >
-                  ביטול
-                </button>
+              <div className="flex justify-between items-center gap-3">
+                {isLinkActive ? (
+                  <button
+                    type="button"
+                    onClick={handleUnlink}
+                    className="
+                        rounded
+                        bg-red-600/80
+                        px-3
+                        py-2
+                        text-sm
+                        hover:bg-red-600
+                      "
+                  >
+                    הסר קישור
+                  </button>
+                ) : (
+                  <div />
+                )}
 
-                <button
-                  type="button"
-                  onClick={handleLinkSubmit}
-                  className="
-                    rounded
-                    bg-[#09bcdc]
-                    px-4
-                    py-2
-                    text-sm
-                    font-bold
-                    text-[#111]
-                    hover:bg-[#19c8e5]
-                  "
-                >
-                  אישור
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowLinkModal(false)}
+                    className="
+                        rounded
+                        bg-[#505050]
+                        px-4
+                        py-2
+                        text-sm
+                        hover:bg-[#606060]
+                      "
+                  >
+                    ביטול
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleLinkSubmit}
+                    className="
+                        rounded
+                        bg-[#09bcdc]
+                        px-4
+                        py-2
+                        text-sm
+                        font-bold
+                        text-[#111]
+                        hover:bg-[#19c8e5]
+                      "
+                  >
+                    אישור
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         )}
       </form>
-    </div>
+    </>
   );
 }
 
@@ -837,7 +771,6 @@ const EditorButton = memo(function EditorButton({
       type="button"
       title={title}
       onMouseDown={(e) => {
-        // Prevent the toolbar button from stealing the editor selection.
         e.preventDefault();
       }}
       onClick={onClick}
@@ -851,8 +784,9 @@ const EditorButton = memo(function EditorButton({
         rounded-[3px]
         border-0
         px-1
-        text-[15px]
+        
         transition
+        text-[16px]
         ${
           active
             ? "bg-[#666] text-white"
