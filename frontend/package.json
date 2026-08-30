@@ -13,6 +13,7 @@
   "dependencies": {
     "@neondatabase/neon-js": "^0.7.0-beta",
     "@tailwindcss/vite": "^4.3.3",
+    "emoji-picker-react": "^4.19.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.2",
