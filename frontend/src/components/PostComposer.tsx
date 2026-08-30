@@ -188,7 +188,7 @@ export default function PostComposer({
     const editor = editorRef.current;
 
     if (!editor) return;
-
+    if (preview) return;
     const range = restoreSelection();
 
     if (!range) return;
@@ -259,6 +259,7 @@ export default function PostComposer({
     const editor = editorRef.current;
 
     if (!editor) return;
+    if (preview) return;
 
     editor.focus();
 
@@ -287,15 +288,25 @@ export default function PostComposer({
     }
 
     const newLine = document.createElement("div");
-
     newLine.appendChild(document.createElement("br"));
 
     codeElement.parentNode?.insertBefore(newLine, codeElement.nextSibling);
 
+    /*
+     * Move the cursor to the last line of the editor
+     * after closing the <code> toggle.
+     */
+    const lastChild = editor.lastElementChild;
+
     const newRange = document.createRange();
 
-    newRange.setStart(newLine, 0);
-    newRange.collapse(true);
+    if (lastChild) {
+      newRange.selectNodeContents(lastChild);
+      newRange.collapse(false);
+    } else {
+      newRange.selectNodeContents(editor);
+      newRange.collapse(false);
+    }
 
     selection.removeAllRanges();
     selection.addRange(newRange);
@@ -307,7 +318,6 @@ export default function PostComposer({
     handleContentInput();
     updateToolbarStates();
   };
-
   const toggleCode = () => {
     if (isCodeActive) {
       escapeCode();
@@ -627,7 +637,6 @@ export default function PostComposer({
               {/* Code toggle */}
               <EditorButton
                 onClick={() => {
-                  setPreview(false);
                   toggleCode();
                 }}
                 title={isCodeActive ? "Exit code" : "Code"}
@@ -656,10 +665,16 @@ export default function PostComposer({
               </EditorButton>
             </div>
 
-            {/* Editor */}
-            {preview ? (
-              <div
-                className="
+            <div
+              ref={editorRef}
+              contentEditable
+              suppressContentEditableWarning
+              onInput={handleContentInput}
+              onPaste={handlePaste}
+              onKeyUp={saveSelection}
+              onMouseUp={saveSelection}
+              onBlur={saveSelection}
+              className="
                   min-h-[225px]
                   bg-[#505050]
                   p-[15px]
@@ -704,67 +719,7 @@ export default function PostComposer({
                   [&_code]:font-mono
                   [&_code]:text-[14px]
                 "
-                dangerouslySetInnerHTML={{
-                  __html: content,
-                }}
-              />
-            ) : (
-              <div
-                ref={editorRef}
-                contentEditable
-                suppressContentEditableWarning
-                onInput={handleContentInput}
-                onPaste={handlePaste}
-                onKeyUp={saveSelection}
-                onMouseUp={saveSelection}
-                onBlur={saveSelection}
-                className="
-                  min-h-[225px]
-                  bg-[#505050]
-                  p-[15px]
-                  text-right
-                  text-[16px]
-                  leading-[1.6]
-                  text-white
-                  outline-none
-                  break-words
-                  [overflow-wrap:anywhere]
-
-                  [&_h2]:my-2
-                  [&_h2]:text-2xl
-                  [&_h2]:font-bold
-
-                  [&_h3]:my-2
-                  [&_h3]:text-xl
-                  [&_h3]:font-bold
-
-                  [&_ul]:mr-6
-                  [&_ul]:list-disc
-
-                  [&_ol]:mr-6
-                  [&_ol]:list-decimal
-
-                  [&_a]:text-cyan-300
-                  [&_a]:underline
-
-                  [&_code]:bg-[#222]
-                  [&_code]:text-[#09bcdc]
-                  [&_code]:text-left
-                  [&_code]:[direction:ltr]
-                  [&_code]:[unicode-bidi:plaintext]
-                  [&_code]:inline-block
-                  [&_code]:max-w-full
-                  [&_code]:overflow-x-auto
-                  [&_code]:whitespace-pre
-                  [&_code]:align-middle
-                  [&_code]:px-2
-                  [&_code]:py-0.5
-                  [&_code]:rounded
-                  [&_code]:font-mono
-                  [&_code]:text-[14px]
-                "
-              />
-            )}
+            />
           </div>
         </div>
 
@@ -846,6 +801,7 @@ export default function PostComposer({
               }
 
               setShowEmojiPicker(false);
+
               setPreview((prev) => !prev);
             }}
             title="Preview"
