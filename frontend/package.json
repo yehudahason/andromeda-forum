@@ -13,6 +13,10 @@
   "dependencies": {
     "@neondatabase/neon-js": "^0.7.0-beta",
     "@tailwindcss/vite": "^4.3.3",
+    "@tiptap/extension-underline": "^3.30.5",
+    "@tiptap/pm": "^3.30.5",
+    "@tiptap/react": "^3.30.5",
+    "@tiptap/starter-kit": "^3.30.5",
     "emoji-picker-react": "^4.19.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",

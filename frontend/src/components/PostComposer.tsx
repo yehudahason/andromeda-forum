@@ -1,5 +1,8 @@
-import { useRef, useState, useEffect } from "react";
+import { useState } from "react";
 import EmojiPicker from "emoji-picker-react";
+import { EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Underline from "@tiptap/extension-underline";
 
 type PostComposerProps = {
   mode: "thread" | "reply";
@@ -11,9 +14,6 @@ type PostComposerProps = {
   submitText?: string;
 };
 
-type BlockMode = "normal" | "h2" | "h3";
-type ListMode = "none" | "bullet" | "numbered";
-
 export default function PostComposer({
   mode,
   onSubmit,
@@ -24,376 +24,284 @@ export default function PostComposer({
   const [content, setContent] = useState("");
   const [notify, setNotify] = useState(false);
   const [preview, setPreview] = useState(false);
-  const [isCodeActive, setIsCodeActive] = useState(false);
 
-  // Active toolbar states
-  const [bold, setBold] = useState(false);
-  const [italic, setItalic] = useState(false);
-  const [underline, setUnderline] = useState(false);
-  const [blockMode, setBlockMode] = useState<BlockMode>("normal");
-  const [listMode, setListMode] = useState<ListMode>("none");
-
-  // Custom Link Modal State
+  // Link modal
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [linkInputUrl, setLinkInputUrl] = useState("");
   const [linkInputText, setLinkInputText] = useState("");
   const [hasSelection, setHasSelection] = useState(false);
 
-  const editorRef = useRef<HTMLDivElement>(null);
-  const savedRangeRef = useRef<Range | null>(null);
-
   const isThread = mode === "thread";
 
-  const updateToolbarStates = () => {
-    setBold(document.queryCommandState("bold"));
-    setItalic(document.queryCommandState("italic"));
-    setUnderline(document.queryCommandState("underline"));
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        heading: {
+          levels: [2, 3],
+        },
 
-    const selection = window.getSelection();
+        code: {
+          HTMLAttributes: {
+            dir: "ltr",
+            class:
+              "bg-[#222] text-[#09bcdc] text-left [direction:ltr] [unicode-bidi:isolate] inline-block max-w-full overflow-x-auto whitespace-pre align-middle px-2 py-0.5 rounded font-mono text-[14px]",
+          },
+        },
 
-    if (!selection || selection.rangeCount === 0) return;
+        codeBlock: {
+          HTMLAttributes: {
+            dir: "ltr",
+            class:
+              "bg-[#222] text-[#09bcdc] text-left [direction:ltr] [unicode-bidi:isolate] overflow-x-auto whitespace-pre rounded p-3 font-mono text-[14px]",
+          },
+        },
 
-    const range = selection.getRangeAt(0);
+        link: {
+          openOnClick: false,
+          autolink: true,
+          linkOnPaste: true,
+          HTMLAttributes: {
+            class: "text-cyan-300 underline",
+            target: "_blank",
+            rel: "noopener noreferrer",
+          },
+        },
+      }),
 
-    let currentElement: HTMLElement | null = null;
+      Underline,
+    ],
 
-    if (range.commonAncestorContainer.nodeType === Node.ELEMENT_NODE) {
-      currentElement = range.commonAncestorContainer as HTMLElement;
-    } else {
-      currentElement = range.commonAncestorContainer.parentElement;
-    }
+    content: "",
 
-    if (!currentElement) return;
+    immediatelyRender: false,
 
-    const h2 = currentElement.closest("h2");
-    const h3 = currentElement.closest("h3");
-    const ul = currentElement.closest("ul");
-    const ol = currentElement.closest("ol");
-    const codeNode = currentElement.closest("code");
+    onUpdate: ({ editor }) => {
+      setContent(editor.getHTML());
+    },
+  });
 
-    if (h2) setBlockMode("h2");
-    else if (h3) setBlockMode("h3");
-    else setBlockMode("normal");
-
-    if (ul) setListMode("bullet");
-    else if (ol) setListMode("numbered");
-    else setListMode("none");
-
-    setIsCodeActive(Boolean(codeNode && editorRef.current?.contains(codeNode)));
-  };
-
-  const saveSelection = () => {
-    const selection = window.getSelection();
-
-    if (!selection || selection.rangeCount === 0) return;
-
-    const range = selection.getRangeAt(0);
-
-    if (editorRef.current?.contains(range.commonAncestorContainer)) {
-      savedRangeRef.current = range.cloneRange();
-    }
-
-    updateToolbarStates();
-  };
-
-  const restoreSelection = (): Range | null => {
-    const editor = editorRef.current;
-
-    if (!editor) return null;
-
-    editor.focus();
-
-    const selection = window.getSelection();
-
-    if (!selection) return null;
-
-    if (savedRangeRef.current) {
-      selection.removeAllRanges();
-      selection.addRange(savedRangeRef.current);
-
-      return savedRangeRef.current;
-    }
-
+  if (!editor) {
     return null;
-  };
+  }
 
-  const executeCommand = (
-    command: string,
-    value: string | undefined = undefined,
-  ) => {
-    editorRef.current?.focus();
+  /*
+   * Active toolbar states
+   */
+  const isBold = editor.isActive("bold");
+  const isItalic = editor.isActive("italic");
+  const isUnderline = editor.isActive("underline");
 
-    restoreSelection();
+  const isH2 = editor.isActive("heading", {
+    level: 2,
+  });
 
-    document.execCommand(command, false, value);
+  const isH3 = editor.isActive("heading", {
+    level: 3,
+  });
 
-    handleContentInput();
-    updateToolbarStates();
-  };
+  const isBulletList = editor.isActive("bulletList");
 
-  const handleContentInput = () => {
-    setContent(editorRef.current?.innerHTML ?? "");
+  const isOrderedList = editor.isActive("orderedList");
+
+  const isCode = editor.isActive("code");
+
+  /*
+   * CODE TOGGLE
+   *
+   * OFF -> ON
+   *
+   * normal text
+   *       ↓
+   * <code>text</code>
+   *
+   *
+   * ON -> OFF
+   *
+   * <code>text</code>
+   *       ↓
+   * <code>text</code>
+   * <p></p>
+   *
+   * The important part is splitBlock().
+   * toggleCode() alone only removes the code mark.
+   */
+  const toggleCode = () => {
+    if (!editor.isActive("code")) {
+      editor.chain().focus().toggleCode().run();
+
+      return;
+    }
+
+    editor.chain().focus().unsetCode().splitBlock().run();
   };
 
   /*
-   * Handles Paste event inside <code> tags.
-   * Forces plain text paste while maintaining strict LTR
-   * flow inside RTL context.
+   * Emoji
    */
-  const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
-    const selection = window.getSelection();
+  const insertEmoji = (emoji: string) => {
+    editor.chain().focus().insertContent(emoji).run();
 
-    if (!selection || selection.rangeCount === 0) return;
-
-    const range = selection.getRangeAt(0);
-
-    const container =
-      range.commonAncestorContainer.nodeType === Node.TEXT_NODE
-        ? range.commonAncestorContainer.parentElement
-        : (range.commonAncestorContainer as HTMLElement);
-
-    const codeNode = container?.closest("code");
-
-    if (codeNode && editorRef.current?.contains(codeNode)) {
-      e.preventDefault();
-
-      const text = e.clipboardData.getData("text/plain");
-
-      document.execCommand("insertText", false, text);
-
-      handleContentInput();
-      updateToolbarStates();
-    }
+    setShowEmojiPicker(false);
   };
 
+  /*
+   * Clear all formatting
+   */
+  const clearFormatting = () => {
+    editor.chain().focus().unsetAllMarks().clearNodes().run();
+  };
+
+  /*
+   * H2
+   */
+  const toggleH2 = () => {
+    editor
+      .chain()
+      .focus()
+      .toggleHeading({
+        level: 2,
+      })
+      .run();
+  };
+
+  /*
+   * H3
+   */
+  const toggleH3 = () => {
+    editor
+      .chain()
+      .focus()
+      .toggleHeading({
+        level: 3,
+      })
+      .run();
+  };
+
+  /*
+   * Bullet list
+   */
+  const toggleBulletList = () => {
+    editor.chain().focus().toggleBulletList().run();
+  };
+
+  /*
+   * Numbered list
+   */
+  const toggleOrderedList = () => {
+    editor.chain().focus().toggleOrderedList().run();
+  };
+
+  /*
+   * Open link modal
+   */
+  const openLinkModal = () => {
+    const { from, to } = editor.state.selection;
+
+    const selectedText = editor.state.doc.textBetween(from, to, " ");
+
+    setHasSelection(from !== to);
+
+    setLinkInputUrl(editor.getAttributes("link").href ?? "");
+
+    setLinkInputText(selectedText);
+
+    setShowLinkModal(true);
+  };
+
+  /*
+   * Create / update link
+   */
+  const handleLinkSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const url = linkInputUrl.trim();
+
+    if (!url) {
+      return;
+    }
+
+    if (hasSelection) {
+      editor
+        .chain()
+        .focus()
+        .setLink({
+          href: url,
+          target: "_blank",
+          rel: "noopener noreferrer",
+        })
+        .run();
+    } else {
+      const text = linkInputText.trim() || url;
+
+      editor
+        .chain()
+        .focus()
+        .insertContent({
+          type: "text",
+          text,
+          marks: [
+            {
+              type: "link",
+              attrs: {
+                href: url,
+                target: "_blank",
+                rel: "noopener noreferrer",
+              },
+            },
+          ],
+        })
+        .run();
+    }
+
+    setShowLinkModal(false);
+    setLinkInputUrl("");
+    setLinkInputText("");
+  };
+
+  /*
+   * Remove link
+   */
+  const removeLink = () => {
+    editor.chain().focus().unsetLink().run();
+
+    setShowLinkModal(false);
+  };
+
+  /*
+   * Submit
+   */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     onSubmit({
       title: isThread ? title : undefined,
-      content,
+      content: editor.getHTML(),
       notify,
     });
   };
 
-  const insertEmoji = (emoji: string) => {
-    executeCommand("insertText", emoji);
-  };
-
   /*
-   * Insert <code> with explicitly forced LTR
-   * attributes and styles.
+   * Preview
    */
-  const insertCode = () => {
-    const editor = editorRef.current;
+  const togglePreview = () => {
+    setShowEmojiPicker(false);
 
-    if (!editor) return;
-    if (preview) return;
-    const range = restoreSelection();
-
-    if (!range) return;
-
-    const selection = window.getSelection();
-
-    if (!selection) return;
-
-    const codeElement = document.createElement("code");
-
-    /*
-     * Force code to behave as LTR even when the
-     * parent page is RTL / Hebrew.
-     */
-    codeElement.setAttribute("dir", "ltr");
-
-    codeElement.style.direction = "ltr";
-    codeElement.style.unicodeBidi = "plaintext";
-    codeElement.style.textAlign = "left";
-
-    codeElement.className =
-      "bg-[#505050] text-[#09bcdc] text-left " +
-      "[direction:ltr] [unicode-bidi:plaintext] " +
-      "inline-block w-full overflow-x-auto " +
-      "whitespace-pre align-middle px-2 py-0.5 " +
-      "rounded font-mono text-[14px]";
-
-    if (!range.collapsed) {
-      const selectedContent = range.extractContents();
-
-      codeElement.appendChild(selectedContent);
-      range.insertNode(codeElement);
-
-      const newRange = document.createRange();
-
-      newRange.selectNodeContents(codeElement);
-      newRange.collapse(false);
-
-      selection.removeAllRanges();
-      selection.addRange(newRange);
-    } else {
-      const emptyText = document.createTextNode("\u200B");
-
-      codeElement.appendChild(emptyText);
-      range.insertNode(codeElement);
-
-      const newRange = document.createRange();
-
-      newRange.setStart(emptyText, 1);
-      newRange.collapse(true);
-
-      selection.removeAllRanges();
-      selection.addRange(newRange);
+    if (!preview) {
+      setContent(editor.getHTML());
     }
 
-    savedRangeRef.current = selection.getRangeAt(0).cloneRange();
-
-    setIsCodeActive(true);
-
-    handleContentInput();
-    updateToolbarStates();
-  };
-
-  /*
-   * Exit the current <code> element.
-   */
-  const escapeCode = () => {
-    const editor = editorRef.current;
-
-    if (!editor) return;
-    if (preview) return;
-
-    editor.focus();
-
-    const selection = window.getSelection();
-
-    if (!selection || selection.rangeCount === 0) {
-      return;
-    }
-
-    const range = selection.getRangeAt(0);
-
-    let codeElement: HTMLElement | null = null;
-
-    if (range.commonAncestorContainer.nodeType === Node.TEXT_NODE) {
-      codeElement =
-        range.commonAncestorContainer.parentElement?.closest("code") ?? null;
-    } else {
-      codeElement =
-        (range.commonAncestorContainer as HTMLElement).closest?.("code") ??
-        null;
-    }
-
-    if (!codeElement || !editor.contains(codeElement)) {
-      setIsCodeActive(false);
-      return;
-    }
-
-    const newLine = document.createElement("div");
-    newLine.appendChild(document.createElement("br"));
-
-    codeElement.parentNode?.insertBefore(newLine, codeElement.nextSibling);
-
-    /*
-     * Move the cursor to the last line of the editor
-     * after closing the <code> toggle.
-     */
-    const lastChild = editor.lastElementChild;
-
-    const newRange = document.createRange();
-
-    if (lastChild) {
-      newRange.selectNodeContents(lastChild);
-      newRange.collapse(false);
-    } else {
-      newRange.selectNodeContents(editor);
-      newRange.collapse(false);
-    }
-
-    selection.removeAllRanges();
-    selection.addRange(newRange);
-
-    savedRangeRef.current = newRange.cloneRange();
-
-    setIsCodeActive(false);
-
-    handleContentInput();
-    updateToolbarStates();
-  };
-  const toggleCode = () => {
-    if (isCodeActive) {
-      escapeCode();
-    } else {
-      insertCode();
-    }
-  };
-
-  useEffect(() => {
-    if (!preview && editorRef.current) {
-      editorRef.current.innerHTML = content;
-    }
-  }, [preview]);
-
-  const clearFormatting = () => {
-    executeCommand("removeFormat");
-    executeCommand("formatBlock", "<div>");
-
-    setBlockMode("normal");
-    setListMode("none");
-    setIsCodeActive(false);
-  };
-
-  const toggleHeading = (heading: "h2" | "h3") => {
-    const targetTag = blockMode === heading ? "<div>" : `<${heading}>`;
-
-    executeCommand("formatBlock", targetTag);
-  };
-
-  const toggleList = (list: "bullet" | "numbered") => {
-    const cmd = list === "bullet" ? "insertUnorderedList" : "insertOrderedList";
-
-    executeCommand(cmd);
-  };
-
-  const openLinkModal = () => {
-    saveSelection();
-
-    const selection = window.getSelection();
-
-    const isTextSelected = Boolean(selection && !selection.isCollapsed);
-
-    setHasSelection(isTextSelected);
-    setLinkInputUrl("");
-
-    setLinkInputText(isTextSelected ? selection?.toString() || "" : "");
-
-    setShowLinkModal(true);
-  };
-
-  const handleLinkSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!linkInputUrl.trim()) return;
-
-    if (hasSelection) {
-      executeCommand("createLink", linkInputUrl.trim());
-    } else {
-      const displayText = linkInputText.trim() || linkInputUrl.trim();
-
-      executeCommand(
-        "insertHTML",
-        `<a class="text-cyan-300 underline" href="${linkInputUrl.trim()}" target="_blank" rel="noopener noreferrer">${displayText}</a> `,
-      );
-    }
-
-    setShowLinkModal(false);
+    setPreview((prev) => !prev);
   };
 
   return (
     <div className="flex mt-4 w-full max-w-[1280px] mx-auto flex-col gap-4 justify-between items-center">
+      {/* Preview */}
       {preview && (
         <>
           <p className="text-white">תצוגה מקדימה</p>
 
           <div
+            dir="rtl"
             className="
               w-full
               max-w-[1280px]
@@ -406,6 +314,7 @@ export default function PostComposer({
               leading-[1.6]
               text-white
               outline-none
+
               break-words
               [overflow-wrap:anywhere]
 
@@ -426,11 +335,12 @@ export default function PostComposer({
               [&_a]:text-cyan-300
               [&_a]:underline
 
+              /* Inline code */
               [&_code]:bg-[#222]
               [&_code]:text-[#09bcdc]
               [&_code]:text-left
               [&_code]:[direction:ltr]
-              [&_code]:[unicode-bidi:plaintext]
+              [&_code]:[unicode-bidi:isolate]
               [&_code]:inline-block
               [&_code]:max-w-full
               [&_code]:overflow-x-auto
@@ -441,6 +351,17 @@ export default function PostComposer({
               [&_code]:rounded
               [&_code]:font-mono
               [&_code]:text-[14px]
+
+              /* Code blocks */
+              [&_pre]:max-w-full
+              [&_pre]:overflow-x-auto
+              [&_pre]:whitespace-pre
+              [&_pre]:break-words
+              [&_pre]:bg-[#222]
+              [&_pre]:rounded
+              [&_pre]:p-3
+              [&_pre]:text-left
+              [&_pre]:[direction:ltr]
             "
             dangerouslySetInnerHTML={{
               __html: content,
@@ -452,12 +373,29 @@ export default function PostComposer({
       <form
         onSubmit={handleSubmit}
         dir="rtl"
-        className="mx-auto mt-8 w-full max-w-[1280px] rounded-lg bg-[#505050] px-4 py-8 text-white"
+        className="
+          mx-auto
+          mt-8
+          w-full
+          max-w-[1280px]
+          rounded-lg
+          bg-[#505050]
+          px-4
+          py-8
+          text-white
+        "
       >
         {/* Title */}
         {isThread && (
           <div className="mb-[22px]">
-            <label htmlFor="post-title" className="mb-2 block text-[15px]">
+            <label
+              htmlFor="post-title"
+              className="
+                mb-2
+                block
+                text-[15px]
+              "
+            >
               כותרת <span className="mr-1.5 text-red-700">חובה</span>
             </label>
 
@@ -488,11 +426,23 @@ export default function PostComposer({
 
         {/* Content */}
         <div className="mb-[22px]">
-          <label className="mb-2 block text-[15px]">
+          <label
+            className="
+              mb-2
+              block
+              text-[15px]
+            "
+          >
             תוכן <span className="mr-1.5 text-red-700">חובה</span>
           </label>
 
-          <div className="rounded-[5px] border border-[#888]">
+          <div
+            className="
+              rounded-[5px]
+              border
+              border-[#888]
+            "
+          >
             {/* Toolbar */}
             <div
               className="
@@ -510,6 +460,7 @@ export default function PostComposer({
                 p-3
               "
             >
+              {/* Clear formatting */}
               <EditorButton
                 onClick={() => {
                   clearFormatting();
@@ -520,24 +471,26 @@ export default function PostComposer({
                 Tx
               </EditorButton>
 
+              {/* H3 */}
               <EditorButton
                 onClick={() => {
-                  toggleHeading("h3");
+                  toggleH3();
                   setPreview(false);
                 }}
                 title="Heading 3"
-                active={blockMode === "h3"}
+                active={isH3}
               >
                 H3
               </EditorButton>
 
+              {/* H2 */}
               <EditorButton
                 onClick={() => {
-                  toggleHeading("h2");
+                  toggleH2();
                   setPreview(false);
                 }}
                 title="Heading 2"
-                active={blockMode === "h2"}
+                active={isH2}
               >
                 H2
               </EditorButton>
@@ -550,10 +503,11 @@ export default function PostComposer({
               <EditorButton
                 onClick={() => {
                   setPreview(false);
-                  executeCommand("bold");
+
+                  editor.chain().focus().toggleBold().run();
                 }}
                 title="Bold"
-                active={bold}
+                active={isBold}
               >
                 <b>B</b>
               </EditorButton>
@@ -562,10 +516,11 @@ export default function PostComposer({
               <EditorButton
                 onClick={() => {
                   setPreview(false);
-                  executeCommand("italic");
+
+                  editor.chain().focus().toggleItalic().run();
                 }}
                 title="Italic"
-                active={italic}
+                active={isItalic}
               >
                 <i>I</i>
               </EditorButton>
@@ -574,10 +529,11 @@ export default function PostComposer({
               <EditorButton
                 onClick={() => {
                   setPreview(false);
-                  executeCommand("underline");
+
+                  editor.chain().focus().toggleUnderline().run();
                 }}
                 title="Underline"
-                active={underline}
+                active={isUnderline}
               >
                 <u>U</u>
               </EditorButton>
@@ -586,10 +542,10 @@ export default function PostComposer({
               <EditorButton
                 onClick={() => {
                   setPreview(false);
-                  toggleList("bullet");
+                  toggleBulletList();
                 }}
                 title="Bullet list"
-                active={listMode === "bullet"}
+                active={isBulletList}
               >
                 ☷
               </EditorButton>
@@ -598,10 +554,10 @@ export default function PostComposer({
               <EditorButton
                 onClick={() => {
                   setPreview(false);
-                  toggleList("numbered");
+                  toggleOrderedList();
                 }}
                 title="Numbered list"
-                active={listMode === "numbered"}
+                active={isOrderedList}
               >
                 1.
               </EditorButton>
@@ -613,7 +569,7 @@ export default function PostComposer({
                 <EditorButton
                   onClick={() => {
                     setPreview(false);
-                    saveSelection();
+
                     setShowEmojiPicker((prev) => !prev);
                   }}
                   title="Emoji"
@@ -622,35 +578,36 @@ export default function PostComposer({
                 </EditorButton>
 
                 {showEmojiPicker && (
-                  <div className="absolute -left-6 sm:left-0 top-full z-50 mt-2">
+                  <div
+                    className="
+                      absolute
+                      -left-6
+                      sm:left-0
+                      top-full
+                      z-50
+                      mt-2
+                    "
+                  >
                     <EmojiPicker
                       width={340}
                       onEmojiClick={(emojiData) => {
                         insertEmoji(emojiData.emoji);
-                        setShowEmojiPicker(false);
                       }}
                     />
                   </div>
                 )}
               </div>
 
-              {/* Code toggle */}
+              {/* CODE TOGGLE */}
               <EditorButton
                 onClick={() => {
+                  setPreview(false);
                   toggleCode();
                 }}
-                title={isCodeActive ? "Exit code" : "Code"}
-                active={isCodeActive}
+                title={isCode ? "Exit code" : "Code"}
+                active={isCode}
               >
-                <span
-                  dir="ltr"
-                  className="
-                    [direction:ltr]
-                    inline-block
-                  "
-                >
-                  {"</>"}
-                </span>
+                {"</>"}
               </EditorButton>
 
               {/* Link */}
@@ -660,66 +617,83 @@ export default function PostComposer({
                   openLinkModal();
                 }}
                 title="Link"
+                active={editor.isActive("link")}
               >
                 🔗
               </EditorButton>
             </div>
 
-            <div
-              ref={editorRef}
-              contentEditable
-              suppressContentEditableWarning
-              onInput={handleContentInput}
-              onPaste={handlePaste}
-              onKeyUp={saveSelection}
-              onMouseUp={saveSelection}
-              onBlur={saveSelection}
-              className="
+            {/* Editor */}
+            {!preview && (
+              <EditorContent
+                editor={editor}
+                className="
                   min-h-[225px]
                   bg-[#505050]
-                  p-[15px]
-                  text-right
-                  text-[16px]
-                  leading-[1.6]
                   text-white
-                  outline-none
-                  break-words
-                  [overflow-wrap:anywhere]
 
-                  [&_h2]:my-2
-                  [&_h2]:text-2xl
-                  [&_h2]:font-bold
+                  [&_.ProseMirror]:min-h-[225px]
+                  [&_.ProseMirror]:p-[15px]
+                  [&_.ProseMirror]:text-right
+                  [&_.ProseMirror]:text-[16px]
+                  [&_.ProseMirror]:leading-[1.6]
+                  [&_.ProseMirror]:outline-none
 
-                  [&_h3]:my-2
-                  [&_h3]:text-xl
-                  [&_h3]:font-bold
+                  [&_.ProseMirror]:break-words
+                  [&_.ProseMirror]:[overflow-wrap:anywhere]
 
-                  [&_ul]:mr-6
-                  [&_ul]:list-disc
+                  /* H2 */
+                  [&_.ProseMirror_h2]:my-2
+                  [&_.ProseMirror_h2]:text-2xl
+                  [&_.ProseMirror_h2]:font-bold
 
-                  [&_ol]:mr-6
-                  [&_ol]:list-decimal
+                  /* H3 */
+                  [&_.ProseMirror_h3]:my-2
+                  [&_.ProseMirror_h3]:text-xl
+                  [&_.ProseMirror_h3]:font-bold
 
-                  [&_a]:text-cyan-300
-                  [&_a]:underline
+                  /* Lists */
+                  [&_.ProseMirror_ul]:mr-6
+                  [&_.ProseMirror_ul]:list-disc
 
-                  [&_code]:bg-[#222]
-                  [&_code]:text-[#09bcdc]
-                  [&_code]:text-left
-                  [&_code]:[direction:ltr]
-                  [&_code]:[unicode-bidi:plaintext]
-                  [&_code]:inline-block
-                  [&_code]:max-w-full
-                  [&_code]:overflow-x-auto
-                  [&_code]:whitespace-pre
-                  [&_code]:align-middle
-                  [&_code]:px-2
-                  [&_code]:py-0.5
-                  [&_code]:rounded
-                  [&_code]:font-mono
-                  [&_code]:text-[14px]
+                  [&_.ProseMirror_ol]:mr-6
+                  [&_.ProseMirror_ol]:list-decimal
+
+                  /* Links */
+                  [&_.ProseMirror_a]:text-cyan-300
+                  [&_.ProseMirror_a]:underline
+
+                  /* Inline code */
+                  [&_.ProseMirror_code]:bg-[#222]
+                  [&_.ProseMirror_code]:text-[#09bcdc]
+                  [&_.ProseMirror_code]:text-left
+                  [&_.ProseMirror_code]:[direction:ltr]
+                  [&_.ProseMirror_code]:[unicode-bidi:isolate]
+                  [&_.ProseMirror_code]:inline-block
+                  [&_.ProseMirror_code]:max-w-full
+                  [&_.ProseMirror_code]:overflow-x-auto
+                  [&_.ProseMirror_code]:whitespace-pre
+                  [&_.ProseMirror_code]:align-middle
+                  [&_.ProseMirror_code]:px-2
+                  [&_.ProseMirror_code]:py-0.5
+                  [&_.ProseMirror_code]:rounded
+                  [&_.ProseMirror_code]:font-mono
+                  [&_.ProseMirror_code]:text-[14px]
+
+                  /* Code block */
+                  [&_.ProseMirror_pre]:max-w-full
+                  [&_.ProseMirror_pre]:overflow-x-auto
+                  [&_.ProseMirror_pre]:whitespace-pre
+                  [&_.ProseMirror_pre]:break-words
+                  [&_.ProseMirror_pre]:bg-[#222]
+                  [&_.ProseMirror_pre]:rounded
+                  [&_.ProseMirror_pre]:p-3
+                  [&_.ProseMirror_pre]:text-left
+                  [&_.ProseMirror_pre]:[direction:ltr]
+                  [&_.ProseMirror_pre]:[unicode-bidi:isolate]
                 "
-            />
+              />
+            )}
           </div>
         </div>
 
@@ -736,7 +710,14 @@ export default function PostComposer({
             px-2.5
           "
         >
-          <label className="relative inline-block h-[22px] w-[42px]">
+          <label
+            className="
+              relative
+              inline-block
+              h-[22px]
+              w-[42px]
+            "
+          >
             <input
               type="checkbox"
               checked={notify}
@@ -774,7 +755,14 @@ export default function PostComposer({
         </div>
 
         {/* Submit */}
-        <div className="flex justify-center gap-3 py-[22px]">
+        <div
+          className="
+            flex
+            justify-center
+            gap-3
+            py-[22px]
+          "
+        >
           <button
             type="submit"
             className="
@@ -795,15 +783,7 @@ export default function PostComposer({
 
           <button
             type="button"
-            onClick={() => {
-              if (!preview && editorRef.current) {
-                setContent(editorRef.current.innerHTML);
-              }
-
-              setShowEmojiPicker(false);
-
-              setPreview((prev) => !prev);
-            }}
+            onClick={togglePreview}
             title="Preview"
             className="
               cursor-pointer
@@ -822,14 +802,54 @@ export default function PostComposer({
           </button>
         </div>
 
-        {/* Custom Link Modal Overlay */}
+        {/* Link Modal */}
         {showLinkModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-            <div className="w-full max-w-md rounded-lg border border-[#666] bg-[#333] p-6 text-white shadow-xl">
-              <h3 className="mb-4 text-lg font-bold">הוספת קישור</h3>
+          <div
+            className="
+              fixed
+              inset-0
+              z-50
+              flex
+              items-center
+              justify-center
+              bg-black/60
+              p-4
+            "
+          >
+            <div
+              className="
+                w-full
+                max-w-md
+                rounded-lg
+                border
+                border-[#666]
+                bg-[#333]
+                p-6
+                text-white
+                shadow-xl
+              "
+            >
+              <h3
+                className="
+                  mb-4
+                  text-lg
+                  font-bold
+                "
+              >
+                הוספת קישור
+              </h3>
 
+              {/* URL */}
               <div className="mb-4">
-                <label className="mb-1 block text-sm font-medium text-gray-300">
+                <label
+                  className="
+                    mb-1
+                    block
+                    text-sm
+                    font-medium
+                    text-gray-300
+                  "
+                >
                   כתובת URL:
                 </label>
 
@@ -854,9 +874,18 @@ export default function PostComposer({
                 />
               </div>
 
+              {/* Display text */}
               {!hasSelection && (
                 <div className="mb-6">
-                  <label className="mb-1 block text-sm font-medium text-gray-300">
+                  <label
+                    className="
+                      mb-1
+                      block
+                      text-sm
+                      font-medium
+                      text-gray-300
+                    "
+                  >
                     טקסט להצגה (אופציונלי):
                   </label>
 
@@ -881,7 +910,31 @@ export default function PostComposer({
                 </div>
               )}
 
-              <div className="flex justify-end gap-3">
+              {/* Buttons */}
+              <div
+                className="
+                  flex
+                  justify-end
+                  gap-3
+                "
+              >
+                {editor.isActive("link") && (
+                  <button
+                    type="button"
+                    onClick={removeLink}
+                    className="
+                      rounded
+                      bg-red-700
+                      px-4
+                      py-2
+                      text-sm
+                      hover:bg-red-600
+                    "
+                  >
+                    הסר קישור
+                  </button>
+                )}
+
                 <button
                   type="button"
                   onClick={() => setShowLinkModal(false)}
@@ -938,6 +991,10 @@ function EditorButton({
       type="button"
       title={title}
       onMouseDown={(e) => {
+        /*
+         * Keep the editor selection when
+         * clicking the toolbar.
+         */
         e.preventDefault();
       }}
       onClick={onClick}
@@ -966,5 +1023,14 @@ function EditorButton({
 }
 
 function ToolbarSeparator() {
-  return <span className="mx-[7px] h-[25px] w-px bg-[#555]" />;
+  return (
+    <span
+      className="
+        mx-[7px]
+        h-[25px]
+        w-px
+        bg-[#555]
+      "
+    />
+  );
 }
