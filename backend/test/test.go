@@ -1,31 +1,13 @@
-package main
+-- 1. Insert test thread and reply
+INSERT INTO forums (name) VALUES ('Test Forum');
+INSERT INTO threads (forum_id, user_id, title, content) VALUES (1, 2147f6d2-fd51-4ee0-bdb8-1db49803c9a3, 'Test Thread', 'Body');
+INSERT INTO replies (thread_id, user_id, post) VALUES (1, 2147f6d2-fd51-4ee0-bdb8-1db49803c9a3, 'Test Reply');
 
-import (
-	"fmt"
-)
+-- Check count (should be 1)
+SELECT replies_count FROM neon_auth."user" WHERE id = 2147f6d2-fd51-4ee0-bdb8-1db49803c9a3;
 
-type User struct {
-	ID    int    `json:"id"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
-}
+-- 2. Delete the THREAD directly (triggering FK CASCADE)
+DELETE FROM threads WHERE id = 1;
 
-var users = []User{
-	{ID: 1, Name: "John", Email: "john@example.com"},
-	{ID: 2, Name: "Jane", Email: "jane@example.com"},
-	{ID: 3, Name: "Jane2", Email: "jane@example.com"},
-	{ID: 4, Name: "Jane3", Email: "jane@example.com"},
-}
-
-func main() {
-	id := 4
-	for i, user := range users {
-		if user.ID == id {
-			users = append(users[:i], users[i+1:]...)
-
-			fmt.Printf("ge-%v:arr-%v", user.ID, users)
-			return
-		}
-	}
-
-}
+-- 3. Check count again (it will still be 1, because the trigger was skipped!)
+SELECT replies_count FROM neon_auth."user" WHERE id = 2147f6d2-fd51-4ee0-bdb8-1db49803c9a3;
