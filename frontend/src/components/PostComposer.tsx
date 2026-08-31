@@ -810,3 +810,13 @@ const EditorButton = memo(function EditorButton({
 const ToolbarSeparator = memo(function ToolbarSeparator() {
   return <span className="mx-[7px] h-[25px] w-px bg-[#555]" />;
 });
+
+// INSERT INTO threads (
+//     forum_id,
+//     user_id,
+//     title,
+//     content,
+//     notify
+// )
+// VALUES ($1, $2, $3, $4, $5)
+// RETURNING id, forum_id, user_id, title, content, notify, created_at;
