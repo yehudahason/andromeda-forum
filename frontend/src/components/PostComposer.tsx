@@ -348,17 +348,25 @@ export default function PostComposer({
   }, [editor]);
 
   const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
+    (e: React.SubmitEvent<HTMLFormElement>) => {
       e.preventDefault();
       if (!editor) return;
 
+      const html = `
+      <div dir="${direction}" style="text-align:${
+        direction === "rtl" ? "right" : "left"
+      }">
+        ${editor.getHTML()}
+      </div>
+    `;
+
       onSubmit({
         title: isThread ? title : undefined,
-        content: editor.getHTML(),
+        content: html,
         notify,
       });
     },
-    [editor, isThread, notify, onSubmit, title],
+    [editor, isThread, notify, onSubmit, title, direction],
   );
 
   return (

@@ -1,5 +1,0 @@
-
-DROP TABLE IF EXISTS replies;
-DROP TABLE IF EXISTS threads;
-DROP TABLE IF EXISTS forums;
-
