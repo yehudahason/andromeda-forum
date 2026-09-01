@@ -1,9 +1,9 @@
 function isValidUTC(value: string): boolean {
-  if (!value.endsWith("Z")) return false;
-
   const date = new Date(value);
 
-  return !Number.isNaN(date.getTime());
+  if (Number.isNaN(date.getTime())) return false;
+
+  return /(?:Z|[+-]\d{2}:\d{2})$/.test(value);
 }
 
 export function formatDate(dateString: string | null | undefined) {

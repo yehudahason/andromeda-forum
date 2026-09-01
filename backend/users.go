@@ -42,10 +42,11 @@ type Thread struct {
 }
 
 type ThreadListResponse struct {
-	Threads []Thread `json:"threads"`
-	Total   int64    `json:"total"`
-	Page    int      `json:"page"`
-	PerPage int      `json:"per_page"`
+	Threads   []Thread `json:"threads"`
+	ForumName string   `json:"forum_name"`
+	Total     int64    `json:"total"`
+	Page      int      `json:"page"`
+	PerPage   int      `json:"per_page"`
 }
 type Forum struct {
 	ID             int64      `json:"id"`
@@ -123,6 +124,28 @@ func getThreads(w http.ResponseWriter, r *http.Request) {
 
 	forumIDString := r.PathValue("forumID")
 
+	var forumName string
+
+	err := db.QueryRow(
+		r.Context(),
+		`
+	SELECT name
+	FROM forums
+	WHERE id = $1
+	`,
+		forumIDString,
+	).Scan(&forumName)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			http.Error(w, "Forum not found", http.StatusNotFound)
+			return
+		}
+
+		http.Error(w, "Failed to get forum", http.StatusInternalServerError)
+		return
+	}
+
 	forumID, err := strconv.ParseInt(forumIDString, 10, 64)
 	if err != nil || forumID <= 0 {
 		http.Error(w, "Invalid forum ID", http.StatusBadRequest)
@@ -185,7 +208,7 @@ func getThreads(w http.ResponseWriter, r *http.Request) {
 
 		ORDER BY
 			t.sticky DESC,
-			t.last_post_date DESC NULLS LAST,
+			t.last_post_date DESC,
 			t.id DESC
 
 		LIMIT $2
@@ -229,10 +252,11 @@ func getThreads(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := ThreadListResponse{
-		Threads: threads,
-		Total:   total,
-		Page:    page,
-		PerPage: perPage,
+		Threads:   threads,
+		Total:     total,
+		Page:      page,
+		PerPage:   perPage,
+		ForumName: forumName,
 	}
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {

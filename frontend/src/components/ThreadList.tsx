@@ -8,12 +8,14 @@ type ThreadListProps = {
   threads: ThreadType[];
   current: string;
   forum: string;
+  total: number;
 };
 
 export default function ThreadList({
   forum,
   threads,
   current,
+  total,
 }: ThreadListProps) {
   const navigate = useNavigate();
   const [currentPage, setCurrenpage] = useState(+current);
@@ -26,7 +28,7 @@ export default function ThreadList({
     <>
       <div className="flex h-fit items-center justify-between border-b mb-4 border-white/15 ">
         <Pagination
-          total={5000}
+          total={total}
           currentPage={currentPage}
           onPageChange={handlePage}
         />
@@ -100,9 +102,9 @@ export default function ThreadList({
       </ul>
       <div className="flex h-fit items-center justify-between border-b border-white/15 ">
         <Pagination
-          total={5000}
+          total={total}
           currentPage={currentPage}
-          onPageChange={setCurrenpage}
+          onPageChange={handlePage}
         />
       </div>
     </>

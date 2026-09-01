@@ -5,6 +5,7 @@ export type ThreadListResponse = {
   total: number;
   page: number;
   per_page: number;
+  forum_name: string;
 };
 
 export async function getThreads(
