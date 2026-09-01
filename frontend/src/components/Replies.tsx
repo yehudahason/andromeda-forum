@@ -72,8 +72,8 @@ export default function Replies({
                 <div>{tdetails.content}</div>
               </div>
               <div className="flex sm:flex-row flex-col gap-4 items-center justify-between">
-                <div className=" w-full sm:mr-40 mr-20 flex gap-4  flex-wrap">
-                  <span className="flex gap-2">
+                <div className=" sm:mr-40 mr-20 flex  gap-4  flex-wrap">
+                  <span className="flex flex-wrap gap-2">
                     <p>{formatDateFull(tdetails.created_at)}</p>
                     <p> ב פורום אסטרונומיה</p>
                   </span>
