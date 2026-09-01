@@ -1,11 +1,11 @@
 export async function createThread({
-  forumId,
+  forum_id,
   title,
   content,
   notify,
   token,
 }: {
-  forumId: string;
+  forum_id: number;
   title: string;
   content: string;
   notify: boolean;
@@ -18,7 +18,7 @@ export async function createThread({
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
-      forum_id: forumId,
+      forum_id,
       title,
       content,
       notify,

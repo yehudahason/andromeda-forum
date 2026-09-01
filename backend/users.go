@@ -5,6 +5,8 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -27,67 +29,216 @@ type User struct {
 	Email string    `json:"email"`
 }
 
-func getTasks(w http.ResponseWriter, r *http.Request) {
+type Thread struct {
+	ID             int64      `json:"id"`
+	ForumID        int64      `json:"forum_id"`
+	Title          string     `json:"title"`
+	Author         *string    `json:"author"`
+	MessagesCount  int64      `json:"messages_count"`
+	LastPostTitle  *string    `json:"last_post_title"`
+	LastPostAuthor *string    `json:"last_post_author"`
+	LastPostDate   *time.Time `json:"last_post_date"`
+	CreatedAt      time.Time  `json:"created_at"`
+}
+
+type ThreadListResponse struct {
+	Threads []Thread `json:"threads"`
+	Total   int64    `json:"total"`
+	Page    int      `json:"page"`
+	PerPage int      `json:"per_page"`
+}
+type Forum struct {
+	ID             int64      `json:"id"`
+	Name           string     `json:"name"`
+	Description    string     `json:"description"`
+	MessagesCount  int64      `json:"messages_count"`
+	LastPostTitle  *string    `json:"last_post_title"`
+	LastPostAuthor *string    `json:"last_post_author"`
+	LastPostDate   *time.Time `json:"last_post_date"`
+}
+
+func getForums(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	user, err := getUserID(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
-		return
-	}
-	var rows pgx.Rows
 
-	if user.Role == "admin" {
-		// Admin gets all tasks
-		rows, err = db.Query(
-			r.Context(),
-			`SELECT id, name, email, task, completed
-			 FROM public."tasks"
-			 ORDER BY id`,
-		)
-	} else {
-		// Normal user gets only their tasks
-		rows, err = db.Query(
-			r.Context(),
-			`SELECT id, name, email, task, completed
-			 FROM public."tasks"
-			 WHERE auth_user_id = $1
-			 ORDER BY id`,
-			user.ID,
-		)
-	}
+	forums := []Forum{}
 
+	rows, err := db.Query(
+		r.Context(),
+		`
+		SELECT
+			f.id,
+			f.name,
+			f.description,
+			f.messages_count,
+			f.last_post_title,
+			u.name AS last_post_author,
+			f.last_post_date
+		FROM forums AS f
+		LEFT JOIN neon_auth."user" AS u
+			ON u.id = f.last_post_author_id
+		ORDER BY f.id ASC
+		`,
+	)
 	if err != nil {
-		http.Error(w, "Failed to get tasks", http.StatusInternalServerError)
+		http.Error(w, "Failed to get forums", http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
 
-	tasks := []Task{}
-
 	for rows.Next() {
-		var task Task
+		var forum Forum
 
 		err := rows.Scan(
-			&task.ID,
-			&task.Name,
-			&task.Email,
-			&task.Task,
-			&task.Completed,
+			&forum.ID,
+			&forum.Name,
+			&forum.Description,
+			&forum.MessagesCount,
+			&forum.LastPostTitle,
+			&forum.LastPostAuthor,
+			&forum.LastPostDate,
 		)
 		if err != nil {
-			http.Error(w, "Failed to read task", http.StatusInternalServerError)
+			http.Error(w, "Failed to scan forum", http.StatusInternalServerError)
 			return
 		}
 
-		tasks = append(tasks, task)
+		forums = append(forums, forum)
 	}
 
 	if err := rows.Err(); err != nil {
-		http.Error(w, "Failed to read tasks", http.StatusInternalServerError)
+		http.Error(w, "Failed to read forums", http.StatusInternalServerError)
 		return
 	}
 
-	json.NewEncoder(w).Encode(tasks)
+	if err := json.NewEncoder(w).Encode(forums); err != nil {
+		http.Error(w, "Failed to encode forums", http.StatusInternalServerError)
+		return
+	}
+}
+
+func getThreads(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	const perPage = 14
+
+	forumIDString := r.PathValue("forumID")
+
+	forumID, err := strconv.ParseInt(forumIDString, 10, 64)
+	if err != nil || forumID <= 0 {
+		http.Error(w, "Invalid forum ID", http.StatusBadRequest)
+		return
+	}
+
+	page := 1
+
+	if pageString := r.URL.Query().Get("page"); pageString != "" {
+		page, err = strconv.Atoi(pageString)
+		if err != nil || page < 1 {
+			http.Error(w, "Invalid page", http.StatusBadRequest)
+			return
+		}
+	}
+
+	offset := (page - 1) * perPage
+
+	var total int64
+
+	err = db.QueryRow(
+		r.Context(),
+		`
+		SELECT COUNT(*)
+		FROM threads
+		WHERE forum_id = $1
+		`,
+		forumID,
+	).Scan(&total)
+
+	if err != nil {
+		http.Error(w, "Failed to count threads", http.StatusInternalServerError)
+		return
+	}
+
+	threads := []Thread{}
+
+	rows, err := db.Query(
+		r.Context(),
+		`
+		SELECT
+			t.id,
+			t.forum_id,
+			t.title,
+			u.name AS author,
+			t.messages_count,
+			t.last_post_title,
+			lp.name AS last_post_author,
+			t.last_post_date,
+			t.created_at
+		FROM threads AS t
+
+		LEFT JOIN neon_auth."user" AS u
+			ON u.id = t.user_id
+
+		LEFT JOIN neon_auth."user" AS lp
+			ON lp.id = t.last_post_author_id
+
+		WHERE t.forum_id = $1
+
+		ORDER BY
+			t.sticky DESC,
+			t.last_post_date DESC NULLS LAST,
+			t.id DESC
+
+		LIMIT $2
+		OFFSET $3
+		`,
+		forumID,
+		perPage,
+		offset,
+	)
+	if err != nil {
+		http.Error(w, "Failed to get threads", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var thread Thread
+
+		err := rows.Scan(
+			&thread.ID,
+			&thread.ForumID,
+			&thread.Title,
+			&thread.Author,
+			&thread.MessagesCount,
+			&thread.LastPostTitle,
+			&thread.LastPostAuthor,
+			&thread.LastPostDate,
+			&thread.CreatedAt,
+		)
+		if err != nil {
+			http.Error(w, "Failed to scan thread", http.StatusInternalServerError)
+			return
+		}
+
+		threads = append(threads, thread)
+	}
+
+	if err := rows.Err(); err != nil {
+		http.Error(w, "Failed to read threads", http.StatusInternalServerError)
+		return
+	}
+
+	response := ThreadListResponse{
+		Threads: threads,
+		Total:   total,
+		Page:    page,
+		PerPage: perPage,
+	}
+
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, "Failed to encode threads", http.StatusInternalServerError)
+		return
+	}
 }
 
 func getTask(w http.ResponseWriter, r *http.Request) {

@@ -1,13 +1,12 @@
 export type ThreadType = {
-  id: string;
+  id: number;
+  forum_id: number;
   title: string;
-  author: string;
-  post: string;
+  author: string | null;
   messages_count: number;
   last_post_title: string | null;
   last_post_author: string | null;
   last_post_date: string | null;
-  image_url: string | null;
   created_at: string;
 };
 

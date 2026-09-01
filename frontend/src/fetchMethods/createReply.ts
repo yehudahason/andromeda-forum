@@ -1,10 +1,10 @@
 export async function createReply({
-  threadId,
+  thread_id,
   post,
   notify,
   token,
 }: {
-  threadId: string;
+  thread_id: number;
   post: string;
   notify: boolean;
   token: string;
@@ -16,7 +16,7 @@ export async function createReply({
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({
-      thread_id: threadId,
+      thread_id,
       post,
       notify,
     }),
