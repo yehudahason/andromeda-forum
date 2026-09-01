@@ -1,8 +1,11 @@
 import type { ThreadDetails } from "../types";
-export async function getThreadByID(threadID: number): Promise<ThreadDetails> {
+export async function getThreadByID(
+  threadID: number,
+  forumId: number,
+): Promise<ThreadDetails> {
   const url = "https://api.pitron-halomot.org";
 
-  const res = await fetch(`${url}/threads/${threadID}`, {
+  const res = await fetch(`${url}/threads/${threadID}?f=${forumId}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",

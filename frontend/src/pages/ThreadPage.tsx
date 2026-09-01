@@ -13,11 +13,12 @@ export default function ThreadPage() {
   const tpage = searchParams.get("tpage");
   const [replies, setReplies] = useState<ReplyType[]>([]);
   const [total, setTotal] = useState<number>(0);
-  const [tdetails, setTdetails] = useState<ThreadDetails>();
+  const [tdetails, setTdetails] = useState<ThreadDetails | null>(null);
 
   useEffect(() => {
     async function init() {
       if (!id) return;
+      if (f && +f < 9) return;
       const data = await getReplies(id, Number(tpage ?? "1"));
       setReplies(data.replies);
       setTotal(data.total);
@@ -28,7 +29,9 @@ export default function ThreadPage() {
     async function init2() {
       try {
         if (!id) return;
-        const thread = await getThreadByID(+id);
+        if (!f) return;
+        if (f && +f < 9) return;
+        const thread = await getThreadByID(+id, +f);
         setTdetails(thread);
         console.log(thread.title);
         console.log(thread.author);
@@ -40,6 +43,8 @@ export default function ThreadPage() {
     }
     init2();
   }, [f, id, tpage]);
+  if (!tdetails || (f && (+f < 9 || +f > 12)))
+    return <h1 className="text-white text-center py-8">404</h1>;
   return (
     <section className="mx-auto max-w-[1280px]">
       <div className="flex my-8 text-white justify-between items-center w-full">

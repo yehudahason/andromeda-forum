@@ -589,6 +589,7 @@ func updateTask(w http.ResponseWriter, r *http.Request) {
 type ThreadDetails struct {
 	ID        int64     `json:"id"`
 	ForumName string    `json:"forum_name"`
+	ForumID   int       `json:"forum_id"`
 	Author    string    `json:"author"`
 	Title     string    `json:"title"`
 	Content   string    `json:"content"`
@@ -597,7 +598,19 @@ type ThreadDetails struct {
 }
 
 func getThreadByID(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+	var forumID int
+
+	forumString := r.URL.Query().Get("f")
+	if forumString == "" {
+		http.Error(w, "Missing forum ID", http.StatusBadRequest)
+		return
+	}
+
+	forumID, err := strconv.Atoi(forumString)
+	if err != nil || forumID <= 0 {
+		http.Error(w, "Invalid forum ID", http.StatusBadRequest)
+		return
+	}
 
 	threadIDString := r.PathValue("threadID")
 
@@ -612,26 +625,28 @@ func getThreadByID(w http.ResponseWriter, r *http.Request) {
 	err = db.QueryRow(
 		r.Context(),
 		`
-	SELECT
-		t.id,
-		f.name,
-		COALESCE(u.name, 'Deleted user'),
-		u.image,
-		t.title,
-		t.content,
-		t.created_at
-	FROM threads AS t
-	JOIN forums AS f
-		ON f.id = t.forum_id
-	LEFT JOIN neon_auth."user" AS u
-		ON u.id = t.user_id
-	WHERE t.id = $1
-	`,
+		SELECT
+			t.id,
+			f.name,
+			COALESCE(u.name, 'Deleted user'),
+			t.forum_id,
+			u.image,
+			t.title,
+			t.content,
+			t.created_at
+		FROM threads AS t
+		JOIN forums AS f
+			ON f.id = t.forum_id
+		LEFT JOIN neon_auth."user" AS u
+			ON u.id = t.user_id
+		WHERE t.id = $1
+		`,
 		threadID,
 	).Scan(
 		&thread.ID,
 		&thread.ForumName,
 		&thread.Author,
+		&thread.ForumID,
 		&thread.ImageURL,
 		&thread.Title,
 		&thread.Content,
@@ -648,12 +663,17 @@ func getThreadByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := json.NewEncoder(w).Encode(thread); err != nil {
-		http.Error(w, "Failed to encode thread", http.StatusInternalServerError)
+	if forumID != thread.ForumID {
+		http.Error(w, "Thread not found", http.StatusNotFound)
 		return
 	}
-}
 
+	w.Header().Set("Content-Type", "application/json")
+
+	if err := json.NewEncoder(w).Encode(thread); err != nil {
+		http.Error(w, "Failed to encode thread", http.StatusInternalServerError)
+	}
+}
 func deleteTask(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
