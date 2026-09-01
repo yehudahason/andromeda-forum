@@ -24,7 +24,7 @@ export default function ForumList({ forums }: ForumListProps) {
             {/* Text */}
             <div className="min-w-0">
               <a
-                href="#"
+                href={`/forum/${forum.id}`}
                 className="block flex-1 truncate text-[20px] font-medium text-[#0BD7FD] hover:underline"
               >
                 {forum.name}
@@ -47,7 +47,7 @@ export default function ForumList({ forums }: ForumListProps) {
           <div className="min-w-0 text-right px-8">
             {forum.last_post_title && (
               <a
-                href="#"
+                href={`/forum/${forum.id}/${forum.last_post_thread_id}`}
                 className="block truncate text-[18px] text-[#0BD7FD] hover:underline"
               >
                 {forum.last_post_title}

@@ -372,7 +372,7 @@ export default function Header() {
           />
           <ul className="sm:flex hidden items-center gap-4 text-lg font-medium text-white">
             <li>
-              <Link to="/forum/1">פורומים</Link>
+              <Link to="/">פורומים</Link>
             </li>
             <li>
               <Link to="/forum/1/25">מה חדש</Link>

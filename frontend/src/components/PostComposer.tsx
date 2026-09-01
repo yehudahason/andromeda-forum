@@ -9,13 +9,14 @@ import CodeBlock from "@tiptap/extension-code-block";
 
 const EmojiPicker = React.lazy(() => import("emoji-picker-react"));
 
+export type Post = {
+  title?: string;
+  content: string;
+  notify: boolean;
+};
 type PostComposerProps = {
   mode: "thread" | "reply";
-  onSubmit: (data: {
-    title?: string;
-    content: string;
-    notify: boolean;
-  }) => void;
+  onSubmit: (data: Post) => void;
   submitText?: string;
   initialContent?: string;
 };

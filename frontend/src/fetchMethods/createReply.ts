@@ -1,26 +1,28 @@
-export async function createReply({
-  thread_id,
-  post,
-  notify,
-  token,
-}: {
-  thread_id: number;
-  post: string;
-  notify: boolean;
-  token: string;
-}) {
-  const res = await fetch("/api/replies", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+import type { Post } from "../components/PostComposer";
+import { getAuthToken } from "../lib/getAuthToken";
+
+export async function createReply(
+  item: Post,
+  forum_id: number,
+  thread_id: number,
+) {
+  const token = await getAuthToken();
+  const url = "https://api.pitron-halomot.org";
+  const res = await fetch(
+    `${url}/api/forums/${forum_id}/threads/${thread_id}/replies`,
+    {
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        post: item.content,
+        notify: item.notify,
+      }),
     },
-    body: JSON.stringify({
-      thread_id,
-      post,
-      notify,
-    }),
-  });
+  );
 
   if (!res.ok) {
     const message = await res.text();

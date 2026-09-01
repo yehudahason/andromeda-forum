@@ -19,6 +19,7 @@ export type ForumType = {
   last_post_author: string | null;
   last_post_date: string | null;
   image_url: string | null;
+  last_post_thread_id: string | null;
 };
 
 export type Users = ReplyAuthor[];

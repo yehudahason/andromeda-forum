@@ -23,7 +23,12 @@ export default function ThreadList({
   function handlePage(page: number) {
     setCurrenpage(page);
     navigate(`/forum/${forum}/?page=${page}`);
+    scrollToTop();
   }
+
+  const scrollToTop = () => {
+    window.scrollTo(0, 0);
+  };
   return (
     <>
       <div className="flex h-fit items-center justify-between border-b mb-4 border-white/15 ">
@@ -49,7 +54,7 @@ export default function ThreadList({
               {/* Text */}
               <div className="min-w-0">
                 <a
-                  href="#"
+                  href={`/forum/${thread.forum_id}/${thread.id}`}
                   className="block flex-1  truncate text-[20px] font-medium text-[#0BD7FD] hover:underline"
                 >
                   {thread.title}

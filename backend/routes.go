@@ -7,84 +7,10 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"time"
+	"strings"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
-
-type Task struct {
-	ID           uuid.UUID `json:"id"`
-	Auth_user_id uuid.UUID `json:"auth_user_id"`
-	Name         string    `json:"name"`
-	Email        string    `json:"email"`
-	Task         string    `json:"task"`
-	Completed    *bool     `json:"completed"`
-	Role         string    `json:"role"`
-}
-
-type User struct {
-	ID    uuid.UUID `json:"id"`
-	Role  string    `json:"role"`
-	Name  string    `json:"name"`
-	Email string    `json:"email"`
-	Image string    `json:"image"`
-}
-
-type Thread struct {
-	ID             int64      `json:"id"`
-	ForumID        int64      `json:"forum_id"`
-	Title          string     `json:"title"`
-	Author         *string    `json:"author"`
-	MessagesCount  int64      `json:"messages_count"`
-	LastPostTitle  *string    `json:"last_post_title"`
-	LastPostAuthor *string    `json:"last_post_author"`
-	LastPostDate   *time.Time `json:"last_post_date"`
-	CreatedAt      time.Time  `json:"created_at"`
-}
-
-type ThreadListResponse struct {
-	Threads   []Thread `json:"threads"`
-	ForumName string   `json:"forum_name"`
-	Total     int64    `json:"total"`
-	Page      int      `json:"page"`
-	PerPage   int      `json:"per_page"`
-}
-type Forum struct {
-	ID             int64      `json:"id"`
-	Name           string     `json:"name"`
-	Description    string     `json:"description"`
-	MessagesCount  int64      `json:"messages_count"`
-	LastPostTitle  *string    `json:"last_post_title"`
-	LastPostAuthor *string    `json:"last_post_author"`
-	LastPostDate   *time.Time `json:"last_post_date"`
-}
-
-type ReplyAuthor struct {
-	ID            uuid.UUID `json:"id"`
-	Name          string    `json:"name"`
-	Email         string    `json:"email"`
-	Role          string    `json:"role"`
-	ImageURL      *string   `json:"image_url"`
-	RepliesCounts int64     `json:"replies_counts"`
-}
-
-type Reply struct {
-	ID        uuid.UUID   `json:"id"`
-	ThreadID  int64       `json:"thread_id"`
-	Title     string      `json:"title"`
-	Author    ReplyAuthor `json:"author"`
-	Post      string      `json:"post"`
-	CreatedAt time.Time   `json:"created_at"`
-	UpdatedAt time.Time   `json:"updated_at"`
-}
-
-type ReplyListResponse struct {
-	Replies []Reply `json:"replies"`
-	Total   int64   `json:"total"`
-	Page    int     `json:"page"`
-	PerPage int     `json:"per_page"`
-}
 
 func getForums(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -99,13 +25,14 @@ func getForums(w http.ResponseWriter, r *http.Request) {
 			f.name,
 			f.description,
 			f.messages_count,
+			f.last_post_thread_id,
 			f.last_post_title,
 			u.name AS last_post_author,
 			f.last_post_date
 		FROM forums AS f
 		LEFT JOIN neon_auth."user" AS u
 			ON u.id = f.last_post_author_id
-		ORDER BY f.id ASC
+		ORDER BY f.id ASC;
 		`,
 	)
 	if err != nil {
@@ -122,6 +49,7 @@ func getForums(w http.ResponseWriter, r *http.Request) {
 			&forum.Name,
 			&forum.Description,
 			&forum.MessagesCount,
+			&forum.LastPostThreadId,
 			&forum.LastPostTitle,
 			&forum.LastPostAuthor,
 			&forum.LastPostDate,
@@ -447,156 +375,94 @@ func getReplies(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getTask(w http.ResponseWriter, r *http.Request) {
-	id, err := uuid.Parse(r.PathValue("id"))
-	if err != nil {
-		http.Error(w, "Invalid task ID", http.StatusBadRequest)
+func createThread(w http.ResponseWriter, r *http.Request) {
+	// Get forum ID from:
+	// POST /forums/{forumID}/threads
+	forumIDString := r.PathValue("forumID")
+
+	forumID, err := strconv.Atoi(forumIDString)
+	if err != nil || forumID <= 0 {
+		http.Error(w, "Invalid forum ID", http.StatusBadRequest)
 		return
 	}
 
-	var task Task
-
-	err = db.QueryRow(
-		r.Context(),
-		`SELECT id, name, email, task, completed
-		 FROM public."tasks"
-		 WHERE id = $1`,
-		id,
-	).Scan(
-		&task.ID,
-		&task.Name,
-		&task.Email,
-		&task.Task,
-		&task.Completed,
-	)
-
-	if errors.Is(err, pgx.ErrNoRows) {
-		http.Error(w, "Task not found", http.StatusNotFound)
-		return
-	}
-
-	if err != nil {
-		http.Error(w, "Failed to get task", http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(task)
-}
-
-func createTask(w http.ResponseWriter, r *http.Request) {
-	var task Task
-
-	err := json.NewDecoder(r.Body).Decode(&task)
-	if err != nil {
-		http.Error(w, "Invalid JSON", http.StatusBadRequest)
-		return
-	}
-
-	if err := validateUser(task); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	authUserID, err := getUserID(r)
+	// Get logged-in user.
+	user, err := getUserID(r)
 	if err != nil {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
 
-	taskID := uuid.New()
+	var input CreateThreadRequest
 
-	_, err = db.Exec(
-		r.Context(),
-		`INSERT INTO public."tasks"
-			(id, auth_user_id, name, email, task, completed)
-		 VALUES
-			($1, $2, $3, $4, $5, $6)`,
-		taskID,
-		authUserID.ID,
-		task.Name,
-		task.Email,
-		task.Task,
-		task.Completed,
-	)
-
+	err = json.NewDecoder(r.Body).Decode(&input)
 	if err != nil {
-		log.Printf("failed to create task: %v", err)
-		http.Error(w, "Failed to create task", http.StatusInternalServerError)
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	task.ID = taskID
+	input.Title = strings.TrimSpace(input.Title)
+	input.Content = strings.TrimSpace(input.Content)
+
+	if input.Title == "" {
+		http.Error(w, "Title is required", http.StatusBadRequest)
+		return
+	}
+
+	if input.Content == "" {
+		http.Error(w, "Content is required", http.StatusBadRequest)
+		return
+	}
+
+	var thread CreateThreadResponse
+
+	err = db.QueryRow(
+		r.Context(),
+		`
+		INSERT INTO threads (
+			forum_id,
+			user_id,
+			title,
+			content,
+			notify
+		)
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING
+			id,
+			forum_id,
+			user_id,
+			title,
+			content,
+			notify,
+			created_at
+		`,
+		forumID,
+		user.ID,
+		input.Title,
+		input.Content,
+		input.Notify,
+	).Scan(
+		&thread.ID,
+		&thread.ForumID,
+		&thread.UserID,
+		&thread.Title,
+		&thread.Content,
+		&thread.Notify,
+		&thread.CreatedAt,
+	)
+
+	if err != nil {
+		http.Error(w, "Failed to create thread", http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 
-	if err := json.NewEncoder(w).Encode(task); err != nil {
-		log.Printf("failed to encode task: %v", err)
+	if err := json.NewEncoder(w).Encode(thread); err != nil {
+		return
 	}
 }
-func updateTask(w http.ResponseWriter, r *http.Request) {
-	id, err := uuid.Parse(r.PathValue("id"))
-	if err != nil {
-		http.Error(w, "Invalid task ID", http.StatusBadRequest)
-		return
-	}
-
-	var updatedTask Task
-
-	err = json.NewDecoder(r.Body).Decode(&updatedTask)
-	if err != nil {
-		http.Error(w, "Invalid JSON", http.StatusBadRequest)
-		return
-	}
-
-	if err := validateUser(updatedTask); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	result, err := db.Exec(
-		r.Context(),
-		`UPDATE public."tasks"
-		 SET name = $1,
-		     email = $2,
-		     task = $3,
-		     completed = $4
-		 WHERE id = $5`,
-		updatedTask.Name,
-		updatedTask.Email,
-		updatedTask.Task,
-		updatedTask.Completed,
-		id,
-	)
-
-	if err != nil {
-		http.Error(w, "Failed to update task", http.StatusInternalServerError)
-		return
-	}
-
-	if result.RowsAffected() == 0 {
-		http.Error(w, "Task not found", http.StatusNotFound)
-		return
-	}
-
-	updatedTask.ID = id
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(updatedTask)
-}
-
-type ThreadDetails struct {
-	ID        int64     `json:"id"`
-	ForumName string    `json:"forum_name"`
-	ForumID   int       `json:"forum_id"`
-	Author    string    `json:"author"`
-	Title     string    `json:"title"`
-	Content   string    `json:"content"`
-	CreatedAt time.Time `json:"created_at"`
-	ImageURL  *string   `json:"image_url"`
-}
-
 func getThreadByID(w http.ResponseWriter, r *http.Request) {
 	var forumID int
 
@@ -674,29 +540,117 @@ func getThreadByID(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to encode thread", http.StatusInternalServerError)
 	}
 }
-func deleteTask(w http.ResponseWriter, r *http.Request) {
-	id, err := uuid.Parse(r.PathValue("id"))
-	if err != nil {
-		http.Error(w, "Invalid task ID", http.StatusBadRequest)
+func createReply(w http.ResponseWriter, r *http.Request) {
+	forumIDString := r.PathValue("forumID")
+	threadIDString := r.PathValue("threadID")
+
+	forumID, err := strconv.ParseInt(forumIDString, 10, 64)
+	if err != nil || forumID <= 0 {
+		http.Error(w, "Invalid forum ID", http.StatusBadRequest)
 		return
 	}
 
-	result, err := db.Exec(
+	threadID, err := strconv.ParseInt(threadIDString, 10, 64)
+	if err != nil || threadID <= 0 {
+		http.Error(w, "Invalid thread ID", http.StatusBadRequest)
+		return
+	}
+
+	user, err := getUserID(r)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	var input CreateReplyRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	input.Post = strings.TrimSpace(input.Post)
+
+	if input.Post == "" {
+		http.Error(w, "Post is required", http.StatusBadRequest)
+		return
+	}
+
+	// Make sure thread exists and belongs to this forum.
+	var exists bool
+
+	err = db.QueryRow(
 		r.Context(),
-		`DELETE FROM public."tasks"
-		 WHERE id = $1`,
-		id,
+		`
+		SELECT EXISTS (
+			SELECT 1
+			FROM threads
+			WHERE id = $1
+			  AND forum_id = $2
+		)
+		`,
+		threadID,
+		forumID,
+	).Scan(&exists)
+
+	if err != nil {
+		http.Error(w, "Failed to check thread", http.StatusInternalServerError)
+		return
+	}
+
+	if !exists {
+		http.Error(w, "Thread not found", http.StatusNotFound)
+		return
+	}
+
+	var reply CreateReplyResponse
+
+	err = db.QueryRow(
+		r.Context(),
+		`
+		INSERT INTO replies (
+			thread_id,
+			user_id,
+			post,
+			notify
+		)
+		VALUES ($1, $2, $3, $4)
+		RETURNING
+			id,
+			thread_id,
+			user_id,
+			post,
+			notify,
+			created_at
+		`,
+		threadID,
+		user.ID,
+		input.Post,
+		input.Notify,
+	).Scan(
+		&reply.ID,
+		&reply.ThreadID,
+		&reply.UserID,
+		&reply.Post,
+		&reply.Notify,
+		&reply.CreatedAt,
 	)
 
 	if err != nil {
-		http.Error(w, "Failed to delete task", http.StatusInternalServerError)
+		log.Printf("createReply INSERT error: %v", err)
+
+		http.Error(
+			w,
+			"Failed to create reply",
+			http.StatusInternalServerError,
+		)
 		return
 	}
 
-	if result.RowsAffected() == 0 {
-		http.Error(w, "Task not found", http.StatusNotFound)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+
+	if err := json.NewEncoder(w).Encode(reply); err != nil {
 		return
 	}
-
-	w.WriteHeader(http.StatusNoContent)
 }

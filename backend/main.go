@@ -71,11 +71,12 @@ func main() {
 	mux.HandleFunc("GET /api/forums/{forumID}/threads", getThreads)
 	mux.HandleFunc("GET /api/threads/{threadID}/replies", getReplies)
 	mux.HandleFunc("GET /threads/{threadID}", getThreadByID)
-	mux.HandleFunc("POST /tasks", createTask)
-	mux.HandleFunc("GET /tasks/{id}", getTask)
+	mux.HandleFunc("POST /api/forums/{forumID}/threads", createThread)
 	mux.HandleFunc("GET /tasks/me", meHandler)
-	mux.HandleFunc("PUT /tasks/{id}", updateTask)
-	mux.HandleFunc("DELETE /tasks/{id}", deleteTask)
+	mux.HandleFunc(
+		"POST /api/forums/{forumID}/threads/{threadID}/replies",
+		createReply,
+	)
 
 	server := http.Server{
 		Addr:    ":4000",

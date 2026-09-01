@@ -24,17 +24,23 @@ export default function ForumPage() {
     }
     init();
   }, [f, page]);
+
+  if (!f || +f > 12 || +f < 9)
+    return <h1 className="text-white text-center py-8">404</h1>;
   return (
     <section className="mx-auto max-w-[1280px]">
       <div className="flex my-8 text-white justify-between items-center w-full">
         <h3 className="text-2xl font-semibold">{forumName}</h3>
-        <Link className="bg-sky-400 text-black py-2 px-4 rounded-lg" to="about">
+        <Link
+          className="bg-sky-400 text-black py-2 px-4 rounded-lg"
+          to={`/post/${f}`}
+        >
           פתח נושא חדש
         </Link>
       </div>
       <ThreadList
         total={total}
-        forum={f ?? "1"}
+        forum={f}
         threads={threads}
         current={page ?? "1"}
       />
