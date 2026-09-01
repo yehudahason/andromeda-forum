@@ -1,13 +1,20 @@
-import type { User } from "../types";
+type AvatarProps = {
+  name: string;
+  image: string | null;
+  size: number;
+};
 
-export function GetAvatar(user: User | null) {
-  if (!user) return;
-  if (user?.image_url) {
+export function GetAvatar({ name, image, size }: AvatarProps) {
+  if (!name) return null;
+
+  const sizeT = `w-${size} h-${size}`;
+
+  if (image) {
     return (
       <img
-        src={user.image_url}
-        alt={user.name}
-        className="w-10 h-10 rounded-full object-cover"
+        src={image}
+        alt={name}
+        className={`${sizeT} rounded-full object-cover`}
       />
     );
   }
@@ -22,16 +29,18 @@ export function GetAvatar(user: User | null) {
     "bg-indigo-500",
     "bg-orange-500",
   ];
-  // Generate a consistent color based on the user's name
+
+  // Consistent color for the same name
   const index =
-    [...user.name].reduce((sum, char) => sum + char.charCodeAt(0), 0) %
+    [...name].reduce((sum, char) => sum + char.charCodeAt(0), 0) %
     colors.length;
 
-  const letter = user.name.charAt(0).toUpperCase();
+  const letter = [...name.trim()][0]?.toUpperCase() ?? "?";
 
   return (
     <div
-      className={`w-7 h-7 rounded-full ${colors[index]} flex items-center justify-center text-white text-sm font-semibold`}
+      className={`${sizeT} ${colors[index]} rounded-full flex items-center justify-center text-white text-sm font-semibold`}
+      aria-label={name}
     >
       {letter}
     </div>

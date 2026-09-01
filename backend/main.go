@@ -69,6 +69,8 @@ func main() {
 
 	mux.HandleFunc("GET /api/forums", getForums)
 	mux.HandleFunc("GET /api/forums/{forumID}/threads", getThreads)
+	mux.HandleFunc("GET /api/threads/{threadID}/replies", getReplies)
+	mux.HandleFunc("GET /threads/{threadID}", getThreadByID)
 	mux.HandleFunc("POST /tasks", createTask)
 	mux.HandleFunc("GET /tasks/{id}", getTask)
 	mux.HandleFunc("GET /tasks/me", meHandler)

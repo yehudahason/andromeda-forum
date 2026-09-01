@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -27,6 +28,7 @@ type User struct {
 	Role  string    `json:"role"`
 	Name  string    `json:"name"`
 	Email string    `json:"email"`
+	Image string    `json:"image"`
 }
 
 type Thread struct {
@@ -56,6 +58,32 @@ type Forum struct {
 	LastPostTitle  *string    `json:"last_post_title"`
 	LastPostAuthor *string    `json:"last_post_author"`
 	LastPostDate   *time.Time `json:"last_post_date"`
+}
+
+type ReplyAuthor struct {
+	ID            uuid.UUID `json:"id"`
+	Name          string    `json:"name"`
+	Email         string    `json:"email"`
+	Role          string    `json:"role"`
+	ImageURL      *string   `json:"image_url"`
+	RepliesCounts int64     `json:"replies_counts"`
+}
+
+type Reply struct {
+	ID        uuid.UUID   `json:"id"`
+	ThreadID  int64       `json:"thread_id"`
+	Title     string      `json:"title"`
+	Author    ReplyAuthor `json:"author"`
+	Post      string      `json:"post"`
+	CreatedAt time.Time   `json:"created_at"`
+	UpdatedAt time.Time   `json:"updated_at"`
+}
+
+type ReplyListResponse struct {
+	Replies []Reply `json:"replies"`
+	Total   int64   `json:"total"`
+	Page    int     `json:"page"`
+	PerPage int     `json:"per_page"`
 }
 
 func getForums(w http.ResponseWriter, r *http.Request) {
@@ -265,6 +293,160 @@ func getThreads(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func getReplies(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	const perPage = 14
+
+	threadIDString := r.PathValue("threadID")
+
+	threadID, err := strconv.ParseInt(threadIDString, 10, 64)
+	if err != nil || threadID <= 0 {
+		http.Error(w, "Invalid thread ID", http.StatusBadRequest)
+		return
+	}
+
+	page := 1
+
+	if pageString := r.URL.Query().Get("page"); pageString != "" {
+		page, err = strconv.Atoi(pageString)
+		if err != nil || page < 1 {
+			http.Error(w, "Invalid page", http.StatusBadRequest)
+			return
+		}
+	}
+
+	// Make sure the thread exists.
+	var threadTitle string
+
+	err = db.QueryRow(
+		r.Context(),
+		`
+		SELECT title
+		FROM threads
+		WHERE id = $1
+		`,
+		threadID,
+	).Scan(&threadTitle)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			http.Error(w, "Thread not found", http.StatusNotFound)
+			return
+		}
+
+		// http.Error(w, "Failed to get thread", http.StatusInternalServerError)
+		fmt.Print(err.Error())
+		return
+	}
+
+	var total int64
+
+	err = db.QueryRow(
+		r.Context(),
+		`
+		SELECT COUNT(*)
+		FROM replies
+		WHERE thread_id = $1
+		`,
+		threadID,
+	).Scan(&total)
+
+	if err != nil {
+		http.Error(w, "Failed to count replies", http.StatusInternalServerError)
+		return
+	}
+
+	offset := (page - 1) * perPage
+
+	replies := []Reply{}
+
+	rows, err := db.Query(
+		r.Context(),
+		`
+		SELECT
+			r.id,
+			r.thread_id,
+			t.title,
+			u.id,
+			u.name,
+			u.email,
+			u.role,
+			u.image,
+			u.replies_count,
+			r.post,
+			r.created_at,
+			r.updated_at
+		FROM replies AS r
+
+		JOIN threads AS t
+			ON t.id = r.thread_id
+
+		JOIN neon_auth."user" AS u
+			ON u.id = r.user_id
+
+		WHERE r.thread_id = $1
+
+		ORDER BY
+			r.created_at ASC,
+			r.id ASC
+
+		LIMIT $2
+		OFFSET $3
+		`,
+		threadID,
+		perPage,
+		offset,
+	)
+	if err != nil {
+		http.Error(w, "Failed to get replies", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var reply Reply
+
+		err := rows.Scan(
+			&reply.ID,
+			&reply.ThreadID,
+			&reply.Title,
+			&reply.Author.ID,
+			&reply.Author.Name,
+			&reply.Author.Email,
+			&reply.Author.Role,
+			&reply.Author.ImageURL,
+			&reply.Author.RepliesCounts,
+			&reply.Post,
+			&reply.CreatedAt,
+			&reply.UpdatedAt,
+		)
+		if err != nil {
+			http.Error(w, "Failed to scan reply", http.StatusInternalServerError)
+			return
+		}
+
+		replies = append(replies, reply)
+	}
+
+	if err := rows.Err(); err != nil {
+		http.Error(w, "Failed to read replies", http.StatusInternalServerError)
+		return
+	}
+
+	response := ReplyListResponse{
+		Replies: replies,
+		Total:   total,
+		Page:    page,
+		PerPage: perPage,
+	}
+
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, "Failed to encode replies", http.StatusInternalServerError)
+		return
+	}
+}
+
 func getTask(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
@@ -402,6 +584,74 @@ func updateTask(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(updatedTask)
+}
+
+type ThreadDetails struct {
+	ID        int64     `json:"id"`
+	ForumName string    `json:"forum_name"`
+	Author    string    `json:"author"`
+	Title     string    `json:"title"`
+	Content   string    `json:"content"`
+	CreatedAt time.Time `json:"created_at"`
+	ImageURL  *string   `json:"image_url"`
+}
+
+func getThreadByID(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	threadIDString := r.PathValue("threadID")
+
+	threadID, err := strconv.ParseInt(threadIDString, 10, 64)
+	if err != nil || threadID <= 0 {
+		http.Error(w, "Invalid thread ID", http.StatusBadRequest)
+		return
+	}
+
+	var thread ThreadDetails
+
+	err = db.QueryRow(
+		r.Context(),
+		`
+	SELECT
+		t.id,
+		f.name,
+		COALESCE(u.name, 'Deleted user'),
+		u.image,
+		t.title,
+		t.content,
+		t.created_at
+	FROM threads AS t
+	JOIN forums AS f
+		ON f.id = t.forum_id
+	LEFT JOIN neon_auth."user" AS u
+		ON u.id = t.user_id
+	WHERE t.id = $1
+	`,
+		threadID,
+	).Scan(
+		&thread.ID,
+		&thread.ForumName,
+		&thread.Author,
+		&thread.ImageURL,
+		&thread.Title,
+		&thread.Content,
+		&thread.CreatedAt,
+	)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			http.Error(w, "Thread not found", http.StatusNotFound)
+			return
+		}
+
+		http.Error(w, "Failed to get thread", http.StatusInternalServerError)
+		return
+	}
+
+	if err := json.NewEncoder(w).Encode(thread); err != nil {
+		http.Error(w, "Failed to encode thread", http.StatusInternalServerError)
+		return
+	}
 }
 
 func deleteTask(w http.ResponseWriter, r *http.Request) {

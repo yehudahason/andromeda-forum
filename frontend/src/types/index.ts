@@ -10,26 +10,6 @@ export type ThreadType = {
   created_at: string;
 };
 
-export type ReplyType = {
-  id: string;
-  title: string;
-  author: User;
-  post: string;
-  image_url: string | null;
-  created_at: string;
-  updated_at: string;
-};
-
-export type User = {
-  id: string;
-  name: string;
-  email: string | null;
-  image_url: string | null;
-  replies_counts: number;
-  created_at: string;
-  role: string;
-};
-
 export type ForumType = {
   id: string;
   name: string;
@@ -41,13 +21,49 @@ export type ForumType = {
   image_url: string | null;
 };
 
-export type User2 = {
+export type Users = ReplyAuthor[];
+
+export type ReplyAuthor = {
   id: string;
-  task: string;
   name: string;
   email: string;
-  completed: boolean;
-  deleting: boolean;
+  role: string;
+  image_url: string | null;
+  replies_counts: number;
 };
 
-export type Users = User[];
+export type ReplyType = {
+  id: string;
+  thread_id: number;
+  title: string;
+  author: ReplyAuthor;
+  post: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ReplyListResponse = {
+  replies: ReplyType[];
+  total: number;
+  page: number;
+  per_page: number;
+};
+
+export type ThreadDetails = {
+  id: number;
+  forum_name: string;
+  author: string;
+  title: string;
+  content: string;
+  created_at: string;
+  image_url: string;
+};
+export type User = {
+  id: string;
+  name: string;
+  email: string | null;
+  image: string | null;
+  replies_counts: number;
+  created_at: string;
+  role: string;
+};

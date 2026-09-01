@@ -268,7 +268,12 @@ export default function Header() {
                 </li>
 
                 <li className="px-2 flex gap-2 text-white relative">
-                  {user && <GetAvatar {...user} />}
+                  {user &&
+                    GetAvatar({
+                      name: user.name,
+                      image: user.image,
+                      size: 7,
+                    })}
                   <span className="flex  truncate">
                     <button
                       className="flex cursor-pointer"
