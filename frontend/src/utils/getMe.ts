@@ -9,7 +9,7 @@ export async function getMe(signal?: AbortSignal) {
   if (!token) return null;
   const url = "https://api.pitron-halomot.org";
   try {
-    const res = await fetch(`${url}/tasks/me`, {
+    const res = await fetch(`${url}/api/me`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

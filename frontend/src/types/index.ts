@@ -65,7 +65,7 @@ export type User = {
   name: string;
   email: string | null;
   image: string | null;
-  replies_counts: number;
+  replies_count: number;
   created_at: string;
   role: string;
 };

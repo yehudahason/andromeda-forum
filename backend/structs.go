@@ -48,7 +48,7 @@ type ThreadDetails struct {
 	ID                 int64     `json:"id"`
 	AuthorRepliesCount int64     `json:"author_replies_count"`
 	ForumName          string    `json:"forum_name"`
-	ForumID            int       `json:"forum_id"`
+	ForumID            int64     `json:"forum_id"`
 	Author             string    `json:"author"`
 	Title              string    `json:"title"`
 	Content            string    `json:"content"`
@@ -57,12 +57,12 @@ type ThreadDetails struct {
 }
 
 type ReplyAuthor struct {
-	ID            uuid.UUID `json:"id"`
-	Name          string    `json:"name"`
-	Email         string    `json:"email"`
-	Role          string    `json:"role"`
-	ImageURL      *string   `json:"image_url"`
-	RepliesCounts int64     `json:"replies_counts"`
+	ID            *uuid.UUID `json:"id"`
+	Name          string     `json:"name"`
+	Email         string     `json:"email"`
+	Role          string     `json:"role"`
+	ImageURL      *string    `json:"image_url"`
+	RepliesCounts int64      `json:"replies_count"`
 }
 
 type Reply struct {
@@ -90,7 +90,7 @@ type CreateThreadRequest struct {
 
 type CreateThreadResponse struct {
 	ID        int64     `json:"id"`
-	ForumID   int       `json:"forum_id"`
+	ForumID   int64     `json:"forum_id"`
 	UserID    string    `json:"user_id"`
 	Title     string    `json:"title"`
 	Content   string    `json:"content"`

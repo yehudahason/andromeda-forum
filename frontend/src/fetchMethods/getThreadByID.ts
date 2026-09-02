@@ -12,7 +12,7 @@ export async function getThreadByID(
     console.log(e);
     token = null;
   }
-  const res = await fetch(`${url}/threads/${threadID}?f=${forumId}`, {
+  const res = await fetch(`${url}/api/threads/${threadID}?f=${forumId}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",

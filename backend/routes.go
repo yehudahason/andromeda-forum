@@ -3,18 +3,16 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/jackc/pgx/v5"
 )
 
 func getForums(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
 	forums := []Forum{}
 
 	rows, err := db.Query(
@@ -27,7 +25,10 @@ func getForums(w http.ResponseWriter, r *http.Request) {
 			f.messages_count,
 			f.last_post_thread_id,
 			f.last_post_title,
-			u.name AS last_post_author,
+			CASE
+				WHEN f.last_post_date IS NULL THEN NULL
+				ELSE COALESCE(u.name, 'Deleted user')
+			END AS last_post_author,
 			f.last_post_date
 		FROM forums AS f
 		LEFT JOIN neon_auth."user" AS u
@@ -67,29 +68,35 @@ func getForums(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
+
 	if err := json.NewEncoder(w).Encode(forums); err != nil {
-		http.Error(w, "Failed to encode forums", http.StatusInternalServerError)
+		log.Printf("getForums encode error: %v", err)
 		return
 	}
 }
 
 func getThreads(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
 	const perPage = 14
 
 	forumIDString := r.PathValue("forumID")
 
+	forumID, err := strconv.ParseInt(forumIDString, 10, 64)
+	if err != nil || forumID <= 0 {
+		http.Error(w, "Invalid forum ID", http.StatusBadRequest)
+		return
+	}
+
 	var forumName string
 
-	err := db.QueryRow(
+	err = db.QueryRow(
 		r.Context(),
 		`
 	SELECT name
 	FROM forums
 	WHERE id = $1
 	`,
-		forumIDString,
+		forumID,
 	).Scan(&forumName)
 
 	if err != nil {
@@ -99,12 +106,6 @@ func getThreads(w http.ResponseWriter, r *http.Request) {
 		}
 
 		http.Error(w, "Failed to get forum", http.StatusInternalServerError)
-		return
-	}
-
-	forumID, err := strconv.ParseInt(forumIDString, 10, 64)
-	if err != nil || forumID <= 0 {
-		http.Error(w, "Invalid forum ID", http.StatusBadRequest)
 		return
 	}
 
@@ -146,10 +147,10 @@ func getThreads(w http.ResponseWriter, r *http.Request) {
 			t.id,
 			t.forum_id,
 			t.title,
-			u.name AS author,
+			COALESCE(u.name, 'Deleted user') AS author,
 			t.messages_count,
 			t.last_post_title,
-			lp.name AS last_post_author,
+			COALESCE(lp.name, 'Deleted user') AS last_post_author,
 			t.last_post_date,
 			t.created_at
 		FROM threads AS t
@@ -215,15 +216,15 @@ func getThreads(w http.ResponseWriter, r *http.Request) {
 		ForumName: forumName,
 	}
 
+	w.Header().Set("Content-Type", "application/json")
+
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, "Failed to encode threads", http.StatusInternalServerError)
+		log.Printf("getThreads encode error: %v", err)
 		return
 	}
 }
 
 func getReplies(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
 	const perPage = 14
 
 	threadIDString := r.PathValue("threadID")
@@ -263,8 +264,7 @@ func getReplies(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// http.Error(w, "Failed to get thread", http.StatusInternalServerError)
-		fmt.Print(err.Error())
+		http.Error(w, "Failed to get thread", http.StatusInternalServerError)
 		return
 	}
 
@@ -296,12 +296,12 @@ func getReplies(w http.ResponseWriter, r *http.Request) {
 			r.id,
 			r.thread_id,
 			t.title,
-			u.id,
-			u.name,
-			u.email,
-			u.role,
+			COALESCE(u.id, '00000000-0000-0000-0000-000000000000'::uuid),
+			COALESCE(u.name, 'Deleted user'),
+			COALESCE(u.email, ''),
+			COALESCE(u.role, ''),
 			u.image,
-			u.replies_count,
+			COALESCE(u.replies_count, 0),
 			r.post,
 			r.created_at,
 			r.updated_at
@@ -310,7 +310,7 @@ func getReplies(w http.ResponseWriter, r *http.Request) {
 		JOIN threads AS t
 			ON t.id = r.thread_id
 
-		JOIN neon_auth."user" AS u
+		LEFT JOIN neon_auth."user" AS u
 			ON u.id = r.user_id
 
 		WHERE r.thread_id = $1
@@ -369,8 +369,10 @@ func getReplies(w http.ResponseWriter, r *http.Request) {
 		PerPage: perPage,
 	}
 
+	w.Header().Set("Content-Type", "application/json")
+
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, "Failed to encode replies", http.StatusInternalServerError)
+		log.Printf("getReplies encode error: %v", err)
 		return
 	}
 }
@@ -380,17 +382,51 @@ func createThread(w http.ResponseWriter, r *http.Request) {
 	// POST /forums/{forumID}/threads
 	forumIDString := r.PathValue("forumID")
 
-	forumID, err := strconv.Atoi(forumIDString)
+	forumID, err := strconv.ParseInt(forumIDString, 10, 64)
 	if err != nil || forumID <= 0 {
 		http.Error(w, "Invalid forum ID", http.StatusBadRequest)
 		return
 	}
 
-	// Get logged-in user.
+	// Get logged-in user before checking whether the forum exists.
+	// This keeps protected POST routes consistent and avoids exposing
+	// resource existence to unauthenticated callers.
 	user, err := getUserID(r)
 	if err != nil {
-		log.Printf("getUserID error: %v", err)
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		if errors.Is(err, ErrUnauthorized) {
+			log.Printf("createThread authentication failed: %v", err)
+
+			w.Header().Set("WWW-Authenticate", "Bearer")
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		log.Printf("createThread authentication database error: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	var forumExists bool
+
+	err = db.QueryRow(
+		r.Context(),
+		`
+		SELECT EXISTS (
+			SELECT 1
+			FROM forums
+			WHERE id = $1
+		)
+		`,
+		forumID,
+	).Scan(&forumExists)
+
+	if err != nil {
+		http.Error(w, "Failed to check forum", http.StatusInternalServerError)
+		return
+	}
+
+	if !forumExists {
+		http.Error(w, "Forum not found", http.StatusNotFound)
 		return
 	}
 	var input CreateThreadRequest
@@ -409,8 +445,18 @@ func createThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if utf8.RuneCountInString(input.Title) > 255 {
+		http.Error(w, "Title is too long", http.StatusBadRequest)
+		return
+	}
+
 	if input.Content == "" {
 		http.Error(w, "Content is required", http.StatusBadRequest)
+		return
+	}
+
+	if utf8.RuneCountInString(input.Content) > 100000 {
+		http.Error(w, "Content is too long", http.StatusBadRequest)
 		return
 	}
 
@@ -430,7 +476,6 @@ func createThread(w http.ResponseWriter, r *http.Request) {
 		RETURNING
 			id,
 			forum_id,
-			user_id,
 			title,
 			content,
 			notify,
@@ -444,7 +489,6 @@ func createThread(w http.ResponseWriter, r *http.Request) {
 	).Scan(
 		&thread.ID,
 		&thread.ForumID,
-		&thread.UserID,
 		&thread.Title,
 		&thread.Content,
 		&thread.Notify,
@@ -456,15 +500,18 @@ func createThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	thread.UserID = user.ID.String()
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 
 	if err := json.NewEncoder(w).Encode(thread); err != nil {
+		log.Printf("createThread encode error: %v", err)
 		return
 	}
 }
 func getThreadByID(w http.ResponseWriter, r *http.Request) {
-	var forumID int
+	var forumID int64
 
 	forumString := r.URL.Query().Get("f")
 	if forumString == "" {
@@ -472,7 +519,7 @@ func getThreadByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	forumID, err := strconv.Atoi(forumString)
+	forumID, err := strconv.ParseInt(forumString, 10, 64)
 	if err != nil || forumID <= 0 {
 		http.Error(w, "Invalid forum ID", http.StatusBadRequest)
 		return
@@ -542,7 +589,7 @@ func getThreadByID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	if err := json.NewEncoder(w).Encode(thread); err != nil {
-		http.Error(w, "Failed to encode thread", http.StatusInternalServerError)
+		log.Printf("getThreadByID encode error: %v", err)
 	}
 }
 func createReply(w http.ResponseWriter, r *http.Request) {
@@ -563,7 +610,16 @@ func createReply(w http.ResponseWriter, r *http.Request) {
 
 	user, err := getUserID(r)
 	if err != nil {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		if errors.Is(err, ErrUnauthorized) {
+			log.Printf("createReply authentication failed: %v", err)
+
+			w.Header().Set("WWW-Authenticate", "Bearer")
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		log.Printf("createReply authentication database error: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
@@ -578,6 +634,11 @@ func createReply(w http.ResponseWriter, r *http.Request) {
 
 	if input.Post == "" {
 		http.Error(w, "Post is required", http.StatusBadRequest)
+		return
+	}
+
+	if utf8.RuneCountInString(input.Post) > 100000 {
+		http.Error(w, "Post is too long", http.StatusBadRequest)
 		return
 	}
 
@@ -623,7 +684,6 @@ func createReply(w http.ResponseWriter, r *http.Request) {
 		RETURNING
 			id,
 			thread_id,
-			user_id,
 			post,
 			notify,
 			created_at
@@ -635,7 +695,6 @@ func createReply(w http.ResponseWriter, r *http.Request) {
 	).Scan(
 		&reply.ID,
 		&reply.ThreadID,
-		&reply.UserID,
 		&reply.Post,
 		&reply.Notify,
 		&reply.CreatedAt,
@@ -652,10 +711,13 @@ func createReply(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	reply.UserID = user.ID.String()
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 
 	if err := json.NewEncoder(w).Encode(reply); err != nil {
+		log.Printf("createReply encode error: %v", err)
 		return
 	}
 }

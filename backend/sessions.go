@@ -1,8 +1,8 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,22 +10,26 @@ import (
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
+var ErrUnauthorized = errors.New("unauthorized")
+
 func getUserID(r *http.Request) (User, error) {
-	authHeader := r.Header.Get("Authorization")
-
+	authHeader := strings.TrimSpace(r.Header.Get("Authorization"))
 	if authHeader == "" {
-		return User{}, fmt.Errorf("missing Authorization header")
+		return User{}, fmt.Errorf("%w: missing Authorization header", ErrUnauthorized)
 	}
 
-	parts := strings.SplitN(authHeader, " ", 2)
-
+	parts := strings.Fields(authHeader)
 	if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
-		return User{}, fmt.Errorf("invalid Authorization header")
+		return User{}, fmt.Errorf("%w: invalid Authorization header", ErrUnauthorized)
 	}
 
-	tokenString := parts[1]
+	tokenString := strings.TrimSpace(parts[1])
+	if tokenString == "" {
+		return User{}, fmt.Errorf("%w: missing bearer token", ErrUnauthorized)
+	}
 
 	var claims jwt.RegisteredClaims
 
@@ -36,47 +40,77 @@ func getUserID(r *http.Request) (User, error) {
 		jwt.WithValidMethods([]string{"EdDSA"}),
 	)
 	if err != nil {
-		return User{}, fmt.Errorf("invalid token: %w", err)
+		return User{}, fmt.Errorf("%w: invalid token: %v", ErrUnauthorized, err)
 	}
 
 	if !token.Valid {
-		return User{}, fmt.Errorf("invalid token")
+		return User{}, fmt.Errorf("%w: invalid token", ErrUnauthorized)
 	}
 
 	if claims.Subject == "" {
-		return User{}, fmt.Errorf("missing user ID")
+		return User{}, fmt.Errorf("%w: missing user ID", ErrUnauthorized)
+	}
+
+	userID, err := uuid.Parse(claims.Subject)
+	if err != nil {
+		return User{}, fmt.Errorf("%w: invalid user ID", ErrUnauthorized)
 	}
 
 	var user User
-	var userID = claims.Subject
 
 	err = db.QueryRow(
-		context.Background(),
-		`SELECT name, role, email ,image , replies_count FROM neon_auth."user" WHERE id = $1`,
+		r.Context(),
+		`
+		SELECT
+			id,
+			name,
+			role,
+			email,
+			image,
+			replies_count
+		FROM neon_auth."user"
+		WHERE id = $1
+		`,
 		userID,
-	).Scan(&user.Name, &user.Role, &user.Email, &user.Image, &user.RepliesCount)
-
+	).Scan(
+		&user.ID,
+		&user.Name,
+		&user.Role,
+		&user.Email,
+		&user.Image,
+		&user.RepliesCount,
+	)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return User{}, fmt.Errorf("%w: user not found", ErrUnauthorized)
+		}
+
 		return User{}, fmt.Errorf("error getting user from db: %w", err)
-	}
-
-	user.ID, err = uuid.Parse(userID)
-	if err != nil {
-		return User{}, fmt.Errorf("wrong uuid: %w", err)
 	}
 
 	return user, nil
 }
+
 func meHandler(w http.ResponseWriter, r *http.Request) {
 	user, err := getUserID(r)
 	if err != nil {
-		log.Printf("authentication failed: %v", err)
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		if errors.Is(err, ErrUnauthorized) {
+			log.Printf("authentication failed: %v", err)
+
+			w.Header().Set("WWW-Authenticate", "Bearer")
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		log.Printf("meHandler database error: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	log.Printf("authenticated user: %v", user)
-
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(user)
+	w.WriteHeader(http.StatusOK)
+
+	if err := json.NewEncoder(w).Encode(user); err != nil {
+		log.Printf("meHandler encode error: %v", err)
+	}
 }

@@ -50,29 +50,17 @@ func main() {
 	if err := db.Ping(ctx); err != nil {
 		log.Fatal("failed to ping database:", err)
 	}
-	_, err = db.Exec(ctx, `
-	CREATE TABLE IF NOT EXISTS tasks (
-		id UUID PRIMARY KEY,
-		auth_user_id UUID  NOT NULL,
-		name TEXT NOT NULL,
-		email TEXT NOT NULL,
-		task TEXT NOT NULL,
-		completed BOOLEAN
-	)
-`)
-	if err != nil {
-		log.Fatal("failed to create users table:", err)
-	}
 	log.Println("Connected to PostgreSQL")
 
 	mux := http.NewServeMux()
-
+	//Public Endpoints
 	mux.HandleFunc("GET /api/forums", getForums)
 	mux.HandleFunc("GET /api/forums/{forumID}/threads", getThreads)
 	mux.HandleFunc("GET /api/threads/{threadID}/replies", getReplies)
-	mux.HandleFunc("GET /threads/{threadID}", getThreadByID)
+	mux.HandleFunc("GET /api/threads/{threadID}", getThreadByID)
+	//Authrized endpoints by Neon better-auth token
 	mux.HandleFunc("POST /api/forums/{forumID}/threads", createThread)
-	mux.HandleFunc("GET /tasks/me", meHandler)
+	mux.HandleFunc("GET /api/me", meHandler)
 	mux.HandleFunc(
 		"POST /api/forums/{forumID}/threads/{threadID}/replies",
 		createReply,
@@ -92,6 +80,8 @@ func main() {
 
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		//Allowed Origins
 		allowedOrigins := map[string]bool{
 			"http://localhost:5173":          true,
 			"https://lab.pitron-halomot.org": true,
