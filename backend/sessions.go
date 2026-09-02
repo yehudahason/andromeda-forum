@@ -238,15 +238,15 @@ func uploadAvatarToR2(
 
 	// Since this is for Google avatars, don't allow arbitrary URLs
 	// from the database to make your server request arbitrary hosts.
-	host := strings.ToLower(parsedURL.Hostname())
+	// host := strings.ToLower(parsedURL.Hostname())
 
-	if host != "googleusercontent.com" &&
-		!strings.HasSuffix(host, ".googleusercontent.com") {
-		return "", fmt.Errorf(
-			"unsupported avatar host: %s",
-			host,
-		)
-	}
+	// if host != "googleusercontent.com" &&
+	// 	!strings.HasSuffix(host, ".googleusercontent.com") {
+	// 	return "", fmt.Errorf(
+	// 		"unsupported avatar host: %s",
+	// 		host,
+	// 	)
+	// }
 
 	req, err := http.NewRequestWithContext(
 		ctx,
