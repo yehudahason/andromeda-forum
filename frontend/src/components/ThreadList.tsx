@@ -82,7 +82,7 @@ export default function ThreadList({
             <div className="min-w-0 text-right px-2">
               {thread.last_post_title && (
                 <a
-                  href="#"
+                  href={`/forum/${thread.forum_id}/${thread.id}`}
                   className="block truncate text-[18px] text-[#0BD7FD] hover:underline"
                 >
                   {thread.last_post_title}
