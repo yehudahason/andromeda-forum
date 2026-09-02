@@ -7,14 +7,20 @@ type AvatarProps = {
 export function GetAvatar({ name, image, size }: AvatarProps) {
   if (!name) return null;
 
-  const sizeT = `w-${size} h-${size}`;
+  const avatarStyle = {
+    width: `${size}px`,
+    height: `${size}px`,
+    minWidth: `${size}px`,
+    minHeight: `${size}px`,
+  };
 
   if (image) {
     return (
       <img
         src={image}
         alt={name}
-        className={`${sizeT} rounded-full object-cover`}
+        style={avatarStyle}
+        className="shrink-0 rounded-full object-cover"
       />
     );
   }
@@ -30,7 +36,6 @@ export function GetAvatar({ name, image, size }: AvatarProps) {
     "bg-orange-500",
   ];
 
-  // Consistent color for the same name
   const index =
     [...name].reduce((sum, char) => sum + char.charCodeAt(0), 0) %
     colors.length;
@@ -39,7 +44,8 @@ export function GetAvatar({ name, image, size }: AvatarProps) {
 
   return (
     <div
-      className={`${sizeT} ${colors[index]} rounded-full flex items-center justify-center text-white text-sm font-semibold`}
+      style={avatarStyle}
+      className={`${colors[index]} shrink-0 rounded-full flex items-center justify-center text-white text-sm font-semibold`}
       aria-label={name}
     >
       {letter}

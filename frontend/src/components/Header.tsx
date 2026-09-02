@@ -272,7 +272,7 @@ export default function Header() {
                     GetAvatar({
                       name: user.name,
                       image: user.image,
-                      size: 7,
+                      size: 32,
                     })}
                   <span className="flex  truncate">
                     <button

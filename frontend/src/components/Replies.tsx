@@ -69,7 +69,7 @@ export default function Replies({
                       {GetAvatar({
                         name: tdetails.author,
                         image: tdetails.image_url,
-                        size: 12,
+                        size: 56,
                       })}
                     </span>
                     <span className="flex items-center gap-1 text-sm">
@@ -142,7 +142,7 @@ export default function Replies({
               {GetAvatar({
                 name: reply.author.name,
                 image: reply.author.image_url,
-                size: 10,
+                size: 50,
               })}
 
               <span className="flex items-center gap-1 text-sm">
