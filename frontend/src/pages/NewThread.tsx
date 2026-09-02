@@ -8,8 +8,10 @@ export default function NewThread() {
     if (!f) return;
     try {
       await createThread(item, +f);
+      window.location.href = "/";
     } catch (e) {
       console.log(e);
+      window.location.href = "/notFound";
     }
   }
   return (

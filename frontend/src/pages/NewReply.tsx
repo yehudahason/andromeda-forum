@@ -10,7 +10,9 @@ export default function NewReply() {
     if (!t) return;
     try {
       await createReply(item, +f, +t);
+      window.location.href = "/";
     } catch (e) {
+      window.location.href = "/notFound";
       console.log(e);
     }
   }
