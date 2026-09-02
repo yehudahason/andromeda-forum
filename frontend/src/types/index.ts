@@ -58,6 +58,7 @@ export type ThreadDetails = {
   content: string;
   created_at: string;
   image_url: string;
+  author_replies_count: number;
 };
 export type User = {
   id: string;

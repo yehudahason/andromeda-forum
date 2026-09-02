@@ -52,9 +52,9 @@ func getUserID(r *http.Request) (User, error) {
 
 	err = db.QueryRow(
 		context.Background(),
-		`SELECT name, role, email ,image  FROM neon_auth."user" WHERE id = $1`,
+		`SELECT name, role, email ,image , replies_count FROM neon_auth."user" WHERE id = $1`,
 		userID,
-	).Scan(&user.Name, &user.Role, &user.Email, &user.Image)
+	).Scan(&user.Name, &user.Role, &user.Email, &user.Image, &user.RepliesCount)
 
 	if err != nil {
 		return User{}, fmt.Errorf("error getting user from db: %w", err)

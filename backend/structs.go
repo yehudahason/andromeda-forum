@@ -7,11 +7,12 @@ import (
 )
 
 type User struct {
-	ID    uuid.UUID `json:"id"`
-	Role  string    `json:"role"`
-	Name  string    `json:"name"`
-	Email string    `json:"email"`
-	Image *string   `json:"image"`
+	ID           uuid.UUID `json:"id"`
+	Role         string    `json:"role"`
+	Name         string    `json:"name"`
+	Email        string    `json:"email"`
+	Image        *string   `json:"image"`
+	RepliesCount int64     `json:"replies_count"`
 }
 
 type Thread struct {
@@ -44,14 +45,15 @@ type Forum struct {
 	LastPostDate     *time.Time `json:"last_post_date"`
 }
 type ThreadDetails struct {
-	ID        int64     `json:"id"`
-	ForumName string    `json:"forum_name"`
-	ForumID   int       `json:"forum_id"`
-	Author    string    `json:"author"`
-	Title     string    `json:"title"`
-	Content   string    `json:"content"`
-	CreatedAt time.Time `json:"created_at"`
-	ImageURL  *string   `json:"image_url"`
+	ID                 int64     `json:"id"`
+	AuthorRepliesCount int64     `json:"author_replies_count"`
+	ForumName          string    `json:"forum_name"`
+	ForumID            int       `json:"forum_id"`
+	Author             string    `json:"author"`
+	Title              string    `json:"title"`
+	Content            string    `json:"content"`
+	CreatedAt          time.Time `json:"created_at"`
+	ImageURL           *string   `json:"image_url"`
 }
 
 type ReplyAuthor struct {

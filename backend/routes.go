@@ -389,6 +389,7 @@ func createThread(w http.ResponseWriter, r *http.Request) {
 	// Get logged-in user.
 	user, err := getUserID(r)
 	if err != nil {
+		log.Printf("getUserID error: %v", err)
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
@@ -464,6 +465,12 @@ func createThread(w http.ResponseWriter, r *http.Request) {
 	}
 }
 func getThreadByID(w http.ResponseWriter, r *http.Request) {
+
+	user, err := getUserID(r)
+	if err != nil {
+		http.Error(w, "Missing forum ID", http.StatusUnauthorized)
+		return
+	}
 	var forumID int
 
 	forumString := r.URL.Query().Get("f")
@@ -472,7 +479,7 @@ func getThreadByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	forumID, err := strconv.Atoi(forumString)
+	forumID, err = strconv.Atoi(forumString)
 	if err != nil || forumID <= 0 {
 		http.Error(w, "Invalid forum ID", http.StatusBadRequest)
 		return
@@ -518,7 +525,7 @@ func getThreadByID(w http.ResponseWriter, r *http.Request) {
 		&thread.Content,
 		&thread.CreatedAt,
 	)
-
+	thread.AuthorRepliesCount = user.RepliesCount
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			http.Error(w, "Thread not found", http.StatusNotFound)

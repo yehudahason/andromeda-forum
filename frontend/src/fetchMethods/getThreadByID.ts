@@ -1,14 +1,16 @@
+import { getAuthToken } from "../lib/getAuthToken";
 import type { ThreadDetails } from "../types";
 export async function getThreadByID(
   threadID: number,
   forumId: number,
 ): Promise<ThreadDetails> {
   const url = "https://api.pitron-halomot.org";
-
+  const token = await getAuthToken();
   const res = await fetch(`${url}/threads/${threadID}?f=${forumId}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
     },
   });
 

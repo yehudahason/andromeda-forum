@@ -60,9 +60,9 @@ export default function Replies({
                   {tdetails.title}
                 </div>
 
-                <div className="flex pr-4 items-center gap-8">
+                <div className="flex  pr-4 items-center gap-8">
                   <div className="flex flex-col gap-4 justify-center items-center">
-                    <span className="wrap-break-word text-center font-medium flex gap-2">
+                    <span className="w-30 text-center font-medium flex gap-2">
                       <p>{tdetails.author}</p>
                     </span>
                     <span className="">
@@ -71,6 +71,10 @@ export default function Replies({
                         image: tdetails.image_url,
                         size: 12,
                       })}
+                    </span>
+                    <span className="flex items-center gap-1 text-sm">
+                      {tdetails.author_replies_count}
+                      <span>💬</span>
                     </span>
                   </div>
                   <div
