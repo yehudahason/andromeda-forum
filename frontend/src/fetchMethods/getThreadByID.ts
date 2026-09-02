@@ -5,7 +5,13 @@ export async function getThreadByID(
   forumId: number,
 ): Promise<ThreadDetails> {
   const url = "https://api.pitron-halomot.org";
-  const token = await getAuthToken();
+  let token;
+  try {
+    token = await getAuthToken();
+  } catch (e) {
+    console.log(e);
+    token = null;
+  }
   const res = await fetch(`${url}/threads/${threadID}?f=${forumId}`, {
     method: "GET",
     headers: {

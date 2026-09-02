@@ -393,7 +393,6 @@ func createThread(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-
 	var input CreateThreadRequest
 
 	err = json.NewDecoder(r.Body).Decode(&input)
@@ -465,12 +464,6 @@ func createThread(w http.ResponseWriter, r *http.Request) {
 	}
 }
 func getThreadByID(w http.ResponseWriter, r *http.Request) {
-
-	user, err := getUserID(r)
-	if err != nil {
-		http.Error(w, "Missing forum ID", http.StatusUnauthorized)
-		return
-	}
 	var forumID int
 
 	forumString := r.URL.Query().Get("f")
@@ -479,7 +472,7 @@ func getThreadByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	forumID, err = strconv.Atoi(forumString)
+	forumID, err := strconv.Atoi(forumString)
 	if err != nil || forumID <= 0 {
 		http.Error(w, "Invalid forum ID", http.StatusBadRequest)
 		return
@@ -504,14 +497,18 @@ func getThreadByID(w http.ResponseWriter, r *http.Request) {
 			COALESCE(u.name, 'Deleted user'),
 			t.forum_id,
 			u.image,
+			COALESCE(u.replies_count, 0),
 			t.title,
 			t.content,
 			t.created_at
 		FROM threads AS t
+
 		JOIN forums AS f
 			ON f.id = t.forum_id
+
 		LEFT JOIN neon_auth."user" AS u
 			ON u.id = t.user_id
+
 		WHERE t.id = $1
 		`,
 		threadID,
@@ -521,11 +518,12 @@ func getThreadByID(w http.ResponseWriter, r *http.Request) {
 		&thread.Author,
 		&thread.ForumID,
 		&thread.ImageURL,
+		&thread.AuthorRepliesCount,
 		&thread.Title,
 		&thread.Content,
 		&thread.CreatedAt,
 	)
-	thread.AuthorRepliesCount = user.RepliesCount
+
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			http.Error(w, "Thread not found", http.StatusNotFound)
