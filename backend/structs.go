@@ -11,7 +11,7 @@ type User struct {
 	Role         string    `json:"role"`
 	Name         string    `json:"name"`
 	Email        string    `json:"email"`
-	Image        *string   `json:"image"`
+	Image        string    `json:"image"`
 	RepliesCount int64     `json:"replies_count"`
 }
 

@@ -114,6 +114,7 @@ func main() {
 
 	//Authorized endpoints by Neon better-auth token
 	mux.HandleFunc("POST /api/forums/{forumID}/threads", createThread)
+	mux.HandleFunc("POST /api/upload", uploadImageHandler)
 	mux.HandleFunc("GET /api/me", meHandler)
 	mux.HandleFunc(
 		"POST /api/forums/{forumID}/threads/{threadID}/replies",

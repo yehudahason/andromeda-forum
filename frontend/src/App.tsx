@@ -7,6 +7,7 @@ import ThreadPage from "./pages/ThreadPage";
 import NewThread from "./pages/NewThread";
 import NewReply from "./pages/NewReply";
 import AuthGuard from "./components/Guard";
+import UploadPage from "./pages/UploadPage";
 
 export default function App() {
   return (
@@ -31,6 +32,7 @@ export default function App() {
         }
       />
       <Route path="/about" element={<About />} />
+      <Route path="/upload" element={<UploadPage />} />
 
       <Route path="*" element={<NotFound />} />
     </Routes>
