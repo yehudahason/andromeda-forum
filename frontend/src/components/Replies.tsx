@@ -157,7 +157,7 @@ export default function Replies({
               </p>
 
               <div className="border-b border-b-gray-500 min-w-0">
-                <h2 className="mb-2 text-lg font-medium">{reply.title}</h2>
+                <h2 className="mb-2 text-lg font-medium">Re:{reply.title}</h2>
 
                 <div
                   className="
