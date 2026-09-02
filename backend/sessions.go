@@ -37,7 +37,7 @@ func getUserID(r *http.Request) (User, error) {
 		tokenString,
 		&claims,
 		jwks.Keyfunc,
-		jwt.WithValidMethods([]string{"EdDSA"}),
+		jwt.WithValidMethods([]string{"RS256", "ES256", "EdDSA"}),
 	)
 	if err != nil {
 		return User{}, fmt.Errorf("%w: invalid token: %v", ErrUnauthorized, err)

@@ -58,6 +58,7 @@ func main() {
 	mux.HandleFunc("GET /api/forums/{forumID}/threads", getThreads)
 	mux.HandleFunc("GET /api/threads/{threadID}/replies", getReplies)
 	mux.HandleFunc("GET /api/threads/{threadID}", getThreadByID)
+
 	//Authrized endpoints by Neon better-auth token
 	mux.HandleFunc("POST /api/forums/{forumID}/threads", createThread)
 	mux.HandleFunc("GET /api/me", meHandler)
@@ -87,8 +88,8 @@ func corsMiddleware(next http.Handler) http.Handler {
 			"https://lab.pitron-halomot.org": true,
 		}
 
+		//Headers
 		origin := r.Header.Get("Origin")
-
 		if allowedOrigins[origin] {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
