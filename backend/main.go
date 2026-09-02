@@ -3,9 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
@@ -28,29 +29,81 @@ func initJWKS() error {
 
 	return nil
 }
-func main() {
-	if err := godotenv.Load(); err != nil {
-		log.Fatal("failed to load .env:", err)
+
+var logger = slog.New(
+	slog.NewJSONHandler(os.Stdout, nil),
+)
+
+type responseWriter struct {
+	http.ResponseWriter
+	status int
+	size   int
+}
+
+func (rw *responseWriter) WriteHeader(status int) {
+	rw.status = status
+	rw.ResponseWriter.WriteHeader(status)
+}
+
+func (rw *responseWriter) Write(data []byte) (int, error) {
+	if rw.status == 0 {
+		rw.status = http.StatusOK
 	}
+
+	n, err := rw.ResponseWriter.Write(data)
+	rw.size += n
+
+	return n, err
+}
+
+func loggerMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+
+		rw := &responseWriter{
+			ResponseWriter: w,
+			status:         http.StatusOK,
+		}
+
+		next.ServeHTTP(rw, r)
+
+		logger.Info(
+			"http request",
+			slog.String("method", r.Method),
+			slog.String("path", r.URL.Path),
+			slog.Int("status", rw.status),
+			slog.Int("bytes", rw.size),
+			slog.Duration("duration", time.Since(start)),
+			slog.String("remote_addr", r.RemoteAddr),
+		)
+	})
+}
+func main() {
+
+	if err := godotenv.Load(); err != nil {
+		logger.Error("failed to load .env", "error", err)
+		os.Exit(1)
+	}
+
 	if err := initJWKS(); err != nil {
-		log.Fatal(err)
+		logger.Error("failed to initialize JWKS", "error", err)
+		os.Exit(1)
 	}
 	ctx := context.Background()
 
 	// Initialize PostgreSQL connection pool
 	var err error
-
 	db, err = pgxpool.New(ctx, os.Getenv("DATABASE_URL"))
 	if err != nil {
-		log.Fatal("failed to connect to database:", err)
+		logger.Error("failed to connect to database:", err)
 	}
 	defer db.Close()
 
 	// Verify the connection
 	if err := db.Ping(ctx); err != nil {
-		log.Fatal("failed to ping database:", err)
+		logger.Error("failed to ping database:", err)
 	}
-	log.Println("Connected to PostgreSQL")
+	logger.Info("Connected to PostgreSQL")
 
 	mux := http.NewServeMux()
 	//Public Endpoints
@@ -59,7 +112,7 @@ func main() {
 	mux.HandleFunc("GET /api/threads/{threadID}/replies", getReplies)
 	mux.HandleFunc("GET /api/threads/{threadID}", getThreadByID)
 
-	//Authrized endpoints by Neon better-auth token
+	//Authorized endpoints by Neon better-auth token
 	mux.HandleFunc("POST /api/forums/{forumID}/threads", createThread)
 	mux.HandleFunc("GET /api/me", meHandler)
 	mux.HandleFunc(
@@ -67,16 +120,47 @@ func main() {
 		createReply,
 	)
 
-	server := http.Server{
+	handler := recoverMiddleware(
+		loggerMiddleware(
+			corsMiddleware(mux),
+		),
+	)
+
+	server := &http.Server{
 		Addr:    ":4000",
-		Handler: corsMiddleware(mux),
+		Handler: handler,
 	}
 
-	log.Println("Server running on http://localhost:4000")
+	logger.Info("server starting", "addr", server.Addr)
 
-	if err := server.ListenAndServe(); err != nil {
-		log.Fatal(err)
+	err = server.ListenAndServe()
+	if err != nil && err != http.ErrServerClosed {
+		logger.Error("server failed", "error", err)
 	}
+	logger.Info("Server is Running in port 4000")
+}
+
+func recoverMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				logger.Error(
+					"panic recovered",
+					"method", r.Method,
+					"path", r.URL.Path,
+					"error", err,
+				)
+
+				http.Error(
+					w,
+					"Internal Server Error",
+					http.StatusInternalServerError,
+				)
+			}
+		}()
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 func corsMiddleware(next http.Handler) http.Handler {
@@ -92,6 +176,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 		origin := r.Header.Get("Origin")
 		if allowedOrigins[origin] {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Add("Vary", "Origin")
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
 			w.Header().Set(
 				"Access-Control-Allow-Methods",
