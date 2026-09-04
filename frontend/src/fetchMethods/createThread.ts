@@ -1,10 +1,15 @@
 import { getAuthToken } from "../lib/getAuthToken";
 import type { Post } from "../components/PostComposer";
-export async function createThread(item: Post, forumId: number) {
+import type { CreateThreadResponse } from "../types";
+
+export async function createThread(
+  item: Post,
+  forum_id: number,
+): Promise<CreateThreadResponse> {
   const token = await getAuthToken();
   const url = "https://api.pitron-halomot.org";
 
-  await fetch(`${url}/api/forums/${forumId}/threads`, {
+  const res = await fetch(`${url}/api/forums/${forum_id}/threads`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -16,4 +21,13 @@ export async function createThread(item: Post, forumId: number) {
       notify: item.notify,
     }),
   });
+
+  if (!res.ok) {
+    const message = await res.text();
+    throw new Error(message || "Failed to create thread");
+  }
+
+  const data: CreateThreadResponse = await res.json();
+
+  return data;
 }

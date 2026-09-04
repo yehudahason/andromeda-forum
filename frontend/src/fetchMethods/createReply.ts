@@ -28,15 +28,6 @@ export async function createReply(
     const message = await res.text();
     throw new Error(message || "Failed to create reply");
   }
-
-  return res.json();
+  const postLink = `/forum/${forum_id}/${thread_id}`;
+  return postLink;
 }
-
-// INSERT INTO replies (
-//     thread_id,
-//     user_id,
-//     post,
-//     notify
-// )
-// VALUES ($1, $2, $3, $4)
-// RETURNING id, thread_id, user_id, post, notify, created_at;

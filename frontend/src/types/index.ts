@@ -69,3 +69,13 @@ export type User = {
   created_at: string;
   role: string;
 };
+
+export type CreateThreadResponse = {
+  id: number;
+  forum_id: number;
+  user_id: string;
+  title: string;
+  content: string;
+  notify: boolean;
+  created_at: string;
+} | null;
