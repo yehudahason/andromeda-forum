@@ -30,7 +30,7 @@ export type ReplyAuthor = {
   email: string;
   role: string;
   image_url: string | null;
-  replies_counts: number;
+  replies_count: number;
 };
 
 export type ReplyType = {

@@ -146,7 +146,7 @@ export default function Replies({
               })}
 
               <span className="flex items-center gap-1 text-sm">
-                {reply.author.replies_counts}
+                {reply.author.replies_count}
                 <span>💬</span>
               </span>
             </div>
