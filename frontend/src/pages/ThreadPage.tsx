@@ -1,50 +1,60 @@
 import { useSearchParams, useParams, Link } from "react-router-dom";
 // import replies from "../assets/threads_with_author_email.json";
 import Replies from "../components/Replies";
-import { useEffect, useState } from "react";
 import { getReplies } from "../fetchMethods/fetchReplies";
 import { getThreadByID } from "../fetchMethods/getThreadByID";
 import type { ReplyType } from "../types";
 import type { ThreadDetails } from "../types";
+import { useQuery } from "@tanstack/react-query";
 
 export default function ThreadPage() {
   const { f, id } = useParams();
   const [searchParams] = useSearchParams();
   const tpage = searchParams.get("tpage");
-  const [replies, setReplies] = useState<ReplyType[]>([]);
-  const [total, setTotal] = useState<number>(0);
-  const [tdetails, setTdetails] = useState<ThreadDetails | null>(null);
 
-  useEffect(() => {
-    async function init() {
-      if (!id) return;
-      if (f && +f < 9) return;
-      const data = await getReplies(id, Number(tpage ?? "1"));
-      setReplies(data.replies);
-      setTotal(data.total);
-      console.log(data);
-    }
-    init();
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ["threads", f, id],
+    queryFn: () => getReplies(id ?? 1, Number(tpage ?? "1")),
+  });
+  const {
+    data: data2,
+    isLoading: isLoading2,
+    isError: isError2,
+    error: error2,
+  } = useQuery({
+    queryKey: ["getThread", f, id, tpage],
+    queryFn: () => getTID(),
+  });
 
-    async function init2() {
-      try {
-        if (!id) return;
-        if (!f) return;
-        if (f && +f < 9) return;
-        const thread = await getThreadByID(+id, +f);
-        setTdetails(thread);
-        console.log(thread.title);
-        console.log(thread.author);
-        console.log(thread.content);
-        console.log(thread.id);
-      } catch (err) {
-        console.error(err);
-      }
-    }
-    init2();
-  }, [f, id, tpage]);
-  if (!tdetails || (f && (+f < 9 || +f > 12)))
-    return <h1 className="text-white text-center py-8">404</h1>;
+  async function getTID() {
+    if (!id) return;
+    if (!f) return;
+    return getThreadByID(+id, +f);
+  }
+  const replies: ReplyType[] | undefined = data?.replies;
+  const total: number | undefined = data?.total;
+  const tdetails: ThreadDetails | undefined = data2;
+
+  if (isLoading || isLoading2) {
+    return (
+      <div className="text-amber-300  mt-12 text-2xl text-center">טוען...</div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="text-red-500  mt-12 text-2xl text-center">
+        {error?.message}
+      </div>
+    );
+  }
+  if (isError2) {
+    return (
+      <div className="text-red-500  mt-12 text-2xl text-center">
+        {error2?.message}
+      </div>
+    );
+  }
   return (
     <section className="mx-auto max-w-[1280px]">
       <div className="flex my-8 text-white justify-between items-center w-full">
@@ -59,9 +69,9 @@ export default function ThreadPage() {
       <Replies
         id={id ?? "9"}
         forum={f ?? ""}
-        replies={replies}
+        replies={replies ?? []}
         current={tpage ?? "1"}
-        total={total}
+        total={total ?? 0}
         tdetails={tdetails ?? null}
       />
       <div className="flex my-8 text-white justify-between items-center w-full">

@@ -1,29 +1,35 @@
 import { useParams, Link } from "react-router-dom";
 import { useSearchParams } from "react-router-dom";
 import ThreadList from "../components/ThreadList";
-// import threads from "../assets/dummythreads.json";
-import { useEffect, useState } from "react";
 import { getThreads } from "../fetchMethods/getThreads";
 import type { ThreadType } from "../types";
+import { useQuery } from "@tanstack/react-query";
 export default function ForumPage() {
   const { f } = useParams();
   const [searchParams] = useSearchParams();
   const page = searchParams.get("page");
-  const [threads, setThreads] = useState<ThreadType[]>([]);
-  const [total, setTotal] = useState<number>(0);
-  const [forumName, setForumName] = useState<string>("");
 
-  useEffect(() => {
-    async function init() {
-      const data = await getThreads(f, Number(page ?? "1"));
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ["threads", f, page],
+    queryFn: () => getThreads(f, Number(page ?? "1")),
+  });
 
-      console.log(data);
-      setThreads(data.threads);
-      setTotal(data.total);
-      setForumName(data.forum_name);
-    }
-    init();
-  }, [f, page]);
+  const threads: ThreadType[] = data?.threads ?? [];
+  const total = data?.total ?? 0;
+  const forumName = data?.forum_name ?? "";
+  if (isLoading) {
+    return (
+      <div className="text-amber-300  mt-12 text-2xl text-center">טוען...</div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="text-red-500  mt-12 text-2xl text-center">
+        {error.message}
+      </div>
+    );
+  }
 
   if (!f || +f > 12 || +f < 9)
     return <h1 className="text-white text-center py-8">404</h1>;

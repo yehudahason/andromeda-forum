@@ -267,7 +267,7 @@ export default function Header() {
                   </ul>
                 </li>
 
-                <li className="px-2 flex gap-2 text-white relative">
+                <li className="px-2 flex items-center gap-2 text-white relative">
                   {user &&
                     GetAvatar({
                       name: user.name,
