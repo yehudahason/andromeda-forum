@@ -119,7 +119,7 @@ export default function PostComposer({
   onSubmit,
   submitText,
   initialContent = "",
-  disabled,
+  disabled = false,
 }: PostComposerProps) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [title, setTitle] = useState("");
