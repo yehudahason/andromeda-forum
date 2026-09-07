@@ -19,6 +19,7 @@ type PostComposerProps = {
   onSubmit: (data: Post) => void;
   submitText?: string;
   initialContent?: string;
+  disabled: boolean;
 };
 
 type BlockMode = "normal" | "h2" | "h3";
@@ -118,6 +119,7 @@ export default function PostComposer({
   onSubmit,
   submitText,
   initialContent = "",
+  disabled,
 }: PostComposerProps) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [title, setTitle] = useState("");
@@ -352,6 +354,7 @@ export default function PostComposer({
     (e: React.SubmitEvent<HTMLFormElement>) => {
       e.preventDefault();
       if (!editor) return;
+      if (disabled) return;
 
       const html = `
       <div dir="${direction}" style="text-align:${
@@ -367,7 +370,7 @@ export default function PostComposer({
         notify,
       });
     },
-    [editor, isThread, notify, onSubmit, title, direction],
+    [disabled, editor, isThread, notify, onSubmit, title, direction],
   );
 
   return (
@@ -626,20 +629,27 @@ export default function PostComposer({
         <div className="flex justify-center gap-3 py-[22px]">
           <button
             type="submit"
+            disabled={disabled}
             className="
-                cursor-pointer
-                rounded-[5px]
-                border-0
-                bg-[#09bcdc]
-                px-[25px]
-                py-[14px]
-                text-[16px]
-                text-[#111]
-                transition
-                hover:bg-[#19c8e5]
-              "
+    cursor-pointer
+    rounded-[5px]
+    border-0
+    bg-[#09bcdc]
+    px-[25px]
+    py-[14px]
+    text-[16px]
+    text-[#111]
+    transition
+    hover:bg-[#19c8e5]
+
+    disabled:cursor-not-allowed
+    disabled:opacity-50
+    disabled:hover:bg-[#09bcdc]
+  "
           >
-            {submitText ?? (isThread ? "פרסם נושא" : "שלח תגובה")}
+            {disabled
+              ? "שולח..."
+              : (submitText ?? (isThread ? "פרסם נושא" : "שלח תגובה"))}
           </button>
         </div>
 

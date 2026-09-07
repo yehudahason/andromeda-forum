@@ -3,32 +3,55 @@ import PostComposer from "../components/PostComposer";
 import type { Post } from "../components/PostComposer";
 import { createReply } from "../fetchMethods/createReply";
 import AfterPost from "../components/AfterPost";
-import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+
 export default function NewReply() {
   const { f, t } = useParams();
-  const [response, setResponse] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  async function handleCreate(item: Post) {
-    if (!f) return;
-    if (!t) return;
-    try {
-      const res = await createReply(item, +f, +t);
-      setResponse(res);
-    } catch (e) {
-      console.log(e);
-      setResponse("fail");
-    }
+  const createReplyMutation = useMutation({
+    mutationFn: (item: Post) => {
+      if (!f || !t) {
+        throw new Error("Forum ID or thread ID is missing");
+      }
+
+      return createReply(item, Number(f), Number(t));
+    },
+
+    onSuccess: () => {
+      // Refresh replies for this thread
+      queryClient.invalidateQueries({
+        queryKey: ["threads", f, t],
+      });
+
+      // Refresh thread details too
+      queryClient.invalidateQueries({
+        queryKey: ["getThread", f, t],
+      });
+    },
+
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+
+  if (createReplyMutation.isSuccess) {
+    return <AfterPost success={true} postLink={createReplyMutation.data} />;
   }
+
+  if (createReplyMutation.isError) {
+    return <AfterPost success={false} postLink="" />;
+  }
+
   return (
-    <div>
-      {response ? (
-        <AfterPost success={response != "fail"} postLink={response} />
-      ) : (
-        <PostComposer
-          mode="reply"
-          onSubmit={(item: Post) => handleCreate(item)}
-        />
-      )}
-    </div>
+    <PostComposer
+      mode="reply"
+      disabled={createReplyMutation.isPending}
+      onSubmit={(item: Post) => {
+        if (createReplyMutation.isPending) return;
+
+        createReplyMutation.mutate(item);
+      }}
+    />
   );
 }

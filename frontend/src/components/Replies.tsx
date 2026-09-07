@@ -108,7 +108,6 @@ export default function Replies({
                   <div className=" sm:mr-40 mr-20 flex  gap-4  flex-wrap">
                     <span className="flex flex-wrap gap-2">
                       <p>{formatDateFull(tdetails.created_at)}</p>
-                      <p> ב פורום אסטרונומיה</p>
                     </span>
                   </div>
 
