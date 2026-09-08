@@ -1,5 +1,7 @@
-import React, { memo, Suspense, useCallback, useEffect, useState } from "react";
+import React, { Suspense, useCallback, useEffect, useState } from "react";
 import ImagePrompt from "./ImagePrompt";
+import { ToolbarSeparator } from "./ToolbarSeperator";
+import { EditorButton } from "./EditorButton";
 import type { Editor } from "@tiptap/core";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -178,14 +180,25 @@ export default function PostComposer({
     extensions: [
       StarterKit.configure({
         codeBlock: false,
+        link: false,
+        underline: false,
       }),
 
       Underline,
 
+      // Link.configure({
+      //   openOnClick: false,
+      //   autolink: false,
+      //   linkOnPaste: true,
+      // }),
       Link.configure({
         openOnClick: false,
         autolink: false,
         linkOnPaste: true,
+        HTMLAttributes: {
+          target: "_blank",
+          rel: "noopener noreferrer",
+        },
       }),
 
       Image,
@@ -424,7 +437,7 @@ export default function PostComposer({
             תוכן <span className="mr-1.5 text-red-700">חובה</span>
           </label>
           <p dir="ltr" className="text-left mb-2">
-            Enter new line after code block.
+            Enter new line after a code block.
           </p>
 
           <div className="relative rounded-[5px] border border-[#888] bg-[#222]">
@@ -789,61 +802,3 @@ export default function PostComposer({
     </>
   );
 }
-
-const EditorButton = memo(function EditorButton({
-  children,
-  onClick,
-  title,
-  active = false,
-}: {
-  children: React.ReactNode;
-  onClick?: () => void;
-  title?: string;
-  active?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      title={title}
-      onMouseDown={(e) => {
-        e.preventDefault();
-      }}
-      onClick={onClick}
-      className={`
-        flex
-        h-[32px]
-        min-w-[30px]
-        cursor-pointer
-        items-center
-        justify-center
-        rounded-[3px]
-        border-0
-        px-1
-        
-        transition
-        text-[16px]
-        ${
-          active
-            ? "bg-[#666] text-white"
-            : "bg-transparent text-[#ddd] hover:bg-[#444]"
-        }
-      `}
-    >
-      {children}
-    </button>
-  );
-});
-
-const ToolbarSeparator = memo(function ToolbarSeparator() {
-  return <span className="mx-[7px] h-[25px] w-px bg-[#555]" />;
-});
-
-// INSERT INTO threads (
-//     forum_id,
-//     user_id,
-//     title,
-//     content,
-//     notify
-// )
-// VALUES ($1, $2, $3, $4, $5)
-// RETURNING id, forum_id, user_id, title, content, notify, created_at;

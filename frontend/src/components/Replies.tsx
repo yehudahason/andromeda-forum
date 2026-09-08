@@ -60,9 +60,9 @@ export default function Replies({
                   {tdetails.title}
                 </div>
 
-                <div className="flex  pr-4  gap-8">
+                <div className="flex  sm:pr-4  pr-2 sm:gap-8 gap-2">
                   <div className="flex mt-6 flex-col gap-4 justify-start items-center">
-                    <span className="w-30 text-center font-medium flex gap-2">
+                    <span className="sm:w-30 w-20 text-center font-medium flex gap-2">
                       <p>{tdetails.author}</p>
                     </span>
                     <span className="">
@@ -145,8 +145,8 @@ export default function Replies({
         >
           {/* Header */}
 
-          <div className="w-full flex gap-4 min-w-0">
-            <div className="flex w-30 shrink-0 flex-col justify-start pt-6 gap-6 items-center">
+          <div className="w-full flex sm:gap-8 gap-4 min-w-0">
+            <div className="flex sm:w-30 w-20 shrink-0 flex-col justify-start pt-6 gap-6 items-center">
               <span className="text-center">{reply.author.name}</span>
 
               {GetAvatar({
