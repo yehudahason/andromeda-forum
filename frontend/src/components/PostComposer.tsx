@@ -1,12 +1,12 @@
 import React, { memo, Suspense, useCallback, useEffect, useState } from "react";
-
+import ImagePrompt from "./ImagePrompt";
 import type { Editor } from "@tiptap/core";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import Link from "@tiptap/extension-link";
 import CodeBlock from "@tiptap/extension-code-block";
-
+import Image from "@tiptap/extension-image";
 const EmojiPicker = React.lazy(() => import("emoji-picker-react"));
 
 export type Post = {
@@ -124,6 +124,7 @@ export default function PostComposer({
   disabled = false,
 }: PostComposerProps) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showImagePrompt, setShowImagePrompt] = useState(false);
   const [title, setTitle] = useState("");
   const [notify, setNotify] = useState(false);
   const [bold, setBold] = useState(false);
@@ -178,25 +179,22 @@ export default function PostComposer({
       StarterKit.configure({
         codeBlock: false,
       }),
+
       Underline,
+
       Link.configure({
         openOnClick: false,
         autolink: false,
         linkOnPaste: true,
-        HTMLAttributes: {
-          target: "_blank",
-          rel: "noopener noreferrer",
-        },
       }),
+
+      Image,
+
       CodeBlock.configure({
         HTMLAttributes: {
           class: CODE_CLASS,
           dir: "ltr",
         },
-        exitOnTripleEnter: true,
-        exitOnArrowDown: true,
-        enableTabIndentation: true,
-        tabSize: 2,
       }),
     ],
     content: initialContent,
@@ -250,7 +248,14 @@ export default function PostComposer({
     },
     [editor],
   );
+  const addImage = useCallback(
+    (url: string) => {
+      if (!editor || !url?.trim()) return;
 
+      editor.chain().focus().setImage({ src: url.trim() }).run();
+    },
+    [editor],
+  );
   const toggleList = useCallback(
     (list: "bullet" | "numbered") => {
       if (!editor) return;
@@ -419,7 +424,7 @@ export default function PostComposer({
             תוכן <span className="mr-1.5 text-red-700">חובה</span>
           </label>
           <p dir="ltr" className="text-left mb-2">
-            To exit code block enter new line 3 times.
+            Enter new line after code block.
           </p>
 
           <div className="relative rounded-[5px] border border-[#888] bg-[#222]">
@@ -545,7 +550,12 @@ export default function PostComposer({
                     </div>
                   )}
                 </div>
-
+                <EditorButton
+                  onClick={() => setShowImagePrompt(true)}
+                  title="Add image"
+                >
+                  🖼️
+                </EditorButton>
                 <EditorButton
                   onClick={toggleCode}
                   title={isCodeActive ? "Exit code" : "Code"}
@@ -771,6 +781,11 @@ export default function PostComposer({
           </div>
         )}
       </form>
+      <ImagePrompt
+        open={showImagePrompt}
+        onClose={() => setShowImagePrompt(false)}
+        onSubmit={addImage}
+      />
     </>
   );
 }
