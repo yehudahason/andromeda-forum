@@ -56,11 +56,13 @@ const EDITOR_CLASSES = `
   [&_.ProseMirror_h3]:text-xl
   [&_.ProseMirror_h3]:font-bold
 
-  [&_.ProseMirror_ul]:mr-6
-  [&_.ProseMirror_ul]:list-disc
+  [&_.ProseMirror_ul]:ps-6
+[&_.ProseMirror_ul]:list-disc
+[&_.ProseMirror_ul]:list-outside
 
-  [&_.ProseMirror_ol]:mr-6
-  [&_.ProseMirror_ol]:list-decimal
+[&_.ProseMirror_ol]:ps-6
+[&_.ProseMirror_ol]:list-decimal
+[&_.ProseMirror_ol]:list-outside
 
   [&_.ProseMirror_a]:text-cyan-300
   [&_.ProseMirror_a]:underline
@@ -201,7 +203,6 @@ export default function PostComposer({
     editorProps: {
       attributes: {
         class: "tiptap",
-        dir: "rtl",
         "data-placeholder": "Enter text or type '/' for commands",
       },
     },

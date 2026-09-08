@@ -60,8 +60,8 @@ export default function Replies({
                   {tdetails.title}
                 </div>
 
-                <div className="flex  pr-4 items-center gap-8">
-                  <div className="flex flex-col gap-4 justify-center items-center">
+                <div className="flex  pr-4  gap-8">
+                  <div className="flex mt-6 flex-col gap-4 justify-start items-center">
                     <span className="w-30 text-center font-medium flex gap-2">
                       <p>{tdetails.author}</p>
                     </span>
@@ -79,6 +79,17 @@ export default function Replies({
                   </div>
                   <div
                     className="
+                    [&_a]:text-sky-400
+                    [&_a]:underline
+           [&_ul]:list-disc
+[&_ul]:ps-6
+[&_ul]:list-outside
+
+[&_ol]:list-decimal
+[&_ol]:ps-6
+[&_ol]:list-outside
+
+[&_li]:my-1
     w-full
     max-w-full
     min-w-0
@@ -160,6 +171,17 @@ export default function Replies({
 
                 <div
                   className="
+                   [&_a]:text-sky-400
+                    [&_a]:underline
+                  [&_ul]:list-disc
+[&_ul]:ps-6
+[&_ul]:list-outside
+
+[&_ol]:list-decimal
+[&_ol]:ps-6
+[&_ol]:list-outside
+
+[&_li]:my-1
           w-full
           max-w-full
           min-w-0
