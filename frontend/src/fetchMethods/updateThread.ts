@@ -1,25 +1,29 @@
-export async function updateThread(
-  id: number,
-  data: {
-    title: string;
-    content: string;
-    notify: boolean;
-  },
-  token: string,
-) {
-  const response = await fetch(`/api/threads/${id}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(data),
-  });
+import type { Post } from "../components/PostComposer";
+import { getAuthToken } from "../lib/getAuthToken";
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(error || "Failed to update thread");
+export async function updateThread(item: Post, threadID: number) {
+  const token = await getAuthToken();
+
+  const res = await fetch(
+    `https://api.pitron-halomot.org/api/threads/${threadID}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        title: item.title,
+        content: item.content,
+        notify: item.notify,
+      }),
+    },
+  );
+
+  if (!res.ok) {
+    const message = await res.text();
+    throw new Error(message || "Failed to update thread");
   }
 
-  return response.json();
+  return res.json();
 }

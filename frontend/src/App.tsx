@@ -8,6 +8,7 @@ import NewThread from "./pages/NewThread";
 import NewReply from "./pages/NewReply";
 import AuthGuard from "./components/Guard";
 import UploadPage from "./pages/UploadPage";
+import EditThread from "./pages/EditThread";
 
 export default function App() {
   return (
@@ -16,10 +17,18 @@ export default function App() {
       <Route path="/forum/:f" element={<ForumPage />} />
       <Route path="/forum/:f/:id" element={<ThreadPage />} />
       <Route
-        path="/post/:f/"
+        path="/post/:f"
         element={
           <AuthGuard>
             <NewThread />
+          </AuthGuard>
+        }
+      />
+      <Route
+        path="/editThread/:f/:id"
+        element={
+          <AuthGuard>
+            <EditThread />
           </AuthGuard>
         }
       />

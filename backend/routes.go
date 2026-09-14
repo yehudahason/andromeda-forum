@@ -510,6 +510,115 @@ func createThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func updateThread(w http.ResponseWriter, r *http.Request) {
+	threadIDString := r.PathValue("threadID")
+
+	threadID, err := strconv.ParseInt(threadIDString, 10, 64)
+	if err != nil || threadID <= 0 {
+		http.Error(w, "Invalid thread ID", http.StatusBadRequest)
+		return
+	}
+
+	user, err := getUserID(r)
+	if err != nil {
+		if errors.Is(err, ErrUnauthorized) {
+			w.Header().Set("WWW-Authenticate", "Bearer")
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		log.Printf("updateThread authentication error: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	var input struct {
+		Title   string `json:"title"`
+		Content string `json:"content"`
+		Notify  bool   `json:"notify"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	input.Title = strings.TrimSpace(input.Title)
+	input.Content = strings.TrimSpace(input.Content)
+
+	if input.Title == "" {
+		http.Error(w, "Title is required", http.StatusBadRequest)
+		return
+	}
+
+	if utf8.RuneCountInString(input.Title) > 255 {
+		http.Error(w, "Title is too long", http.StatusBadRequest)
+		return
+	}
+
+	if input.Content == "" {
+		http.Error(w, "Content is required", http.StatusBadRequest)
+		return
+	}
+
+	if utf8.RuneCountInString(input.Content) > 100000 {
+		http.Error(w, "Content is too long", http.StatusBadRequest)
+		return
+	}
+
+	var thread struct {
+		ID      int64  `json:"id"`
+		Title   string `json:"title"`
+		Content string `json:"content"`
+		Notify  bool   `json:"notify"`
+	}
+
+	err = db.QueryRow(
+		r.Context(),
+		`
+		UPDATE threads
+		SET
+			title = $1,
+			content = $2,
+			notify = $3
+		WHERE id = $4
+		  AND user_id = $5
+		RETURNING
+			id,
+			title,
+			content,
+			notify
+		`,
+		input.Title,
+		input.Content,
+		input.Notify,
+		threadID,
+		user.ID,
+	).Scan(
+		&thread.ID,
+		&thread.Title,
+		&thread.Content,
+		&thread.Notify,
+	)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			http.Error(w, "Thread not found or not allowed", http.StatusNotFound)
+			return
+		}
+
+		log.Printf("updateThread database error: %v", err)
+		http.Error(w, "Failed to update thread", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	if err := json.NewEncoder(w).Encode(thread); err != nil {
+		log.Printf("updateThread encode error: %v", err)
+	}
+}
 func getThreadByID(w http.ResponseWriter, r *http.Request) {
 	var forumID int64
 

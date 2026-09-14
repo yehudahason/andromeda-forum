@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Pagination from "./Paginatiom";
 import { formatDateFull } from "../utils/formatDateFull";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { GetAvatar } from "../utils/GetAvatar";
 import type { ReplyType } from "../types";
 import type { ThreadDetails } from "../types";
@@ -25,6 +25,7 @@ export default function Replies({
 }: RepliesProp) {
   const navigate = useNavigate();
   const [currentPage, setCurrenpage] = useState(+current);
+  const baseUrl = import.meta.env.BASE_URL;
 
   function handlePage(page: number) {
     setCurrenpage(page);
@@ -123,6 +124,9 @@ export default function Replies({
                   </div>
 
                   <div className="flex gap-4 justify-center items-center">
+                    <Link to={`/editThread/${forum}/${tdetails.id}`}>
+                      <img src={`${baseUrl}edit.png`} alt="" />
+                    </Link>
                     <button className="py-2 px-4 bg-none rounded-lg">
                       שתף
                     </button>
@@ -229,6 +233,9 @@ export default function Replies({
                     <span className="flex h-9 w-9 items-center justify-center rounded bg-white text-black">
                       ✓
                     </span>
+                  </button>
+                  <button>
+                    <img src={`${baseUrl}edit.png`} alt="" />
                   </button>
                 </div>
                 {/* Like */}

@@ -9,6 +9,7 @@ import Underline from "@tiptap/extension-underline";
 import Link from "@tiptap/extension-link";
 import CodeBlock from "@tiptap/extension-code-block";
 import Image from "@tiptap/extension-image";
+import type { ThreadDetails } from "../types";
 const EmojiPicker = React.lazy(() => import("emoji-picker-react"));
 
 export type Post = {
@@ -17,10 +18,11 @@ export type Post = {
   notify: boolean;
 };
 type PostComposerProps = {
+  tdetails?: ThreadDetails;
   mode: "thread" | "reply";
   onSubmit: (data: Post) => void;
   submitText?: string;
-  initialContent?: string;
+  // initialContent?: string;
   disabled: boolean;
 };
 
@@ -119,15 +121,16 @@ const FORCE_CODE_LTR_CSS = `
 `;
 
 export default function PostComposer({
+  tdetails,
   mode,
   onSubmit,
   submitText,
-  initialContent = "",
+  // initialContent = tdetails?.content,
   disabled = false,
 }: PostComposerProps) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showImagePrompt, setShowImagePrompt] = useState(false);
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState(tdetails ? tdetails.title : "");
   const [notify, setNotify] = useState(false);
   const [bold, setBold] = useState(false);
   const [italic, setItalic] = useState(false);
@@ -148,7 +151,6 @@ export default function PostComposer({
   } | null>(null);
   const baseUrl = import.meta.env.BASE_URL;
   const isThread = mode === "thread";
-
   const updateToolbarStates = useCallback((currentEditor: Editor) => {
     if (!currentEditor) return;
 
@@ -210,7 +212,7 @@ export default function PostComposer({
         },
       }),
     ],
-    content: initialContent,
+    content: tdetails?.content ?? "",
     editorProps: {
       attributes: {
         class: "tiptap",
@@ -226,12 +228,25 @@ export default function PostComposer({
   });
 
   useEffect(() => {
-    if (editor && initialContent !== editor.getHTML()) {
-      editor.commands.setContent(initialContent, {
-        emitUpdate: false,
-      });
+    if (!editor || !tdetails) return;
+
+    editor.commands.setContent(tdetails.content ?? "", {
+      emitUpdate: false,
+    });
+
+    async function init() {
+      setTitle(tdetails?.title ?? "");
     }
-  }, [editor, initialContent]);
+    init();
+  }, [editor, tdetails]);
+
+  // useEffect(() => {
+  //   if (editor && initialContent !== editor.getHTML()) {
+  //     editor.commands.setContent(initialContent, {
+  //       emitUpdate: false,
+  //     });
+  //   }
+  // }, [editor, initialContent]);
 
   const executeStyle = useCallback(
     (style: "bold" | "italic" | "underline") => {
@@ -438,6 +453,9 @@ export default function PostComposer({
           </label>
           <p dir="ltr" className="text-left mb-2">
             Enter new line after a code block.
+          </p>
+          <p dir="ltr" className="text-left mb-2">
+            Default is RTL ,Change to LTR as neccessery.
           </p>
 
           <div className="relative rounded-[5px] border border-[#888] bg-[#222]">
