@@ -1,24 +1,28 @@
-export async function updateReply(
-  id: string,
-  data: {
-    post: string;
-    notify: boolean;
-  },
-  token: string,
-) {
-  const response = await fetch(`/api/replies/${id}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(data),
-  });
+import type { Post } from "../components/PostComposer";
+import { getAuthToken } from "../lib/getAuthToken";
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(error || "Failed to update reply");
+export async function updateReply(item: Post, replyID: string) {
+  const token = await getAuthToken();
+
+  const res = await fetch(
+    `https://api.pitron-halomot.org/api/replies/${replyID}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        post: item.content,
+        notify: item.notify,
+      }),
+    },
+  );
+
+  if (!res.ok) {
+    const message = await res.text();
+    throw new Error(message || "Failed to update reply");
   }
 
-  return response.json();
+  return res.json();
 }

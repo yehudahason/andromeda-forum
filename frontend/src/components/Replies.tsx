@@ -10,13 +10,13 @@ type RepliesProp = {
   replies: ReplyType[];
   current: string;
   forum: string;
-  id: string;
+  tid: string;
   total: number;
   tdetails: ThreadDetails | null;
 };
 
 export default function Replies({
-  id,
+  tid,
   forum,
   total,
   replies,
@@ -29,7 +29,7 @@ export default function Replies({
 
   function handlePage(page: number) {
     setCurrenpage(page);
-    navigate(`/forum/${forum}/${id}/?tpage=${page}`);
+    navigate(`/forum/${forum}/${tid}/?tpage=${page}`);
     scrollToTop();
   }
 
@@ -234,9 +234,9 @@ export default function Replies({
                       ✓
                     </span>
                   </button>
-                  <button>
+                  <Link to={`/editReply/${forum}/${tid}/${reply.id}`}>
                     <img src={`${baseUrl}edit.png`} alt="" />
-                  </button>
+                  </Link>
                 </div>
                 {/* Like */}
                 <button

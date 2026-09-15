@@ -7,21 +7,25 @@ import { getThreadByID } from "../fetchMethods/getThreadByID";
 import type { ThreadDetails } from "../types";
 
 export default function EditThread() {
-  const { f, id } = useParams();
+  const { f, t } = useParams();
 
   const queryClient = useQueryClient();
 
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ["getThread", f, t],
+    queryFn: () => getThreadByID(Number(t), Number(f)),
+    enabled: !!t && !!f,
+  });
+
   const updateThreadMutation = useMutation({
     mutationFn: (item: Post) => {
-      if (!id) {
+      if (!t) {
         throw new Error("Thread ID is missing");
       }
 
-      return updateThread(item, Number(id));
+      return updateThread(item, Number(t));
     },
 
-    // mutations do not retry by default,
-    // but this makes the intention explicit
     retry: false,
 
     onSuccess: () => {
@@ -30,7 +34,7 @@ export default function EditThread() {
       });
 
       queryClient.invalidateQueries({
-        queryKey: ["getThread", f, id],
+        queryKey: ["getThread", f, t],
       });
     },
 
@@ -39,37 +43,34 @@ export default function EditThread() {
     },
   });
 
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["getThread", f, id],
-    queryFn: () => getTID(),
-  });
-  async function getTID() {
-    if (!id) return;
-    if (!f) return;
-    return getThreadByID(+id, +f);
-  }
   const tdetails: ThreadDetails | undefined = data;
-  if (updateThreadMutation.isSuccess) {
-    return <AfterPost success={true} postLink={`/forum/${f}/${id}`} />;
-  }
-  if (isError)
+
+  if (isError) {
     return <h3 className="text-red-500 text-center py-8">{error.message}</h3>;
+  }
+
+  if (updateThreadMutation.isSuccess) {
+    return <AfterPost success={true} postLink={`/forum/${f}/${t}`} />;
+  }
+
   if (updateThreadMutation.isError) {
     return <AfterPost success={false} postLink="" />;
   }
 
-  if (isLoading)
+  if (isLoading) {
     return <h3 className="text-amber-300 text-center py-8">המתן..</h3>;
+  }
+
   return (
     <PostComposer
-      tdetails={tdetails}
+      post={{
+        title: tdetails?.title,
+        content: tdetails?.content,
+        notify: false,
+      }}
       mode="thread"
       disabled={updateThreadMutation.isPending}
       onSubmit={(item: Post) => {
-        if (updateThreadMutation.isPending) {
-          return;
-        }
-
         updateThreadMutation.mutate(item);
       }}
     />

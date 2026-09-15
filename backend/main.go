@@ -111,10 +111,12 @@ func main() {
 	mux.HandleFunc("GET /api/forums/{forumID}/threads", getThreads)
 	mux.HandleFunc("GET /api/threads/{threadID}/replies", getReplies)
 	mux.HandleFunc("GET /api/threads/{threadID}", getThreadByID)
+	mux.HandleFunc("GET /api/replies/{replyID}", getReplyByID)
 
 	//Authorized endpoints by Neon better-auth token
 	mux.HandleFunc("POST /api/forums/{forumID}/threads", createThread)
 	mux.HandleFunc("PUT /api/threads/{threadID}", updateThread)
+	mux.HandleFunc("PUT /api/replies/{replyID}", updateReply)
 	mux.HandleFunc("POST /api/upload", uploadImageHandler)
 	mux.HandleFunc("GET /api/me", meHandler)
 	mux.HandleFunc(

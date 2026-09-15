@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
 	"unicode/utf8"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -619,6 +621,151 @@ func updateThread(w http.ResponseWriter, r *http.Request) {
 		log.Printf("updateThread encode error: %v", err)
 	}
 }
+
+func updateReply(w http.ResponseWriter, r *http.Request) {
+	replyID := r.PathValue("replyID")
+
+	user, err := getUserID(r)
+	if err != nil {
+		if errors.Is(err, ErrUnauthorized) {
+			w.Header().Set("WWW-Authenticate", "Bearer")
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		log.Printf("updateReply authentication error: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	var input struct {
+		Post   string `json:"post"`
+		Notify bool   `json:"notify"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	input.Post = strings.TrimSpace(input.Post)
+
+	if input.Post == "" {
+		http.Error(w, "Post is required", http.StatusBadRequest)
+		return
+	}
+
+	if utf8.RuneCountInString(input.Post) > 100000 {
+		http.Error(w, "Post is too long", http.StatusBadRequest)
+		return
+	}
+
+	var reply struct {
+		ID     uuid.UUID `json:"id"`
+		Post   string    `json:"post"`
+		Notify bool      `json:"notify"`
+	}
+
+	err = db.QueryRow(
+		r.Context(),
+		`
+		UPDATE replies
+		SET
+			post = $1,
+			notify = $2
+		WHERE id = $3
+		  AND user_id = $4
+		RETURNING
+			id,
+			post,
+			notify
+		`,
+		input.Post,
+		input.Notify,
+		replyID,
+		user.ID,
+	).Scan(
+		&reply.ID,
+		&reply.Post,
+		&reply.Notify,
+	)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			http.Error(w, "Reply not found or not allowed", http.StatusNotFound)
+			return
+		}
+
+		log.Printf("updateReply database error: %v", err)
+		http.Error(w, "Failed to update reply", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	if err := json.NewEncoder(w).Encode(reply); err != nil {
+		log.Printf("updateReply encode error: %v", err)
+	}
+}
+
+type ReplyPost struct {
+	ID     string `json:"id"`
+	Post   string `json:"post"`
+	Notify bool   `json:"notify"`
+}
+
+func getReplyByID(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("replyID")
+
+	if id == "" {
+		http.Error(w, "Reply ID is required", http.StatusBadRequest)
+		return
+	}
+
+	var reply ReplyPost
+
+	err := db.QueryRow(
+		r.Context(),
+		`
+		SELECT
+			id,
+			post,
+			notify
+		FROM replies
+		WHERE id = $1
+		`,
+		id,
+	).Scan(
+		&reply.ID,
+		&reply.Post,
+		&reply.Notify,
+	)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			http.Error(w, "Reply not found", http.StatusNotFound)
+			return
+		}
+
+		slog.Error("failed to get reply",
+			"reply_id", id,
+			"error", err,
+		)
+
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	if err := json.NewEncoder(w).Encode(reply); err != nil {
+		slog.Error("failed to encode reply",
+			"reply_id", id,
+			"error", err,
+		)
+	}
+}
+
 func getThreadByID(w http.ResponseWriter, r *http.Request) {
 	var forumID int64
 

@@ -79,3 +79,9 @@ export type CreateThreadResponse = {
   notify: boolean;
   created_at: string;
 } | null;
+
+export type ReplyPost = {
+  id: string;
+  post: string;
+  notify: boolean;
+};

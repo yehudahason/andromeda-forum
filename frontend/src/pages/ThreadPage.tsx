@@ -8,13 +8,13 @@ import type { ThreadDetails } from "../types";
 import { useQuery } from "@tanstack/react-query";
 
 export default function ThreadPage() {
-  const { f, id } = useParams();
+  const { f, t } = useParams();
   const [searchParams] = useSearchParams();
   const tpage = searchParams.get("tpage");
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["threads", f, id],
-    queryFn: () => getReplies(id ?? 1, Number(tpage ?? "1")),
+    queryKey: ["threads", f, t],
+    queryFn: () => getReplies(t ?? 1, Number(tpage ?? "1")),
   });
   const {
     data: data2,
@@ -22,14 +22,14 @@ export default function ThreadPage() {
     isError: isError2,
     error: error2,
   } = useQuery({
-    queryKey: ["getThread", f, id, tpage],
+    queryKey: ["getThread", f, t, tpage],
     queryFn: () => getTID(),
   });
 
   async function getTID() {
-    if (!id) return;
+    if (!t) return;
     if (!f) return;
-    return getThreadByID(+id, +f);
+    return getThreadByID(+t, +f);
   }
   const replies: ReplyType[] | undefined = data?.replies;
   const total: number | undefined = data?.total;
@@ -61,13 +61,13 @@ export default function ThreadPage() {
         <h3 className="text-2xl font-semibold">{tdetails?.forum_name}</h3>
         <Link
           className="bg-sky-400 text-black py-2 px-4 rounded-lg"
-          to={`/post/${f}/${id}`}
+          to={`/post/${f}/${t}`}
         >
           שלח תגובה
         </Link>
       </div>
       <Replies
-        id={id ?? "9"}
+        tid={t ?? "9"}
         forum={f ?? ""}
         replies={replies ?? []}
         current={tpage ?? "1"}
@@ -77,7 +77,7 @@ export default function ThreadPage() {
       <div className="flex my-8 text-white justify-between items-center w-full">
         <Link
           className="bg-sky-400 text-black py-2 px-4 rounded-lg"
-          to={`/post/${f}/${id}`}
+          to={`/post/${f}/${t}`}
         >
           שלח תגובה
         </Link>

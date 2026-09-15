@@ -9,13 +9,14 @@ import NewReply from "./pages/NewReply";
 import AuthGuard from "./components/Guard";
 import UploadPage from "./pages/UploadPage";
 import EditThread from "./pages/EditThread";
+import EditReply from "./pages/EditReply";
 
 export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/forum/:f" element={<ForumPage />} />
-      <Route path="/forum/:f/:id" element={<ThreadPage />} />
+      <Route path="/forum/:f/:t" element={<ThreadPage />} />
       <Route
         path="/post/:f"
         element={
@@ -25,7 +26,7 @@ export default function App() {
         }
       />
       <Route
-        path="/editThread/:f/:id"
+        path="/editThread/:f/:t"
         element={
           <AuthGuard>
             <EditThread />
@@ -37,6 +38,14 @@ export default function App() {
         element={
           <AuthGuard>
             <NewReply />
+          </AuthGuard>
+        }
+      />
+      <Route
+        path="/editReply/:f/:t/:id"
+        element={
+          <AuthGuard>
+            <EditReply />
           </AuthGuard>
         }
       />

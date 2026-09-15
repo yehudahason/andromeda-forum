@@ -9,16 +9,15 @@ import Underline from "@tiptap/extension-underline";
 import Link from "@tiptap/extension-link";
 import CodeBlock from "@tiptap/extension-code-block";
 import Image from "@tiptap/extension-image";
-import type { ThreadDetails } from "../types";
 const EmojiPicker = React.lazy(() => import("emoji-picker-react"));
 
 export type Post = {
   title?: string;
-  content: string;
+  content: string | undefined;
   notify: boolean;
 };
 type PostComposerProps = {
-  tdetails?: ThreadDetails;
+  post?: Post;
   mode: "thread" | "reply";
   onSubmit: (data: Post) => void;
   submitText?: string;
@@ -121,7 +120,7 @@ const FORCE_CODE_LTR_CSS = `
 `;
 
 export default function PostComposer({
-  tdetails,
+  post,
   mode,
   onSubmit,
   submitText,
@@ -130,7 +129,7 @@ export default function PostComposer({
 }: PostComposerProps) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showImagePrompt, setShowImagePrompt] = useState(false);
-  const [title, setTitle] = useState(tdetails ? tdetails.title : "");
+  const [title, setTitle] = useState(post ? post.title : "");
   const [notify, setNotify] = useState(false);
   const [bold, setBold] = useState(false);
   const [italic, setItalic] = useState(false);
@@ -212,7 +211,7 @@ export default function PostComposer({
         },
       }),
     ],
-    content: tdetails?.content ?? "",
+    content: post?.content ?? "",
     editorProps: {
       attributes: {
         class: "tiptap",
@@ -228,17 +227,17 @@ export default function PostComposer({
   });
 
   useEffect(() => {
-    if (!editor || !tdetails) return;
+    if (!editor || !post) return;
 
-    editor.commands.setContent(tdetails.content ?? "", {
+    editor.commands.setContent(post.content ?? "", {
       emitUpdate: false,
     });
 
     async function init() {
-      setTitle(tdetails?.title ?? "");
+      setTitle(post?.title ?? "");
     }
     init();
-  }, [editor, tdetails]);
+  }, [editor, post]);
 
   // useEffect(() => {
   //   if (editor && initialContent !== editor.getHTML()) {
