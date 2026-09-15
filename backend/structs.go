@@ -75,6 +75,11 @@ type Reply struct {
 	UpdatedAt time.Time   `json:"updated_at"`
 }
 
+type ReplyPost struct {
+	ID     string `json:"id"`
+	Post   string `json:"post"`
+	Notify bool   `json:"notify"`
+}
 type ReplyListResponse struct {
 	Replies []Reply `json:"replies"`
 	Total   int64   `json:"total"`

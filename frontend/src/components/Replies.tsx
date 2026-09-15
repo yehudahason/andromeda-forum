@@ -144,6 +144,7 @@ export default function Replies({
       {replies.map((reply) => (
         <li
           key={reply.id}
+          id={reply.id}
           dir="rtl"
           className=" rounded-md bg-[#555] sm:px-5 p-1 py-4 text-white"
         >

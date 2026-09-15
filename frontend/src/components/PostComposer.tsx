@@ -124,7 +124,6 @@ export default function PostComposer({
   mode,
   onSubmit,
   submitText,
-  // initialContent = tdetails?.content,
   disabled = false,
 }: PostComposerProps) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);

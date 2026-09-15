@@ -15,5 +15,7 @@ export async function getReplies(
     throw new Error(error || "Failed to get replies");
   }
 
-  return await response.json();
+  const log = await response.json();
+  console.log(log);
+  return log;
 }

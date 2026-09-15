@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log"
@@ -708,10 +709,83 @@ func updateReply(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type ReplyPost struct {
-	ID     string `json:"id"`
-	Post   string `json:"post"`
-	Notify bool   `json:"notify"`
+func getReplyPositionHandler(w http.ResponseWriter, r *http.Request) {
+	threadIDStr := r.PathValue("threadID")
+	replyID := r.PathValue("replyID")
+
+	threadID, err := strconv.ParseInt(threadIDStr, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid thread ID", http.StatusBadRequest)
+		return
+	}
+
+	if replyID == "" {
+		http.Error(w, "Reply ID is missing", http.StatusBadRequest)
+		return
+	}
+
+	position, err := getReplyPosition(
+		r.Context(),
+		threadID,
+		replyID,
+	)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			http.Error(w, "Reply not found", http.StatusNotFound)
+			return
+		}
+
+		slog.Error("failed to get reply position",
+			"thread_id", threadID,
+			"reply_id", replyID,
+			"error", err,
+		)
+
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	json.NewEncoder(w).Encode(map[string]int64{
+		"position": position,
+	})
+}
+func getReplyPosition(
+	ctx context.Context,
+	threadID int64,
+	replyID string,
+) (int64, error) {
+
+	const query = `
+		SELECT position
+		FROM (
+			SELECT
+				id,
+				ROW_NUMBER() OVER (
+					ORDER BY created_at ASC, id ASC
+				) AS position
+			FROM replies
+			WHERE thread_id = $1
+		) r
+		WHERE id = $2;
+	`
+
+	var position int64
+
+	err := db.QueryRow(
+		ctx,
+		query,
+		threadID,
+		replyID,
+	).Scan(&position)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return position, nil
 }
 
 func getReplyByID(w http.ResponseWriter, r *http.Request) {

@@ -1,5 +1,6 @@
 import { useSearchParams, useParams, Link } from "react-router-dom";
-// import replies from "../assets/threads_with_author_email.json";
+import { useLocation } from "react-router-dom";
+import { useEffect } from "react";
 import Replies from "../components/Replies";
 import { getReplies } from "../fetchMethods/fetchReplies";
 import { getThreadByID } from "../fetchMethods/getThreadByID";
@@ -11,9 +12,10 @@ export default function ThreadPage() {
   const { f, t } = useParams();
   const [searchParams] = useSearchParams();
   const tpage = searchParams.get("tpage");
+  const location = useLocation();
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["threads", f, t],
+    queryKey: ["threads", f, t, tpage],
     queryFn: () => getReplies(t ?? 1, Number(tpage ?? "1")),
   });
   const {
@@ -31,6 +33,21 @@ export default function ThreadPage() {
     if (!f) return;
     return getThreadByID(+t, +f);
   }
+
+  useEffect(() => {
+    if (!data || !location.hash) return;
+
+    const element = document.getElementById(
+      decodeURIComponent(location.hash.slice(1)),
+    );
+
+    if (element) {
+      element.scrollIntoView({
+        behavior: "instant",
+        block: "center",
+      });
+    }
+  }, [data, location.hash]);
   const replies: ReplyType[] | undefined = data?.replies;
   const total: number | undefined = data?.total;
   const tdetails: ThreadDetails | undefined = data2;

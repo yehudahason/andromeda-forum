@@ -1,5 +1,6 @@
 import type { Post } from "../components/PostComposer";
 import { getAuthToken } from "../lib/getAuthToken";
+import { getReplyPosition } from "./getReplyPosition";
 
 export async function createReply(
   item: Post,
@@ -28,6 +29,9 @@ export async function createReply(
     const message = await res.text();
     throw new Error(message || "Failed to create reply");
   }
-  const postLink = `/forum/${forum_id}/${thread_id}`;
+  const data = await res.json();
+  let position = await getReplyPosition(thread_id, data.id);
+  position = Math.ceil(position / 14);
+  const postLink = `/forum/${forum_id}/${thread_id}?tpage=${position}#${data.id}`;
   return postLink;
 }

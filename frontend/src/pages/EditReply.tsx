@@ -5,9 +5,12 @@ import { useParams } from "react-router-dom";
 import AfterPost from "../components/AfterPost";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ReplyPost } from "../types";
+import { useEffect, useState } from "react";
+import { getReplyPosition } from "../fetchMethods/getReplyPosition";
 
 export default function EditReply() {
   const { f, t, id } = useParams();
+  const [pos, setPos] = useState<number>(1);
 
   const queryClient = useQueryClient();
 
@@ -28,6 +31,16 @@ export default function EditReply() {
     enabled: !!id,
   });
 
+  useEffect(() => {
+    async function init() {
+      if (!t || !id) return;
+
+      const position = await getReplyPosition(+t, id);
+      setPos(Math.ceil(position / 14));
+    }
+
+    init();
+  }, [t, id]);
   // UPDATE reply
   const updateReplyMutation = useMutation({
     mutationFn: (item: Post) => {
@@ -68,7 +81,12 @@ export default function EditReply() {
   }
 
   if (updateReplyMutation.isSuccess) {
-    return <AfterPost success={true} postLink={`/forum/${f}/${t}/#${id}`} />;
+    return (
+      <AfterPost
+        success={true}
+        postLink={`/forum/${f}/${t}?tpage=${pos}#${id}`}
+      />
+    );
   }
 
   if (updateReplyMutation.isError) {
