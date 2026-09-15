@@ -24,7 +24,7 @@ export default function ThreadPage() {
     isError: isError2,
     error: error2,
   } = useQuery({
-    queryKey: ["getThread", f, t, tpage],
+    queryKey: ["getThread", f, t],
     queryFn: () => getTID(),
   });
 
@@ -37,16 +37,31 @@ export default function ThreadPage() {
   useEffect(() => {
     if (!data || !location.hash) return;
 
-    const element = document.getElementById(
-      decodeURIComponent(location.hash.slice(1)),
-    );
+    const id = decodeURIComponent(location.hash.slice(1));
 
-    if (element) {
-      element.scrollIntoView({
-        behavior: "instant",
-        block: "center",
-      });
-    }
+    let attempts = 0;
+    let timeout: ReturnType<typeof setTimeout>;
+
+    const scroll = () => {
+      const element = document.getElementById(id);
+
+      if (element) {
+        element.scrollIntoView({
+          behavior: "instant",
+          block: "center",
+        });
+        return;
+      }
+
+      if (attempts < 10) {
+        attempts++;
+        timeout = setTimeout(scroll, 50);
+      }
+    };
+
+    scroll();
+
+    return () => clearTimeout(timeout);
   }, [data, location.hash]);
   const replies: ReplyType[] | undefined = data?.replies;
   const total: number | undefined = data?.total;
