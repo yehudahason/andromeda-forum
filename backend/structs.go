@@ -115,3 +115,14 @@ type CreateReplyResponse struct {
 	Notify    bool      `json:"notify"`
 	CreatedAt time.Time `json:"created_at"`
 }
+
+type LatestPost struct {
+	ID          string    `json:"id"`
+	PostType    string    `json:"post_type"`
+	ThreadID    int64     `json:"thread_id"`
+	ForumID     int64     `json:"forum_id"`
+	UserID      string    `json:"user_id"`
+	ThreadTitle string    `json:"thread_title"`
+	Content     string    `json:"content"`
+	CreatedAt   time.Time `json:"created_at"`
+}

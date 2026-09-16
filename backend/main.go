@@ -112,6 +112,7 @@ func main() {
 	mux.HandleFunc("GET /api/threads/{threadID}/replies", getReplies)
 	mux.HandleFunc("GET /api/threads/{threadID}", getThreadByID)
 	mux.HandleFunc("GET /api/replies/{replyID}", getReplyByID)
+	mux.HandleFunc("GET /api/posts/latest", getLatestPosts)
 	mux.HandleFunc("GET /api/replies/{threadID}/{replyID}/position", getReplyPositionHandler)
 
 	//Authorized endpoints by Neon better-auth token

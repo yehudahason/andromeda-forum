@@ -6,6 +6,7 @@ import { authClient } from "../lib/auth";
 import { useUserStore } from "../stores/userStore";
 import { useSessionStore } from "../stores/sessionStore";
 import Login from "../Login.tsx";
+import { getLatestPosts } from "../fetchMethods/getLatestPosts.ts";
 export default function Header() {
   const [tzurMenu, setTzurMenu] = useState<boolean>(false);
   const [notiMenu, setNotiMenu] = useState<boolean>(false);
@@ -17,6 +18,12 @@ export default function Header() {
   const baseUrl = import.meta.env.BASE_URL;
   const { user, setUser } = useUserStore((state) => state);
   const { setSession } = useSessionStore((state) => state);
+
+  async function fetchLast() {
+    const res = await getLatestPosts();
+    console.log(res);
+  }
+
   const handleSignOut = async () => {
     console.log("1. sign out clicked");
 
@@ -375,7 +382,9 @@ export default function Header() {
               <Link to="/">פורומים</Link>
             </li>
             <li>
-              <Link to="/forum/1/25">מה חדש</Link>
+              <Link to="#">
+                <button onClick={() => fetchLast()}>מה חדש</button>
+              </Link>
             </li>
             <li>בלוגים</li>
             <li>אודות</li>
