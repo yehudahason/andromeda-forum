@@ -143,7 +143,7 @@ func main() {
 	if err != nil && err != http.ErrServerClosed {
 		logger.Error("server failed", "error", err)
 	}
-	logger.Info("Server is Running in port 4000")
+
 }
 
 func recoverMiddleware(next http.Handler) http.Handler {
