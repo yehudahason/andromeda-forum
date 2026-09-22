@@ -46,23 +46,13 @@ export default function NewPosts() {
               navigate(`/forum/${item.forum_id}/${item.thread_id}/#${item.id}`)
             }
             key={item.id}
-            className="
-            cursor-pointer
-            rounded-md
-            border border-slate-700
-            bg-[#111827]
-            px-5 py-4
-            transition-all
-            duration-200
-            hover:border-[#0BD7FD]
-            hover:bg-slate-800
-          "
+            className="cursor-pointer rounded-md bg-[#555] sm:px-7 p-1 py-5 text-white"
           >
             <div className="text-lg font-semibold text-[#0BD7FD]">
               {item.thread_title}
             </div>
 
-            <div className="mt-2 line-clamp-2 text-sm text-slate-300">
+            <div className="mt-2 line-clamp-2 text-lg text-white">
               {" "}
               <div
                 className="
@@ -106,6 +96,7 @@ export default function NewPosts() {
             <div className="mt-3 text-xs text-slate-500">
               {item.post_type === "reply" ? "תגובה חדשה" : "נושא חדש"}
             </div>
+            <div className="text-white">{item.user.name}</div>
           </li>
         ))}
       </ul>

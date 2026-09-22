@@ -95,13 +95,13 @@ func main() {
 	var err error
 	db, err = pgxpool.New(ctx, os.Getenv("DATABASE_URL"))
 	if err != nil {
-		logger.Error("failed to connect to database:", err)
+		logger.Error("failed to connect to database", "error", err)
 	}
 	defer db.Close()
 
 	// Verify the connection
 	if err := db.Ping(ctx); err != nil {
-		logger.Error("failed to ping database:", err)
+		logger.Error("failed to ping database:", "error", err)
 	}
 	logger.Info("Connected to PostgreSQL")
 
@@ -114,6 +114,7 @@ func main() {
 	mux.HandleFunc("GET /api/replies/{replyID}", getReplyByID)
 	mux.HandleFunc("GET /api/posts/latest", getLatestPosts)
 	mux.HandleFunc("GET /api/replies/{threadID}/{replyID}/position", getReplyPositionHandler)
+	mux.HandleFunc("GET /api/users/{id}", getUserByIDEndpoint)
 
 	//Authorized endpoints by Neon better-auth token
 	mux.HandleFunc("POST /api/forums/{forumID}/threads", createThread)

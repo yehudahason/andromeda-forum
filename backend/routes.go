@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"log"
-	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -74,7 +72,11 @@ func getForums(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	if err := json.NewEncoder(w).Encode(forums); err != nil {
-		log.Printf("getForums encode error: %v", err)
+		logger.Error(
+			"getForums encode error",
+			"error", err,
+			"status", http.StatusOK,
+		)
 		return
 	}
 }
@@ -222,7 +224,11 @@ func getThreads(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		log.Printf("getThreads encode error: %v", err)
+		logger.Error(
+			"getThreads encode error",
+			"error", err,
+			"status", http.StatusOK,
+		)
 		return
 	}
 }
@@ -375,7 +381,11 @@ func getReplies(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
-		log.Printf("getReplies encode error: %v", err)
+		logger.Error(
+			"getReplies encode error",
+			"error", err,
+			"status", http.StatusOK,
+		)
 		return
 	}
 }
@@ -397,14 +407,22 @@ func createThread(w http.ResponseWriter, r *http.Request) {
 	user, err := getUserID(r)
 	if err != nil {
 		if errors.Is(err, ErrUnauthorized) {
-			log.Printf("createThread authentication failed: %v", err)
+			logger.Warn(
+				"createThread authentication failed",
+				"error", err,
+				"status", http.StatusUnauthorized,
+			)
 
 			w.Header().Set("WWW-Authenticate", "Bearer")
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
-		log.Printf("createThread authentication database error: %v", err)
+		logger.Error(
+			"createThread authentication database error",
+			"error", err,
+			"status", http.StatusInternalServerError,
+		)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
@@ -509,7 +527,11 @@ func createThread(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 
 	if err := json.NewEncoder(w).Encode(thread); err != nil {
-		log.Printf("createThread encode error: %v", err)
+		logger.Error(
+			"createThread encode error",
+			"error", err,
+			"status", http.StatusCreated,
+		)
 		return
 	}
 }
@@ -531,7 +553,11 @@ func updateThread(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		log.Printf("updateThread authentication error: %v", err)
+		logger.Error(
+			"updateThread authentication error",
+			"error", err,
+			"status", http.StatusInternalServerError,
+		)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
@@ -611,7 +637,11 @@ func updateThread(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		log.Printf("updateThread database error: %v", err)
+		logger.Error(
+			"updateThread database error",
+			"error", err,
+			"status", http.StatusInternalServerError,
+		)
 		http.Error(w, "Failed to update thread", http.StatusInternalServerError)
 		return
 	}
@@ -619,7 +649,11 @@ func updateThread(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	if err := json.NewEncoder(w).Encode(thread); err != nil {
-		log.Printf("updateThread encode error: %v", err)
+		logger.Error(
+			"updateThread encode error",
+			"error", err,
+			"status", http.StatusOK,
+		)
 	}
 }
 
@@ -634,7 +668,11 @@ func updateReply(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		log.Printf("updateReply authentication error: %v", err)
+		logger.Error(
+			"updateReply authentication error",
+			"error", err,
+			"status", http.StatusInternalServerError,
+		)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
@@ -697,7 +735,11 @@ func updateReply(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		log.Printf("updateReply database error: %v", err)
+		logger.Error(
+			"updateReply database error",
+			"error", err,
+			"status", http.StatusInternalServerError,
+		)
 		http.Error(w, "Failed to update reply", http.StatusInternalServerError)
 		return
 	}
@@ -705,7 +747,11 @@ func updateReply(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	if err := json.NewEncoder(w).Encode(reply); err != nil {
-		log.Printf("updateReply encode error: %v", err)
+		logger.Error(
+			"updateReply encode error",
+			"error", err,
+			"status", http.StatusOK,
+		)
 	}
 }
 
@@ -736,10 +782,11 @@ func getReplyPositionHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		slog.Error("failed to get reply position",
+		logger.Error("failed to get reply position",
 			"thread_id", threadID,
 			"reply_id", replyID,
 			"error", err,
+			"status", http.StatusInternalServerError,
 		)
 
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -821,9 +868,10 @@ func getReplyByID(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		slog.Error("failed to get reply",
+		logger.Error("failed to get reply",
 			"reply_id", id,
 			"error", err,
+			"status", http.StatusInternalServerError,
 		)
 
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -833,9 +881,10 @@ func getReplyByID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	if err := json.NewEncoder(w).Encode(reply); err != nil {
-		slog.Error("failed to encode reply",
+		logger.Error("failed to encode reply",
 			"reply_id", id,
 			"error", err,
+			"status", http.StatusOK,
 		)
 	}
 }
@@ -919,7 +968,11 @@ func getThreadByID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	if err := json.NewEncoder(w).Encode(thread); err != nil {
-		log.Printf("getThreadByID encode error: %v", err)
+		logger.Error(
+			"getThreadByID encode error",
+			"error", err,
+			"status", http.StatusOK,
+		)
 	}
 }
 func createReply(w http.ResponseWriter, r *http.Request) {
@@ -941,14 +994,22 @@ func createReply(w http.ResponseWriter, r *http.Request) {
 	user, err := getUserID(r)
 	if err != nil {
 		if errors.Is(err, ErrUnauthorized) {
-			log.Printf("createReply authentication failed: %v", err)
+			logger.Warn(
+				"createReply authentication failed",
+				"error", err,
+				"status", http.StatusUnauthorized,
+			)
 
 			w.Header().Set("WWW-Authenticate", "Bearer")
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
-		log.Printf("createReply authentication database error: %v", err)
+		logger.Error(
+			"createReply authentication database error",
+			"error", err,
+			"status", http.StatusInternalServerError,
+		)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
@@ -1031,7 +1092,11 @@ func createReply(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err != nil {
-		log.Printf("createReply INSERT error: %v", err)
+		logger.Error(
+			"createReply INSERT error",
+			"error", err,
+			"status", http.StatusInternalServerError,
+		)
 
 		http.Error(
 			w,
@@ -1047,7 +1112,11 @@ func createReply(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 
 	if err := json.NewEncoder(w).Encode(reply); err != nil {
-		log.Printf("createReply encode error: %v", err)
+		logger.Error(
+			"createReply encode error",
+			"error", err,
+			"status", http.StatusCreated,
+		)
 		return
 	}
 }

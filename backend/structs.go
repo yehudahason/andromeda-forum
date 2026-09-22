@@ -15,6 +15,15 @@ type User struct {
 	RepliesCount int64     `json:"replies_count"`
 }
 
+//	type UserD struct {
+//		ID           string    `json:"id"`
+//		Name         string    `json:"name"`
+//		Email        string    `json:"email"`
+//		Role         string    `json:"role"`
+//		ImageURL     *string   `json:"image_url"`
+//		RepliesCount int64     `json:"replies_count"`
+//		CreatedAt    time.Time `json:"created_at"`
+//	}
 type Thread struct {
 	ID             int64      `json:"id"`
 	ForumID        int64      `json:"forum_id"`
@@ -125,4 +134,5 @@ type LatestPost struct {
 	ThreadTitle string    `json:"thread_title"`
 	Content     string    `json:"content"`
 	CreatedAt   time.Time `json:"created_at"`
+	User        User      `json:"user"`
 }

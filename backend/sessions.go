@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 
@@ -108,10 +107,11 @@ func getUserID(r *http.Request) (User, error) {
 
 		if err != nil {
 			// Avatar failure must NOT prevent login/authentication.
-			log.Printf(
-				"failed to copy avatar to R2 for user %s: %v",
-				user.ID,
-				err,
+			logger.Error(
+				"failed to copy avatar to R2",
+				"user_id", user.ID,
+				"error", err,
+				"status", http.StatusInternalServerError,
 			)
 		} else if r2ImageURL != "" &&
 			r2ImageURL != user.Image {
@@ -128,10 +128,11 @@ func getUserID(r *http.Request) (User, error) {
 			)
 
 			if err != nil {
-				log.Printf(
-					"failed to update avatar URL for user %s: %v",
-					user.ID,
-					err,
+				logger.Error(
+					"failed to update avatar URL",
+					"user_id", user.ID,
+					"error", err,
+					"status", http.StatusInternalServerError,
 				)
 			} else {
 				// Return the new R2 URL immediately.
@@ -147,14 +148,22 @@ func meHandler(w http.ResponseWriter, r *http.Request) {
 	user, err := getUserID(r)
 	if err != nil {
 		if errors.Is(err, ErrUnauthorized) {
-			log.Printf("authentication failed: %v", err)
+			logger.Warn(
+				"authentication failed",
+				"error", err,
+				"status", http.StatusUnauthorized,
+			)
 
 			w.Header().Set("WWW-Authenticate", "Bearer")
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
 
-		log.Printf("meHandler database error: %v", err)
+		logger.Error(
+			"meHandler database error",
+			"error", err,
+			"status", http.StatusInternalServerError,
+		)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
@@ -163,6 +172,70 @@ func meHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	if err := json.NewEncoder(w).Encode(user); err != nil {
-		log.Printf("meHandler encode error: %v", err)
+		logger.Error(
+			"meHandler encode error",
+			"error", err,
+			"status", http.StatusOK,
+		)
+	}
+}
+
+func getUserByIDEndpoint(w http.ResponseWriter, r *http.Request) {
+	userID := r.PathValue("id")
+
+	if userID == "" {
+		http.Error(w, "user id is required", http.StatusBadRequest)
+		return
+	}
+
+	var user User
+
+	err := db.QueryRow(
+		r.Context(),
+		`
+		SELECT
+			id,
+			name,
+			email,
+			role,
+			image,
+			replies_count,
+			created_at
+		FROM neon_auth."user"
+		WHERE id = $1
+		`,
+		userID,
+	).Scan(
+		&user.ID,
+		&user.Name,
+		&user.Email,
+		&user.Role,
+		&user.Image,
+		&user.RepliesCount,
+	)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			http.Error(w, "user not found", http.StatusNotFound)
+			return
+		}
+
+		logger.Error("failed to get user",
+			"error", err,
+			"user_id", userID,
+			"status", http.StatusInternalServerError,
+		)
+
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	if err := json.NewEncoder(w).Encode(user); err != nil {
+		logger.Error(
+			"failed to encode user",
+			"error", err,
+		)
 	}
 }

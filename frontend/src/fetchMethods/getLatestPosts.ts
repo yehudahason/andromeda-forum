@@ -1,3 +1,5 @@
+import type { User } from "../types";
+
 export type LatestPost = {
   id: string;
   post_type: "reply" | "thread";
@@ -7,6 +9,7 @@ export type LatestPost = {
   thread_title: string;
   content: string;
   created_at: string;
+  user: User;
 };
 
 import { getAuthToken } from "../lib/getAuthToken";
