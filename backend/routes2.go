@@ -3,9 +3,26 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 )
 
 func getLatestPosts(w http.ResponseWriter, r *http.Request) {
+
+	const perPage = 50
+
+	page := 1
+
+	if value := r.URL.Query().Get("page"); value != "" {
+		n, err := strconv.Atoi(value)
+		if err != nil || n < 1 {
+			http.Error(w, "invalid page", http.StatusBadRequest)
+			return
+		}
+
+		page = n
+	}
+
+	offset := (page - 1) * perPage
 	const query = `
 		SELECT *
 		FROM (
@@ -44,10 +61,16 @@ func getLatestPosts(w http.ResponseWriter, r *http.Request) {
 			)
 		) AS posts
 		ORDER BY created_at DESC
-		LIMIT 50
+		LIMIT $1
+		OFFSET $2
 	`
 
-	rows, err := db.Query(r.Context(), query)
+	rows, err := db.Query(
+		r.Context(),
+		query,
+		perPage,
+		offset,
+	)
 	if err != nil {
 		logger.Error(
 			"failed to query latest posts",

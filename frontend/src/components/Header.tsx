@@ -376,7 +376,7 @@ export default function Header() {
               <Link to="/">פורומים</Link>
             </li>
             <li>
-              <Link to="/newposts">מה חדש ?</Link>
+              <a href="/newposts">מה חדש ?</a>
             </li>
             <li>בלוגים</li>
             <li>אודות</li>

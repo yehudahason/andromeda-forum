@@ -10,7 +10,7 @@ export type LatestPost = {
 };
 
 import { getAuthToken } from "../lib/getAuthToken";
-export async function getLatestPosts(): Promise<LatestPost[]> {
+export async function getLatestPosts(page: number = 1): Promise<LatestPost[]> {
   const url = "https://api.pitron-halomot.org";
   let token;
   try {
@@ -20,7 +20,7 @@ export async function getLatestPosts(): Promise<LatestPost[]> {
     token = null;
   }
   const res = await fetch(
-    `${url}/api/posts/latest`,
+    `${url}/api/posts/latest?page=${page}`,
 
     {
       method: "GET",
