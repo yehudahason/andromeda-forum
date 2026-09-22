@@ -10,12 +10,14 @@ import AuthGuard from "./components/Guard";
 import UploadPage from "./pages/UploadPage";
 import EditThread from "./pages/EditThread";
 import EditReply from "./pages/EditReply";
+import NewPosts from "./pages/NewPosts";
 
 export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/forum/:f" element={<ForumPage />} />
+      <Route path="/newposts" element={<NewPosts />} />
       <Route path="/forum/:f/:t" element={<ThreadPage />} />
       <Route
         path="/post/:f"

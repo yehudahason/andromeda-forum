@@ -5,14 +5,15 @@ BEGIN;
 
 -- =========================================================
 
+
 CREATE TABLE forums (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 
     name TEXT NOT NULL,
     description TEXT NOT NULL DEFAULT '',
 
-    -- Total messages in this forum: threads + replies.
-    messages_count BIGINT NOT NULL DEFAULT 0
+-- Total messages in this forum: threads + replies.
+messages_count BIGINT NOT NULL DEFAULT 0
         CONSTRAINT forums_messages_count_check CHECK (messages_count >= 0),
 
     last_post_thread_id BIGINT,
@@ -36,6 +37,7 @@ CREATE TABLE forums (
 -- THREADS
 -- =========================================================
 
+
 CREATE TABLE threads (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 
@@ -47,8 +49,8 @@ CREATE TABLE threads (
     title TEXT NOT NULL,
     content TEXT NOT NULL,
 
-    -- Total number of replies in this thread; opening post is not counted.
-    messages_count BIGINT NOT NULL DEFAULT 0
+-- Total number of replies in this thread; opening post is not counted.
+messages_count BIGINT NOT NULL DEFAULT 0
         CONSTRAINT threads_messages_count_check CHECK (messages_count >= 0),
 
     last_post_title TEXT NOT NULL DEFAULT '',
@@ -84,14 +86,12 @@ CREATE TABLE threads (
 );
 
 ALTER TABLE forums
-ADD CONSTRAINT forums_last_post_thread_fk
-    FOREIGN KEY (last_post_thread_id)
-    REFERENCES threads(id)
-    ON DELETE SET NULL;
+ADD CONSTRAINT forums_last_post_thread_fk FOREIGN KEY (last_post_thread_id) REFERENCES threads (id) ON DELETE SET NULL;
 
 -- =========================================================
 -- REPLIES
 -- =========================================================
+
 
 CREATE TABLE replies (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -134,41 +134,46 @@ ADD COLUMN replies_count BIGINT NOT NULL DEFAULT 0
 -- PostgreSQL does not automatically index foreign-key columns.
 -- =========================================================
 
-CREATE INDEX idx_forums_last_post_thread_id ON forums(last_post_thread_id);
+CREATE INDEX idx_forums_last_post_thread_id ON forums (last_post_thread_id);
 
-CREATE INDEX idx_threads_forum_id
-    ON threads(forum_id);
+CREATE INDEX idx_threads_forum_id ON threads (forum_id);
 
-CREATE INDEX idx_threads_user_id
-    ON threads(user_id);
+CREATE INDEX idx_threads_user_id ON threads (user_id);
 
-CREATE INDEX idx_threads_created_at
-    ON threads(created_at DESC);
+CREATE INDEX idx_threads_created_at ON threads (created_at DESC);
 
-CREATE INDEX idx_threads_last_post_date
-    ON threads(last_post_date DESC NULLS LAST);
+CREATE INDEX idx_threads_last_post_date ON threads (
+    last_post_date DESC NULLS LAST
+);
 
-CREATE INDEX idx_threads_forum_last_post_date
-    ON threads(forum_id, last_post_date DESC NULLS LAST, id DESC);
+CREATE INDEX idx_threads_forum_last_post_date ON threads (
+    forum_id,
+    last_post_date DESC NULLS LAST,
+    id DESC
+);
 
-CREATE INDEX idx_threads_forum_sticky_last_post
-    ON threads(forum_id, sticky DESC, last_post_date DESC NULLS LAST, id DESC);
+CREATE INDEX idx_threads_forum_sticky_last_post ON threads (
+    forum_id,
+    sticky DESC,
+    last_post_date DESC NULLS LAST,
+    id DESC
+);
 
-CREATE INDEX idx_threads_notify
-    ON threads(id)
-    WHERE notify = TRUE;
+CREATE INDEX idx_threads_notify ON threads (id)
+WHERE
+    notify = TRUE;
 
-CREATE INDEX idx_replies_thread_id
-    ON replies(thread_id);
+CREATE INDEX idx_replies_thread_id ON replies (thread_id);
 
-CREATE INDEX idx_replies_user_id
-    ON replies(user_id);
+CREATE INDEX idx_replies_user_id ON replies (user_id);
 
-CREATE INDEX idx_replies_created_at
-    ON replies(created_at DESC);
+CREATE INDEX idx_replies_created_at ON replies (created_at DESC);
 
-CREATE INDEX idx_replies_thread_created_at
-    ON replies(thread_id, created_at DESC, id DESC);
+CREATE INDEX idx_replies_thread_created_at ON replies (
+    thread_id,
+    created_at DESC,
+    id DESC
+);
 
 -- =========================================================
 -- FORUM INITIAL VALUES
@@ -786,33 +791,57 @@ EXECUTE FUNCTION forum_after_thread_delete();
 -- =========================================================
 
 COMMENT ON TABLE forums IS 'Forum categories containing threads';
+
 COMMENT ON COLUMN forums.id IS 'Unique forum identifier';
+
 COMMENT ON COLUMN forums.name IS 'Forum name (1-100 characters)';
+
 COMMENT ON COLUMN forums.description IS 'Forum description';
+
 COMMENT ON COLUMN forums.messages_count IS 'Total messages in the forum: threads + replies';
+
 COMMENT ON COLUMN forums.last_post_thread_id IS 'Thread ID of the most recent forum activity';
+
 COMMENT ON COLUMN forums.last_post_title IS 'Title of the most recently active thread';
+
 COMMENT ON COLUMN forums.last_post_author_id IS 'User ID of the most recent poster';
+
 COMMENT ON COLUMN forums.last_post_date IS 'Timestamp of the most recent forum activity';
 
 COMMENT ON TABLE threads IS 'Discussion threads within forums';
+
 COMMENT ON COLUMN threads.id IS 'Unique thread identifier';
+
 COMMENT ON COLUMN threads.forum_id IS 'Parent forum ID';
+
 COMMENT ON COLUMN threads.user_id IS 'Original thread author ID; NULL only after that auth user is deleted';
+
 COMMENT ON COLUMN threads.title IS 'Thread title (1-255 characters)';
+
 COMMENT ON COLUMN threads.content IS 'Opening post content/body';
+
 COMMENT ON COLUMN threads.messages_count IS 'Total number of replies in the thread; opening post is not counted';
+
 COMMENT ON COLUMN threads.last_post_title IS 'Copy of the current thread title';
+
 COMMENT ON COLUMN threads.last_post_author_id IS 'User ID of the most recent poster in the thread';
+
 COMMENT ON COLUMN threads.last_post_date IS 'Timestamp of the most recent thread activity';
+
 COMMENT ON COLUMN threads.notify IS 'Whether the thread author requested notifications';
+
 COMMENT ON COLUMN threads.sticky IS 'Whether the thread is pinned';
 
 COMMENT ON TABLE replies IS 'Replies to forum threads';
+
 COMMENT ON COLUMN replies.id IS 'Unique reply identifier';
+
 COMMENT ON COLUMN replies.thread_id IS 'Parent thread ID';
+
 COMMENT ON COLUMN replies.user_id IS 'Reply author ID; NULL only after that auth user is deleted';
+
 COMMENT ON COLUMN replies.post IS 'Reply content/body';
+
 COMMENT ON COLUMN replies.notify IS 'Whether the reply author requested notifications';
 
 COMMENT ON COLUMN neon_auth."user".replies_count IS 'Total number of replies currently authored by this user';
