@@ -75,7 +75,8 @@ export default function Replies({
                     </span>
 
                     <span className="flex items-center gap-1 text-sm">
-                      {tdetails.author.replies_count}
+                      <span>{tdetails.author.replies_count}</span>
+                      <span>{formatDateFull(tdetails.author.created_at)}</span>
                       <span>💬</span>
                     </span>
                   </div>
