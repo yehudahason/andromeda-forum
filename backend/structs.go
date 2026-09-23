@@ -126,13 +126,21 @@ type CreateReplyResponse struct {
 }
 
 type LatestPost struct {
-	ID          string    `json:"id"`
-	PostType    string    `json:"post_type"`
-	ThreadID    int64     `json:"thread_id"`
-	ForumID     int64     `json:"forum_id"`
-	UserID      string    `json:"user_id"`
-	ThreadTitle string    `json:"thread_title"`
-	Content     string    `json:"content"`
-	CreatedAt   time.Time `json:"created_at"`
-	User        User      `json:"user"`
+	ID        string `json:"id"`
+	PostType  string `json:"post_type"`
+	ThreadID  int64  `json:"thread_id"`
+	ForumID   int64  `json:"forum_id"`
+	ForumName string `json:"forum_name"`
+
+	OpenUserID   string `json:"open_user_id"`
+	OpenUserName string `json:"open_user_name"`
+
+	LastReplyUserID   *string `json:"last_reply_user_id"`
+	LastReplyUserName string  `json:"last_reply_user_name"`
+
+	ThreadTitle   string    `json:"thread_title"`
+	ThreadContent string    `json:"thread_content"`
+	Content       string    `json:"content"`
+	CreatedAt     time.Time `json:"created_at"`
+	MessagesCount int64     `json:"messages_count"`
 }

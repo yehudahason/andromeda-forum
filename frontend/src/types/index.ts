@@ -85,3 +85,23 @@ export type ReplyPost = {
   post: string;
   notify: boolean;
 };
+
+export type LatestPost = {
+  id: string;
+  post_type: string;
+  thread_id: number;
+  forum_id: number;
+  forum_name: string;
+
+  open_user_id: string;
+  open_user_name: string;
+
+  last_reply_user_id: string | null;
+  last_reply_user_name: string;
+
+  thread_title: string;
+  thread_content: string;
+  content: string;
+  created_at: string;
+  messages_count: number;
+};

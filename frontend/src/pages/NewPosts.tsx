@@ -1,8 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import {
-  getLatestPosts,
-  type LatestPost,
-} from "../fetchMethods/getLatestPosts";
+import { getLatestPosts } from "../fetchMethods/getLatestPosts";
+import type { LatestPost } from "../types";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 export default function NewPosts() {
@@ -13,6 +11,41 @@ export default function NewPosts() {
     queryKey: ["newPosts", page],
     queryFn: () => getLatestPosts(page),
   });
+
+  function truncateHtml(html: string, maxChars = 200) {
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    let count = 0;
+    let finished = false;
+
+    function walk(node: Node) {
+      if (finished) {
+        node.parentNode?.removeChild(node);
+        return;
+      }
+
+      if (node.nodeType === Node.TEXT_NODE) {
+        const text = node.textContent ?? "";
+        const remaining = maxChars - count;
+
+        if (text.length > remaining) {
+          node.textContent = text.slice(0, remaining) + "...";
+          finished = true;
+          return;
+        }
+
+        count += text.length;
+        return;
+      }
+
+      for (const child of Array.from(node.childNodes)) {
+        walk(child);
+      }
+    }
+
+    walk(doc.body);
+
+    return doc.body.innerHTML;
+  }
 
   useEffect(() => {
     function init() {
@@ -50,53 +83,52 @@ export default function NewPosts() {
           >
             <div className="text-lg font-semibold text-[#0BD7FD]">
               {item.thread_title}
-            </div>
-
-            <div className="mt-2 line-clamp-2 text-lg text-white">
-              {" "}
+            </div>{" "}
+            <div className="mt-2 text-lg text-white">
               <div
                 className="
-                    [&_a]:text-sky-400
-                    [&_a]:underline
-           [&_ul]:list-disc
-[&_ul]:ps-6
-[&_ul]:list-outside
+      [&_a]:text-sky-400
+      [&_a]:underline
 
-[&_ol]:list-decimal
-[&_ol]:ps-6
-[&_ol]:list-outside
+      [&_ul]:list-disc
+      [&_ul]:ps-6
+      [&_ul]:list-outside
 
-[&_li]:my-1
-    w-full
-    max-w-full
-    min-w-0
-    overflow-hidden
+      [&_ol]:list-decimal
+      [&_ol]:ps-6
+      [&_ol]:list-outside
 
-    [&>div]:w-full
-    [&>div]:max-w-full
-    [&>div]:min-w-0
+      [&_li]:my-1
 
-    [&_pre]:w-full
-    [&_pre]:max-w-full
-    [&_pre]:min-w-0
-    [&_pre]:overflow-x-auto
-    [&_pre]:whitespace-pre
+      w-full
+      max-w-full
+      min-w-0
+      overflow-hidden
 
-    [&_code]:block
-    [&_code]:max-w-full
-    [&_code]:min-w-0
-    [&_code]:[direction:ltr]
-  "
+      [&>div]:w-full
+      [&>div]:max-w-full
+      [&>div]:min-w-0
+
+      [&_pre]:w-full
+      [&_pre]:max-w-full
+      [&_pre]:min-w-0
+      [&_pre]:overflow-x-auto
+      [&_pre]:whitespace-pre
+
+      [&_code]:block
+      [&_code]:max-w-full
+      [&_code]:min-w-0
+      [&_code]:[direction:ltr]
+    "
                 dangerouslySetInnerHTML={{
-                  __html: item.content,
+                  __html: truncateHtml(item.content, 150),
                 }}
               />
             </div>
-
             <div className="mt-3 text-xs text-slate-500">
               {item.post_type === "reply" ? "תגובה חדשה" : "נושא חדש"}
             </div>
-            <div className="text-white">{item.user.name}</div>
+            <div className="text-white">{item.last_reply_user_name}</div>
           </li>
         ))}
       </ul>

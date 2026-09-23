@@ -1,18 +1,5 @@
-import type { User } from "../types";
-
-export type LatestPost = {
-  id: string;
-  post_type: "reply" | "thread";
-  thread_id: number;
-  forum_id: number;
-  user_id: string;
-  thread_title: string;
-  content: string;
-  created_at: string;
-  user: User;
-};
-
 import { getAuthToken } from "../lib/getAuthToken";
+import type { LatestPost } from "../types";
 export async function getLatestPosts(page: number = 1): Promise<LatestPost[]> {
   const url = "https://api.pitron-halomot.org";
   let token;
