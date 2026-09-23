@@ -51,15 +51,6 @@ export type ThreadDetails = {
   created_at: string;
 };
 
-// type ThreadDetails struct {
-// 	ID        int64     `json:"id"`
-// 	ForumName string    `json:"forum_name"`
-// 	ForumID   int64     `json:"forum_id"`
-// 	Author    User      `json:"author"`
-// 	Title     string    `json:"title"`
-// 	Content   string    `json:"content"`
-// 	CreatedAt time.Time `json:"created_at"`
-// }
 export type User = {
   id: string;
   name: string;
@@ -69,15 +60,6 @@ export type User = {
   created_at: string;
   role: string;
 };
-
-// export type ReplyAuthor = {
-//   id: string;
-//   name: string;
-//   email: string;
-//   role: string;
-//   image_url: string | null;
-//   replies_count: number;
-// };
 
 export type CreateThreadResponse = {
   id: number;
