@@ -18,26 +18,17 @@ export type ForumType = {
   last_post_title: string | null;
   last_post_author: string | null;
   last_post_date: string | null;
-  image_url: string | null;
+  image: string | null;
   last_post_thread_id: string | null;
 };
 
-export type Users = ReplyAuthor[];
-
-export type ReplyAuthor = {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  image_url: string | null;
-  replies_count: number;
-};
+export type Users = User[];
 
 export type ReplyType = {
   id: string;
   thread_id: number;
   title: string;
-  author: ReplyAuthor;
+  author: User;
   post: string;
   created_at: string;
   updated_at: string;
@@ -53,13 +44,22 @@ export type ReplyListResponse = {
 export type ThreadDetails = {
   id: number;
   forum_name: string;
-  author: string;
+  forum_id: number;
+  author: User;
   title: string;
   content: string;
   created_at: string;
-  image_url: string;
-  author_replies_count: number;
 };
+
+// type ThreadDetails struct {
+// 	ID        int64     `json:"id"`
+// 	ForumName string    `json:"forum_name"`
+// 	ForumID   int64     `json:"forum_id"`
+// 	Author    User      `json:"author"`
+// 	Title     string    `json:"title"`
+// 	Content   string    `json:"content"`
+// 	CreatedAt time.Time `json:"created_at"`
+// }
 export type User = {
   id: string;
   name: string;
@@ -69,6 +69,15 @@ export type User = {
   created_at: string;
   role: string;
 };
+
+// export type ReplyAuthor = {
+//   id: string;
+//   name: string;
+//   email: string;
+//   role: string;
+//   image_url: string | null;
+//   replies_count: number;
+// };
 
 export type CreateThreadResponse = {
   id: number;

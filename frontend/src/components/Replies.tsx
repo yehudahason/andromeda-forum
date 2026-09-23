@@ -64,17 +64,18 @@ export default function Replies({
                 <div className="flex  sm:pr-4  pr-2 sm:gap-8 gap-2">
                   <div className="flex mt-6 flex-col gap-4 justify-start items-center">
                     <span className="sm:w-30 w-20 text-center font-medium flex gap-2">
-                      <p>{tdetails.author}</p>
+                      <p>{tdetails.author.name}</p>
                     </span>
                     <span className="">
                       {GetAvatar({
-                        name: tdetails.author,
-                        image: tdetails.image_url,
+                        name: tdetails.author.name,
+                        image: tdetails.author.image,
                         size: 56,
                       })}
                     </span>
+
                     <span className="flex items-center gap-1 text-sm">
-                      {tdetails.author_replies_count}
+                      {tdetails.author.replies_count}
                       <span>💬</span>
                     </span>
                   </div>
@@ -156,13 +157,14 @@ export default function Replies({
 
               {GetAvatar({
                 name: reply.author.name,
-                image: reply.author.image_url,
+                image: reply.author.image,
                 size: 50,
               })}
 
               <span className="flex items-center gap-1 text-sm">
                 {reply.author.replies_count}
                 <span>💬</span>
+                <span>{formatDateFull(reply.author.created_at)}</span>
               </span>
             </div>
 

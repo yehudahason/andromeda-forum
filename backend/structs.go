@@ -7,23 +7,24 @@ import (
 )
 
 type User struct {
-	ID           uuid.UUID `json:"id"`
-	Role         string    `json:"role"`
-	Name         string    `json:"name"`
-	Email        string    `json:"email"`
-	Image        string    `json:"image"`
-	RepliesCount int64     `json:"replies_count"`
+	ID           uuid.UUID  `json:"id"`
+	Role         string     `json:"role"`
+	Name         string     `json:"name"`
+	Email        string     `json:"email"`
+	Image        string     `json:"image"`
+	RepliesCount int64      `json:"replies_count"`
+	CreatedAt    *time.Time `json:"created_at"`
 }
 
-//	type UserD struct {
-//		ID           string    `json:"id"`
-//		Name         string    `json:"name"`
-//		Email        string    `json:"email"`
-//		Role         string    `json:"role"`
-//		ImageURL     *string   `json:"image_url"`
-//		RepliesCount int64     `json:"replies_count"`
-//		CreatedAt    time.Time `json:"created_at"`
-//	}
+type ThreadDetails struct {
+	ID        int64     `json:"id"`
+	ForumName string    `json:"forum_name"`
+	ForumID   int64     `json:"forum_id"`
+	Author    User      `json:"author"`
+	Title     string    `json:"title"`
+	Content   string    `json:"content"`
+	CreatedAt time.Time `json:"created_at"`
+}
 type Thread struct {
 	ID             int64      `json:"id"`
 	ForumID        int64      `json:"forum_id"`
@@ -53,35 +54,15 @@ type Forum struct {
 	LastPostAuthor   *string    `json:"last_post_author"`
 	LastPostDate     *time.Time `json:"last_post_date"`
 }
-type ThreadDetails struct {
-	ID                 int64     `json:"id"`
-	AuthorRepliesCount int64     `json:"author_replies_count"`
-	ForumName          string    `json:"forum_name"`
-	ForumID            int64     `json:"forum_id"`
-	Author             string    `json:"author"`
-	Title              string    `json:"title"`
-	Content            string    `json:"content"`
-	CreatedAt          time.Time `json:"created_at"`
-	ImageURL           *string   `json:"image_url"`
-}
-
-type ReplyAuthor struct {
-	ID            *uuid.UUID `json:"id"`
-	Name          string     `json:"name"`
-	Email         string     `json:"email"`
-	Role          string     `json:"role"`
-	ImageURL      *string    `json:"image_url"`
-	RepliesCounts int64      `json:"replies_count"`
-}
 
 type Reply struct {
-	ID        uuid.UUID   `json:"id"`
-	ThreadID  int64       `json:"thread_id"`
-	Title     string      `json:"title"`
-	Author    ReplyAuthor `json:"author"`
-	Post      string      `json:"post"`
-	CreatedAt time.Time   `json:"created_at"`
-	UpdatedAt time.Time   `json:"updated_at"`
+	ID        uuid.UUID `json:"id"`
+	ThreadID  int64     `json:"thread_id"`
+	Title     string    `json:"title"`
+	Author    User      `json:"author"`
+	Post      string    `json:"post"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type ReplyPost struct {

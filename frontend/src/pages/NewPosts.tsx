@@ -3,6 +3,7 @@ import { getLatestPosts } from "../fetchMethods/getLatestPosts";
 import type { LatestPost } from "../types";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { formatDateFull } from "../utils/formatDateFull";
 export default function NewPosts() {
   const navigate = useNavigate();
   const [page, setPage] = useState<number>(1);
@@ -84,6 +85,7 @@ export default function NewPosts() {
             <div className="text-lg font-semibold text-[#0BD7FD]">
               {item.thread_title}
             </div>{" "}
+            <div className="text-center">{formatDateFull(item.created_at)}</div>
             <div className="mt-2 text-lg text-white">
               <div
                 className="

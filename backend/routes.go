@@ -309,8 +309,10 @@ func getReplies(w http.ResponseWriter, r *http.Request) {
 			COALESCE(u.name, 'Deleted user'),
 			COALESCE(u.email, ''),
 			COALESCE(u.role, ''),
-			u.image,
+			COALESCE(u.image, ''),
 			COALESCE(u.replies_count, 0),
+			u."createdAt",
+
 			r.post,
 			r.created_at,
 			r.updated_at
@@ -336,9 +338,19 @@ func getReplies(w http.ResponseWriter, r *http.Request) {
 		offset,
 	)
 	if err != nil {
-		http.Error(w, "Failed to get replies", http.StatusInternalServerError)
+		logger.Error(
+			"failed to scan reply",
+			"error", err,
+			"status", http.StatusInternalServerError,
+		)
+
+		http.Error(w, "Failed to scan reply", http.StatusInternalServerError)
 		return
 	}
+	// if err != nil {
+	// 	http.Error(w, "Failed to get replies", http.StatusInternalServerError)
+	// 	return
+	// }
 	defer rows.Close()
 
 	for rows.Next() {
@@ -352,8 +364,9 @@ func getReplies(w http.ResponseWriter, r *http.Request) {
 			&reply.Author.Name,
 			&reply.Author.Email,
 			&reply.Author.Role,
-			&reply.Author.ImageURL,
-			&reply.Author.RepliesCounts,
+			&reply.Author.Image,
+			&reply.Author.RepliesCount,
+			&reply.Author.CreatedAt,
 			&reply.Post,
 			&reply.CreatedAt,
 			&reply.UpdatedAt,
@@ -920,13 +933,23 @@ func getThreadByID(w http.ResponseWriter, r *http.Request) {
 		SELECT
 			t.id,
 			f.name,
-			COALESCE(u.name, 'Deleted user'),
 			t.forum_id,
-			u.image,
+
+			COALESCE(
+				u.id,
+				'00000000-0000-0000-0000-000000000000'::uuid
+			),
+			COALESCE(u.role, ''),
+			COALESCE(u.name, 'Deleted user'),
+			COALESCE(u.email, ''),
+			COALESCE(u.image, ''),
 			COALESCE(u.replies_count, 0),
+			u."createdAt",
+
 			t.title,
 			t.content,
 			t.created_at
+
 		FROM threads AS t
 
 		JOIN forums AS f
@@ -941,10 +964,16 @@ func getThreadByID(w http.ResponseWriter, r *http.Request) {
 	).Scan(
 		&thread.ID,
 		&thread.ForumName,
-		&thread.Author,
 		&thread.ForumID,
-		&thread.ImageURL,
-		&thread.AuthorRepliesCount,
+
+		&thread.Author.ID,
+		&thread.Author.Role,
+		&thread.Author.Name,
+		&thread.Author.Email,
+		&thread.Author.Image,
+		&thread.Author.RepliesCount,
+		&thread.Author.CreatedAt,
+
 		&thread.Title,
 		&thread.Content,
 		&thread.CreatedAt,
@@ -955,6 +984,12 @@ func getThreadByID(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Thread not found", http.StatusNotFound)
 			return
 		}
+
+		logger.Error(
+			"getThreadByID query error",
+			"error", err,
+			"status", http.StatusInternalServerError,
+		)
 
 		http.Error(w, "Failed to get thread", http.StatusInternalServerError)
 		return
