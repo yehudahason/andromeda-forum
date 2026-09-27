@@ -926,10 +926,7 @@ func getThreadByID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var thread ThreadDetails
-
-	err = db.QueryRow(
-		r.Context(),
-		`
+	const query = `
 		SELECT
 			t.id,
 			f.name,
@@ -959,7 +956,11 @@ func getThreadByID(w http.ResponseWriter, r *http.Request) {
 			ON u.id = t.user_id
 
 		WHERE t.id = $1
-		`,
+		`
+
+	err = db.QueryRow(
+		r.Context(),
+		query,
 		threadID,
 	).Scan(
 		&thread.ID,
