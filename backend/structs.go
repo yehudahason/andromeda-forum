@@ -120,9 +120,9 @@ type LatestPost struct {
 	LastReplyUserID   *string `json:"last_reply_user_id"`
 	LastReplyUserName string  `json:"last_reply_user_name"`
 
-	ThreadTitle   string    `json:"thread_title"`
-	ThreadContent string    `json:"thread_content"`
-	Content       string    `json:"content"`
-	CreatedAt     time.Time `json:"created_at"`
-	MessagesCount int64     `json:"messages_count"`
+	ThreadTitle      string    `json:"thread_title"`
+	ThreadContent    string    `json:"thread_content"`
+	LastReplyContent string    `json:"last_reply_content"`
+	CreatedAt        time.Time `json:"created_at"`
+	MessagesCount    int64     `json:"messages_count"`
 }

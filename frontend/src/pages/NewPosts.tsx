@@ -3,8 +3,11 @@ import { getLatestPosts } from "../fetchMethods/getLatestPosts";
 import type { LatestPost } from "../types";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { formatDateFull } from "../utils/formatDateFull";
+import { GetAvatar } from "../utils/GetAvatar";
+// import { formatDateFull } from "../utils/formatDateFull";
+import { formatDate } from "../utils/formatDate";
 export default function NewPosts() {
+  const baseUrl = import.meta.env.BASE_URL;
   const navigate = useNavigate();
   const [page, setPage] = useState<number>(1);
   const [latestPosts, setLatestPosts] = useState<LatestPost[]>([]);
@@ -80,15 +83,27 @@ export default function NewPosts() {
               navigate(`/forum/${item.forum_id}/${item.thread_id}/#${item.id}`)
             }
             key={item.id}
-            className="cursor-pointer rounded-md bg-[#555] sm:px-7 p-1 py-5 text-white"
+            className="cursor-pointer rounded-md bg-[#555] sm:px-7 p-1 py-5 text-white flex gap-4"
           >
-            <div className="text-lg font-semibold text-[#0BD7FD]">
-              {item.thread_title}
-            </div>{" "}
-            <div className="text-center">{formatDateFull(item.created_at)}</div>
-            <div className="mt-2 text-lg text-white">
-              <div
-                className="
+            <div className="flex">
+              <GetAvatar
+                name={item.open_user_name}
+                image={item.open_user_image}
+                size={30}
+              />
+            </div>
+            <div className="flex flex-col w-full">
+              <div className="flex w-full justify-between">
+                <div className="text-lg font-semibold text-[#0BD7FD]">
+                  {item.thread_title}
+                </div>{" "}
+                <div className="text-center text-sm text-amber-950 flex justify-center items-center bg-amber-50 p-2 min-w-9 h-fit w-fit rounded-full ">
+                  {item.messages_count}
+                </div>
+              </div>
+              <div className="mt-2 text-lg text-white">
+                <div
+                  className="
       [&_a]:text-sky-400
       [&_a]:underline
 
@@ -122,15 +137,27 @@ export default function NewPosts() {
       [&_code]:min-w-0
       [&_code]:[direction:ltr]
     "
-                dangerouslySetInnerHTML={{
-                  __html: truncateHtml(item.content, 150),
-                }}
-              />
+                  dangerouslySetInnerHTML={{
+                    __html: truncateHtml(item.last_reply_content, 150),
+                  }}
+                />
+              </div>
+              <div className="flex gap-2 items-center">
+                <img src={`${baseUrl}time.png`} alt="" />
+                <div className="text-white">{formatDate(item.created_at)}</div>
+                <div className="text-white">
+                  {item.post_type === "reply"
+                    ? item.last_reply_user_name
+                    : item.open_user_name}
+                </div>
+                <span>
+                  פרסם
+                  {item.post_type === "reply" ? " תגובה " : " נושא "}
+                  בפורום
+                </span>
+                <span>{item.forum_name}</span>
+              </div>
             </div>
-            <div className="mt-3 text-xs text-slate-500">
-              {item.post_type === "reply" ? "תגובה חדשה" : "נושא חדש"}
-            </div>
-            <div className="text-white">{item.last_reply_user_name}</div>
           </li>
         ))}
       </ul>

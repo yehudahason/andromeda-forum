@@ -44,7 +44,7 @@ func getLatestPosts(w http.ResponseWriter, r *http.Request) {
 
 		posts.thread_title,
 		posts.thread_content,
-		posts.content,
+		posts.last_reply_content,
 		posts.created_at,
 		posts.messages_count
 
@@ -62,7 +62,7 @@ func getLatestPosts(w http.ResponseWriter, r *http.Request) {
 
 				t.title AS thread_title,
 				t.content AS thread_content,
-				r.post AS content,
+				r.post AS last_reply_content,
 				r.created_at,
 				t.messages_count
 
@@ -159,7 +159,7 @@ func getLatestPosts(w http.ResponseWriter, r *http.Request) {
 
 			&post.ThreadTitle,
 			&post.ThreadContent,
-			&post.Content,
+			&post.LastReplyContent,
 			&post.CreatedAt,
 			&post.MessagesCount,
 		); err != nil {

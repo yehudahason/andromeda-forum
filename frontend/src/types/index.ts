@@ -93,7 +93,7 @@ export type LatestPost = {
 
   thread_title: string;
   thread_content: string;
-  content: string;
+  last_reply_content: string;
   created_at: string;
   messages_count: number;
 };
