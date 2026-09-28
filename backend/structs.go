@@ -113,8 +113,9 @@ type LatestPost struct {
 	ForumID   int64  `json:"forum_id"`
 	ForumName string `json:"forum_name"`
 
-	OpenUserID   string `json:"open_user_id"`
-	OpenUserName string `json:"open_user_name"`
+	OpenUserID    string  `json:"open_user_id"`
+	OpenUserName  string  `json:"open_user_name"`
+	OpenUserImage *string `json:"open_user_image"`
 
 	LastReplyUserID   *string `json:"last_reply_user_id"`
 	LastReplyUserName string  `json:"last_reply_user_name"`

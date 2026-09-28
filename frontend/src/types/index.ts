@@ -86,6 +86,7 @@ export type LatestPost = {
 
   open_user_id: string;
   open_user_name: string;
+  open_user_image: string;
 
   last_reply_user_id: string | null;
   last_reply_user_name: string;

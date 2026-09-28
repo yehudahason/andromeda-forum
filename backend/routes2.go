@@ -37,6 +37,7 @@ func getLatestPosts(w http.ResponseWriter, r *http.Request) {
 
 		posts.open_user_id,
 		COALESCE(open_user.name, '') AS open_user_name,
+		open_user.image AS open_user_image,
 
 		posts.last_reply_user_id,
 		COALESCE(last_reply_user.name, '') AS last_reply_user_name,
@@ -151,6 +152,7 @@ func getLatestPosts(w http.ResponseWriter, r *http.Request) {
 
 			&post.OpenUserID,
 			&post.OpenUserName,
+			&post.OpenUserImage,
 
 			&post.LastReplyUserID,
 			&post.LastReplyUserName,
