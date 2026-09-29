@@ -57,7 +57,7 @@ export default function Replies({
               {/* Header */}
 
               <div className="w-full flex flex-col gap-4">
-                <div className="pb-4 border-b border-b-neutral-500 text-center text-2xl">
+                <div className="break-all pb-4 border-b border-b-neutral-500 text-center text-2xl">
                   {tdetails.title}
                 </div>
 

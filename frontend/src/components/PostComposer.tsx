@@ -416,15 +416,22 @@ export default function PostComposer({
       >
         {isThread && (
           <div className="mb-[22px]">
-            <label htmlFor="post-title" className="mb-2 block text-[15px]">
-              כותרת <span className="mr-1.5 text-red-700">חובה</span>
+            <label htmlFor="post-title" className="mb-2 flex gap-1 text-[15px]">
+              <span>כותרת </span>
+              <span className="mr-1.5 text-red-700">חובה</span>
             </label>
 
             <input
+              max={150}
               id="post-title"
               type="text"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                if (e.target.value.length > 150) return;
+                else {
+                  setTitle(e.target.value);
+                }
+              }}
               required
               className="
                   box-border

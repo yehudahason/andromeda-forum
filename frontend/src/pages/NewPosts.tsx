@@ -74,7 +74,7 @@ export default function NewPosts() {
   return (
     <section className="mx-auto max-w-[1280px]">
       <div className="flex my-8 text-white justify-between items-center w-full">
-        <h3 className="text-2xl font-semibold">מה חדש </h3>
+        <h3 className="text-2xl font-semibold">הודעות אחרונות </h3>
       </div>
       <ul className="space-y-3">
         {latestPosts.map((item) => (
@@ -92,9 +92,9 @@ export default function NewPosts() {
                 size={30}
               />
             </div>
-            <div className="flex flex-col w-full">
+            <div className="flex flex-col w-full gap-2 ">
               <div className="flex w-full justify-between">
-                <div className="text-lg font-semibold text-[#0BD7FD]">
+                <div className="truncate break-all whitespace-pre-wrap text-lg  text-[#0BD7FD]">
                   {item.thread_title}
                 </div>{" "}
                 <div className="text-center text-sm text-amber-950 flex justify-center items-center bg-amber-50 p-2 min-w-9 h-fit w-fit rounded-full ">
@@ -142,20 +142,27 @@ export default function NewPosts() {
                   }}
                 />
               </div>
-              <div className="flex gap-2 items-center">
-                <img src={`${baseUrl}time.png`} alt="" />
-                <div className="text-white">{formatDate(item.created_at)}</div>
-                <div className="text-white">
-                  {item.post_type === "reply"
-                    ? item.last_reply_user_name
-                    : item.open_user_name}
+              <div className="flex sm:flex-row flex-col  gap-2 items-center">
+                <div className="flex gap-2">
+                  <img src={`${baseUrl}time.png`} alt="" />
+                  <div className="text-white">
+                    {formatDate(item.created_at)}
+                  </div>
                 </div>
-                <span>
-                  פרסם
-                  {item.post_type === "reply" ? " תגובה " : " נושא "}
-                  בפורום
-                </span>
-                <span>{item.forum_name}</span>
+                <div className="flex gap-2">
+                  <div className="text-white">
+                    {item.post_type === "reply"
+                      ? item.last_reply_user_name
+                      : item.open_user_name}
+                  </div>
+
+                  <span>
+                    פרסם
+                    {item.post_type === "reply" ? " תגובה " : " נושא "}
+                  </span>
+                </div>
+
+                <span>בפורום {item.forum_name}</span>
               </div>
             </div>
           </li>

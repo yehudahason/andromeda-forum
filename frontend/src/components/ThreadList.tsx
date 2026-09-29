@@ -2,7 +2,8 @@ import { useState } from "react";
 import Pagination from "./Paginatiom";
 import { formatDate } from "../utils/formatDate";
 import { useNavigate } from "react-router-dom";
-
+import { deleteThread } from "../fetchMethods/deleteThread";
+import { useQueryClient } from "@tanstack/react-query";
 import type { ThreadType } from "../types";
 type ThreadListProps = {
   threads: ThreadType[];
@@ -17,13 +18,28 @@ export default function ThreadList({
   current,
   total,
 }: ThreadListProps) {
+  const baseUrl = import.meta.env.BASE_URL;
   const navigate = useNavigate();
   const [currentPage, setCurrenpage] = useState(+current);
+  const queryClient = useQueryClient();
 
   function handlePage(page: number) {
     setCurrenpage(page);
     navigate(`/forum/${forum}/?page=${page}`);
     scrollToTop();
+  }
+
+  async function handleDeleteThread(id: number) {
+    if (!id) return;
+    try {
+      const res = await deleteThread(id);
+      if (res) alert(res);
+      await queryClient.invalidateQueries({
+        queryKey: ["threads"],
+      });
+    } catch (e) {
+      console.log(e);
+    }
   }
 
   const scrollToTop = () => {
@@ -46,9 +62,15 @@ export default function ThreadList({
           <li
             key={thread.id}
             dir="rtl"
-            className="grid min-h-[120px] p-4 gap-4 grid-cols-1 sm:grid-cols-[1fr_100px_1fr] items-center border-b 
+            className="relative grid min-h-[120px] p-4 gap-4 grid-cols-1 sm:grid-cols-[1fr_100px_1fr] items-center border-b 
            border-white/15  last:border-b-0"
           >
+            <button
+              onClick={() => handleDeleteThread(thread.id)}
+              className="absolute top-1 right-3 cursor-pointer"
+            >
+              <img className="w-3 h-3.5" src={`${baseUrl}delete.png`} alt="" />
+            </button>
             {/* Forum */}
             <div className="flex justify-start min-w-0 items-center gap-5 text-right">
               {/* Text */}
