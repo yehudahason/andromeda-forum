@@ -1,8 +1,13 @@
 package main
 
 import (
+	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
+	"strings"
+
+	"github.com/jackc/pgx/v5"
 )
 
 func deleteThread(w http.ResponseWriter, r *http.Request) {
@@ -76,6 +81,145 @@ func deleteReply(w http.ResponseWriter, r *http.Request) {
 
 	if result.RowsAffected() == 0 {
 		http.Error(w, "Reply not found or not owned by user", http.StatusNotFound)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func createForum(w http.ResponseWriter, r *http.Request) {
+
+	userID, err := getUserID(r)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	if userID.Role != "admin" {
+		http.Error(w, "Unauthorized non admin", http.StatusUnauthorized)
+		return
+	}
+	var input CreateForumRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if input.SortOrder < 1 {
+		http.Error(w, "Invalid sort order", http.StatusBadRequest)
+		return
+	}
+
+	input.Name = strings.TrimSpace(input.Name)
+
+	if input.Name == "" {
+		http.Error(w, "Forum name is required", http.StatusBadRequest)
+		return
+	}
+
+	var forum Forum
+
+	err = db.QueryRow(
+		r.Context(),
+		`
+		INSERT INTO forums (
+			sort_order,
+			name,
+			description
+		)
+		VALUES ($1, $2, $3)
+		RETURNING
+			id,
+			sort_order,
+			name,
+			description
+		`,
+		input.SortOrder,
+		input.Name,
+		input.Description,
+	).Scan(
+		&forum.ID,
+		&forum.SortOrder,
+		&forum.Name,
+		&forum.Description,
+	)
+
+	if err != nil {
+		logger.Error(
+			"failed to create forum",
+			"error", err,
+			"status", http.StatusInternalServerError,
+		)
+
+		http.Error(w, "Failed to create forum", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+
+	if err := json.NewEncoder(w).Encode(forum); err != nil {
+		logger.Error(
+			"failed to encode forum",
+			"error", err,
+			"status", http.StatusCreated,
+		)
+	}
+}
+
+func updateForumSortOrder(w http.ResponseWriter, r *http.Request) {
+	forumIDString := r.PathValue("forumID")
+
+	forumID, err := strconv.ParseInt(forumIDString, 10, 64)
+	if err != nil || forumID <= 0 {
+		http.Error(w, "Invalid forum ID", http.StatusBadRequest)
+		return
+	}
+
+	var input UpdateForumSortOrderRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if input.SortOrder < 1 {
+		http.Error(w, "Invalid sort order", http.StatusBadRequest)
+		return
+	}
+
+	var updatedID int64
+
+	err = db.QueryRow(
+		r.Context(),
+		`
+		UPDATE forums
+		SET sort_order = $1
+		WHERE id = $2
+		RETURNING id
+		`,
+		input.SortOrder,
+		forumID,
+	).Scan(&updatedID)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		http.Error(w, "Forum not found", http.StatusNotFound)
+		return
+	}
+
+	if err != nil {
+		logger.Error(
+			"failed to update forum sort order",
+			"error", err,
+			"forum_id", forumID,
+			"status", http.StatusInternalServerError,
+		)
+
+		http.Error(
+			w,
+			"Failed to update forum sort order",
+			http.StatusInternalServerError,
+		)
 		return
 	}
 

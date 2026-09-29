@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -26,6 +27,7 @@ func getForums(w http.ResponseWriter, r *http.Request) {
 			f.messages_count,
 			f.last_post_thread_id,
 			f.last_post_title,
+			f.sort_order,
 			CASE
 				WHEN f.last_post_date IS NULL THEN NULL
 				ELSE COALESCE(u.name, 'Deleted user')
@@ -34,11 +36,13 @@ func getForums(w http.ResponseWriter, r *http.Request) {
 		FROM forums AS f
 		LEFT JOIN neon_auth."user" AS u
 			ON u.id = f.last_post_author_id
-		ORDER BY f.id ASC;
+		ORDER BY f.sort_order ASC, f.id ASC;
 		`,
 	)
 	if err != nil {
+		fmt.Print(err)
 		http.Error(w, "Failed to get forums", http.StatusInternalServerError)
+
 		return
 	}
 	defer rows.Close()
@@ -53,10 +57,12 @@ func getForums(w http.ResponseWriter, r *http.Request) {
 			&forum.MessagesCount,
 			&forum.LastPostThreadId,
 			&forum.LastPostTitle,
+			&forum.SortOrder,
 			&forum.LastPostAuthor,
 			&forum.LastPostDate,
 		)
 		if err != nil {
+			fmt.Print(err)
 			http.Error(w, "Failed to scan forum", http.StatusInternalServerError)
 			return
 		}
@@ -65,6 +71,7 @@ func getForums(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := rows.Err(); err != nil {
+		fmt.Print(err)
 		http.Error(w, "Failed to read forums", http.StatusInternalServerError)
 		return
 	}

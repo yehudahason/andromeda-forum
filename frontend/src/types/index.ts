@@ -13,6 +13,7 @@ export type ThreadType = {
 export type ForumType = {
   id: string;
   name: string;
+  sort_order: number;
   description: string;
   messages_count: number;
   last_post_title: string | null;

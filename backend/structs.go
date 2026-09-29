@@ -47,6 +47,7 @@ type ThreadListResponse struct {
 type Forum struct {
 	ID               int64      `json:"id"`
 	Name             string     `json:"name"`
+	SortOrder        int64      `json:"sort_order"`
 	Description      string     `json:"description"`
 	MessagesCount    int64      `json:"messages_count"`
 	LastPostThreadId *int64     `json:"last_post_thread_id"`
@@ -54,7 +55,14 @@ type Forum struct {
 	LastPostAuthor   *string    `json:"last_post_author"`
 	LastPostDate     *time.Time `json:"last_post_date"`
 }
-
+type UpdateForumSortOrderRequest struct {
+	SortOrder int64 `json:"sort_order"`
+}
+type CreateForumRequest struct {
+	SortOrder   int64  `json:"sort_order"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
 type Reply struct {
 	ID        uuid.UUID `json:"id"`
 	ThreadID  int64     `json:"thread_id"`

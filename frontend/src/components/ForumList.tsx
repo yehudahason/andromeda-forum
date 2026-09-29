@@ -12,10 +12,11 @@ export default function ForumList({ forums }: ForumListProps) {
         <li
           key={forum.id}
           dir="rtl"
-          className="grid min-h-[120px] py-4 gap-4 grid-cols-1 sm:grid-cols-[1fr_100px_1fr] items-center border-b 
+          className="grid min-h-[120px] relative py-4 gap-4 grid-cols-1 sm:grid-cols-[1fr_100px_1fr] items-center border-b 
            border-white/15  last:border-b-0"
         >
           {/* Forum */}
+          <div className="flex absolute top-2 right-2">{forum.sort_order}</div>
           <div className="flex justify-start min-w-0 items-center gap-5 text-right">
             {/* Menu */}
             <button className="w-4 text-3xl leading-none text-black">⋮</button>

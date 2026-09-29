@@ -8,11 +8,14 @@ BEGIN;
 
 CREATE TABLE forums (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    sort_order  BIGINT NOT NULL ,
 
     name TEXT NOT NULL,
     description TEXT NOT NULL DEFAULT '',
 
 -- Total messages in this forum: threads + replies.
+
+
 messages_count BIGINT NOT NULL DEFAULT 0
         CONSTRAINT forums_messages_count_check CHECK (messages_count >= 0),
 
@@ -50,6 +53,8 @@ CREATE TABLE threads (
     content TEXT NOT NULL,
 
 -- Total number of replies in this thread; opening post is not counted.
+
+
 messages_count BIGINT NOT NULL DEFAULT 0
         CONSTRAINT threads_messages_count_check CHECK (messages_count >= 0),
 

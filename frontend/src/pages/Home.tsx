@@ -1,3 +1,4 @@
+import CreateForum from "../components/CreateForum";
 import ForumList from "../components/ForumList";
 import { getForums } from "../fetchMethods/getForums";
 import type { ForumType } from "../types";
@@ -28,6 +29,7 @@ export default function Home() {
       <div className="flex my-8 text-white justify-between items-center w-full">
         <h3 className="text-2xl font-semibold">פורומים</h3>
       </div>
+      <CreateForum />
       <ForumList forums={forums ?? []} />
     </section>
   );
