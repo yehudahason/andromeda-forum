@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { deleteThread } from "../fetchMethods/deleteThread";
 import { useQueryClient } from "@tanstack/react-query";
 import type { ThreadType } from "../types";
+import { useRef, useEffect } from "react";
 type ThreadListProps = {
   threads: ThreadType[];
   current: string;
@@ -22,6 +23,7 @@ export default function ThreadList({
   const navigate = useNavigate();
   const [currentPage, setCurrenpage] = useState(+current);
   const queryClient = useQueryClient();
+  const [isDeleting, setIsDeleting] = useState(false);
 
   function handlePage(page: number) {
     setCurrenpage(page);
@@ -29,22 +31,47 @@ export default function ThreadList({
     scrollToTop();
   }
 
+  const deleteController = useRef<AbortController | null>(null);
+
   async function handleDeleteThread(id: number) {
     if (!id) return;
+
+    // Abort previous delete request if still running
+    deleteController.current?.abort();
+
+    const controller = new AbortController();
+    deleteController.current = controller;
+    setIsDeleting(true);
+
     try {
-      const res = await deleteThread(id);
-      if (res) alert(res);
+      await deleteThread(id, controller.signal);
+
       await queryClient.invalidateQueries({
         queryKey: ["threads"],
       });
     } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") {
+        console.log("Delete request aborted");
+        return;
+      }
+
       console.log(e);
+    } finally {
+      if (deleteController.current === controller) {
+        deleteController.current = null;
+        setIsDeleting(false);
+      }
     }
   }
 
   const scrollToTop = () => {
     window.scrollTo(0, 0);
   };
+  useEffect(() => {
+    return () => {
+      deleteController.current?.abort();
+    };
+  }, []);
   return (
     <>
       <div className="flex h-fit items-center justify-between border-b mb-4 border-white/15 ">
@@ -66,8 +93,10 @@ export default function ThreadList({
            border-white/15  last:border-b-0"
           >
             <button
+              disabled={isDeleting}
+              title="מחק אשכול"
               onClick={() => handleDeleteThread(thread.id)}
-              className="absolute top-1 right-3 cursor-pointer"
+              className="absolute top-1 left-3 cursor-pointer"
             >
               <img className="w-3 h-3.5" src={`${baseUrl}delete.png`} alt="" />
             </button>

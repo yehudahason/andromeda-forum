@@ -15,7 +15,7 @@ export default function ThreadPage() {
   const location = useLocation();
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["threads", f, t, tpage],
+    queryKey: ["replies", f, t, tpage],
     queryFn: () => getReplies(t ?? 1, Number(tpage ?? "1")),
   });
   const {

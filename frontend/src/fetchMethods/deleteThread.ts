@@ -1,6 +1,6 @@
 import { getAuthToken } from "../lib/getAuthToken";
 
-export async function deleteThread(id: number) {
+export async function deleteThread(id: number, signal?: AbortSignal) {
   let token;
   const url = "https://api.pitron-halomot.org";
   try {
@@ -14,10 +14,11 @@ export async function deleteThread(id: number) {
     headers: {
       Authorization: `Bearer ${token}`,
     },
+    signal,
   });
 
   if (!response.ok) {
     const error = await response.text();
-    return error;
+    throw new Error(error || "Failed to delete thread");
   }
 }

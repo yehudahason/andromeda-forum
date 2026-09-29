@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Pagination from "./Paginatiom";
 import { formatDateFull } from "../utils/formatDateFull";
 import { Link, useNavigate } from "react-router-dom";
 import { GetAvatar } from "../utils/GetAvatar";
 import type { ReplyType } from "../types";
 import type { ThreadDetails } from "../types";
+import { deleteReply } from "../fetchMethods/deleteReply";
+import { useQueryClient } from "@tanstack/react-query";
 
 type RepliesProp = {
   replies: ReplyType[];
@@ -26,6 +28,7 @@ export default function Replies({
   const navigate = useNavigate();
   const [currentPage, setCurrenpage] = useState(+current);
   const baseUrl = import.meta.env.BASE_URL;
+  const queryClient = useQueryClient();
 
   function handlePage(page: number) {
     setCurrenpage(page);
@@ -33,9 +36,49 @@ export default function Replies({
     scrollToTop();
   }
 
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const deleteController = useRef<AbortController | null>(null);
+
+  async function handleDeleteReply(id: string) {
+    if (!id) return;
+
+    // Abort previous delete request if still running
+    deleteController.current?.abort();
+
+    const controller = new AbortController();
+    deleteController.current = controller;
+    setIsDeleting(true);
+
+    try {
+      await deleteReply(id, controller.signal);
+
+      await queryClient.invalidateQueries({
+        queryKey: ["replies"],
+      });
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") {
+        console.log("Delete request aborted");
+        return;
+      }
+
+      console.log(e);
+    } finally {
+      if (deleteController.current === controller) {
+        deleteController.current = null;
+        setIsDeleting(false);
+      }
+    }
+  }
+
   const scrollToTop = () => {
     window.scrollTo(0, 0);
   };
+  useEffect(() => {
+    return () => {
+      deleteController.current?.abort();
+    };
+  }, []);
+
   return (
     <ul className="w-full flex flex-col gap-8">
       {/* Header */}
@@ -148,9 +191,17 @@ export default function Replies({
           key={reply.id}
           id={reply.id}
           dir="rtl"
-          className=" rounded-md bg-[#555] sm:px-5 p-1 py-4 text-white"
+          className="relative rounded-md bg-[#555] sm:px-5 p-1 py-4 text-white"
         >
           {/* Header */}
+          <button
+            disabled={isDeleting}
+            title="מחק תגובה"
+            onClick={() => handleDeleteReply(reply.id)}
+            className="absolute top-1 left-3 cursor-pointer"
+          >
+            <img className="w-3 h-3.5" src={`${baseUrl}delete.png`} alt="" />
+          </button>
 
           <div className="w-full flex sm:gap-8 gap-4 min-w-0">
             <div className="flex sm:w-30 w-20 shrink-0 flex-col justify-start pt-6 gap-6 items-center">
