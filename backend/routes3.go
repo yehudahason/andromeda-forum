@@ -167,7 +167,18 @@ func createForum(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func updateForumSortOrder(w http.ResponseWriter, r *http.Request) {
+func updateForum(w http.ResponseWriter, r *http.Request) {
+	userID, err := getUserID(r)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	if userID.Role != "admin" {
+		http.Error(w, "Unauthorized non admin", http.StatusUnauthorized)
+		return
+	}
+
 	forumIDString := r.PathValue("forumID")
 
 	forumID, err := strconv.ParseInt(forumIDString, 10, 64)
@@ -176,7 +187,7 @@ func updateForumSortOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var input UpdateForumSortOrderRequest
+	var input CreateForumRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
@@ -188,40 +199,64 @@ func updateForumSortOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var updatedID int64
+	input.Name = strings.TrimSpace(input.Name)
+
+	if input.Name == "" {
+		http.Error(w, "Forum name is required", http.StatusBadRequest)
+		return
+	}
+
+	var forum Forum
 
 	err = db.QueryRow(
 		r.Context(),
 		`
 		UPDATE forums
-		SET sort_order = $1
-		WHERE id = $2
-		RETURNING id
+		SET
+			name = $1,
+			description = $2,
+			sort_order = $3
+		WHERE id = $4
+		RETURNING
+			id,
+			sort_order,
+			name,
+			description
 		`,
+		input.Name,
+		input.Description,
 		input.SortOrder,
 		forumID,
-	).Scan(&updatedID)
-
-	if errors.Is(err, pgx.ErrNoRows) {
-		http.Error(w, "Forum not found", http.StatusNotFound)
-		return
-	}
+	).Scan(
+		&forum.ID,
+		&forum.SortOrder,
+		&forum.Name,
+		&forum.Description,
+	)
 
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			http.Error(w, "Forum not found", http.StatusNotFound)
+			return
+		}
+
 		logger.Error(
-			"failed to update forum sort order",
+			"failed to update forum",
 			"error", err,
-			"forum_id", forumID,
 			"status", http.StatusInternalServerError,
 		)
 
-		http.Error(
-			w,
-			"Failed to update forum sort order",
-			http.StatusInternalServerError,
-		)
+		http.Error(w, "Failed to update forum", http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	w.Header().Set("Content-Type", "application/json")
+
+	if err := json.NewEncoder(w).Encode(forum); err != nil {
+		logger.Error(
+			"failed to encode forum",
+			"error", err,
+			"status", http.StatusOK,
+		)
+	}
 }

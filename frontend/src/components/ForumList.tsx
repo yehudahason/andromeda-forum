@@ -1,11 +1,19 @@
 import { formatDate } from "../utils/formatDate";
 
 import type { ForumType } from "../types";
+import type { CreateForumData } from "../fetchMethods/createForum";
 type ForumListProps = {
   forums: ForumType[];
+  setDataU: React.Dispatch<CreateForumData>;
+  setShowMenu: (value: boolean) => void;
 };
 
-export default function ForumList({ forums }: ForumListProps) {
+export default function ForumList({
+  forums,
+  setDataU,
+  setShowMenu,
+}: ForumListProps) {
+  const baseUrl = import.meta.env.BASE_URL;
   return (
     <ul className="w-full overflow-hidden rounded-md bg-[#555] text-white">
       {forums.map((forum) => (
@@ -13,8 +21,22 @@ export default function ForumList({ forums }: ForumListProps) {
           key={forum.id}
           dir="rtl"
           className="grid min-h-[120px] relative py-4 gap-4 grid-cols-1 sm:grid-cols-[1fr_100px_1fr] items-center border-b 
-           border-white/15  last:border-b-0"
+           border-white/15 relative cursor-pointer last:border-b-0"
         >
+          <button
+            className="absolute top-2 left-2"
+            onClick={() => {
+              setDataU({
+                id: +forum.id,
+                name: forum.name,
+                description: forum.description,
+                sort_order: forum.sort_order,
+              });
+              setShowMenu(true);
+            }}
+          >
+            <img src={`${baseUrl}edit.png`} alt="" />
+          </button>
           {/* Forum */}
           <div className="flex absolute top-2 right-2">{forum.sort_order}</div>
           <div className="flex justify-start min-w-0 items-center gap-5 text-right">

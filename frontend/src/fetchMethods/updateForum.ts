@@ -1,20 +1,8 @@
 import { getAuthToken } from "../lib/getAuthToken";
 
-export type CreateForumData = {
-  id?: number;
-  name: string;
-  description: string;
-  sort_order: number;
-};
+import type { CreateForumData, CreatedForum } from "./createForum";
 
-export type CreatedForum = {
-  id: number;
-  name: string;
-  description: string;
-  sort_order: number;
-};
-
-export async function createForum(
+export async function updateForum(
   data: CreateForumData,
 ): Promise<CreatedForum | undefined> {
   const url = "https://api.pitron-halomot.org";
@@ -28,8 +16,8 @@ export async function createForum(
     return;
   }
 
-  const response = await fetch(`${url}/api/forums`, {
-    method: "POST",
+  const response = await fetch(`${url}/api/forums/${data.id}`, {
+    method: "PUT",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,

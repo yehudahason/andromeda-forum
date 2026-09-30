@@ -115,9 +115,10 @@ func main() {
 	mux.HandleFunc("GET /api/posts/latest", getLatestPosts)
 	mux.HandleFunc("GET /api/replies/{threadID}/{replyID}/position", getReplyPositionHandler)
 	mux.HandleFunc("GET /api/users/{id}", getUserByIDEndpoint)
-	mux.HandleFunc("POST /api/forums", createForum)
 
 	//Authorized endpoints by Neon better-auth token
+	mux.HandleFunc("POST /api/forums", createForum)
+	mux.HandleFunc("PUT /api/forums/{forumID}", updateForum)
 	mux.HandleFunc("DELETE /api/threads/{threadID}", deleteThread)
 	mux.HandleFunc("DELETE /api/replies/{replyID}", deleteReply)
 	mux.HandleFunc("POST /api/forums/{forumID}/threads", createThread)
