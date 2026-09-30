@@ -10,7 +10,7 @@ export default function Home() {
   const [showMenu, setShowMenu] = useState<boolean>(false);
   const [dataU, setDataU] = useState<CreateForumData>();
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["forums", dataU, showMenu],
+    queryKey: ["forums", showMenu],
     queryFn: () => getForums(),
   });
 

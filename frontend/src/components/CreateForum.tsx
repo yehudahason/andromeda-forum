@@ -101,7 +101,13 @@ export default function CreateForum({ setShowMenu, data }: CreateForumProps) {
         disabled={loading}
         className="rounded bg-cyan-500 p-3 font-bold text-black disabled:opacity-50"
       >
-        {loading ? "יוצר..." : "צור פורום"}
+        {data
+          ? loading
+            ? "מעדכן.."
+            : "עדכן פורום"
+          : loading
+            ? "יוצר.."
+            : "צור פורום"}
       </button>
     </form>
   );
