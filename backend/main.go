@@ -117,6 +117,7 @@ func main() {
 	mux.HandleFunc("GET /api/users/{id}", getUserByIDEndpoint)
 
 	//Authorized endpoints by Neon better-auth token
+	mux.HandleFunc("DELETE /api/forums/{forumID}", deleteForum)
 	mux.HandleFunc("POST /api/forums", createForum)
 	mux.HandleFunc("PUT /api/forums/{forumID}", updateForum)
 	mux.HandleFunc("DELETE /api/threads/{threadID}", deleteThread)

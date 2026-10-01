@@ -1,11 +1,13 @@
 import { formatDate } from "../utils/formatDate";
-
+import { useEffect, useRef, useState } from "react";
 import type { ForumType } from "../types";
 import type { CreateForumData } from "../fetchMethods/createForum";
+import { useQueryClient } from "@tanstack/react-query";
+import { deleteForum } from "../fetchMethods/deleteForum";
 type ForumListProps = {
   forums: ForumType[];
-  setDataU: React.Dispatch<CreateForumData>;
-  setShowMenu: (value: boolean) => void;
+  setDataU: React.Dispatch<React.SetStateAction<CreateForumData | undefined>>;
+  setShowMenu: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
 export default function ForumList({
@@ -13,6 +15,46 @@ export default function ForumList({
   setDataU,
   setShowMenu,
 }: ForumListProps) {
+  const queryClient = useQueryClient();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const deleteController = useRef<AbortController | null>(null);
+
+  async function handleDeleteForum(id: number) {
+    if (!id) return;
+
+    // Abort previous delete request if still running
+    deleteController.current?.abort();
+
+    const controller = new AbortController();
+    deleteController.current = controller;
+    setIsDeleting(true);
+
+    try {
+      await deleteForum(id, controller.signal);
+
+      await queryClient.invalidateQueries({
+        queryKey: ["forums"],
+      });
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") {
+        console.log("Delete request aborted");
+        return;
+      }
+
+      console.log(e);
+    } finally {
+      if (deleteController.current === controller) {
+        deleteController.current = null;
+        setIsDeleting(false);
+      }
+    }
+  }
+
+  useEffect(() => {
+    return () => {
+      deleteController.current?.abort();
+    };
+  }, []);
   const baseUrl = import.meta.env.BASE_URL;
   return (
     <ul className="w-full overflow-hidden rounded-md bg-[#555] text-white">
@@ -23,19 +65,35 @@ export default function ForumList({
           className="grid min-h-[120px] relative py-4 gap-4 grid-cols-1 sm:grid-cols-[1fr_100px_1fr] items-center border-b 
            border-white/15 relative cursor-pointer last:border-b-0"
         >
+          {/* Edit Forum button */}
           <button
-            className="absolute top-2 left-2"
+            title="ערוך פורום"
+            className="absolute top-12 left-2"
             onClick={() => {
+              setShowMenu((prev) => !prev);
               setDataU({
                 id: +forum.id,
                 name: forum.name,
                 description: forum.description,
                 sort_order: forum.sort_order,
               });
-              setShowMenu(true);
             }}
           >
             <img src={`${baseUrl}edit.png`} alt="" />
+          </button>
+          {/* Delete Forum button */}
+          <button
+            disabled={isDeleting}
+            title="מחק פורום"
+            onClick={() => {
+              const confirmed = confirm(
+                "Are you sure you want to delete this forum?",
+              );
+              if (confirmed) handleDeleteForum(+forum.id);
+            }}
+            className="absolute top-2 left-3 cursor-pointer"
+          >
+            <img className="w-4 h-4" src={`${baseUrl}delete.png`} alt="" />
           </button>
           {/* Forum */}
           <div className="flex absolute top-2 right-2">{forum.sort_order}</div>

@@ -10,6 +10,46 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
+func deleteForum(w http.ResponseWriter, r *http.Request) {
+	forumIDString := r.PathValue("forumID")
+
+	forumID, err := strconv.ParseInt(forumIDString, 10, 64)
+	if err != nil || forumID <= 0 {
+		http.Error(w, "Invalid forum ID", http.StatusBadRequest)
+		return
+	}
+
+	userID, err := getUserID(r)
+	if err != nil {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	if userID.Role != "admin" {
+		http.Error(w, "Unauthorized non admin", http.StatusUnauthorized)
+		return
+	}
+
+	result, err := db.Exec(
+		r.Context(),
+		`
+		DELETE FROM forums
+		WHERE id = $1
+		`,
+		forumID,
+	)
+	if err != nil {
+		http.Error(w, "Failed to delete forum", http.StatusInternalServerError)
+		return
+	}
+
+	if result.RowsAffected() == 0 {
+		http.Error(w, "Forum not found", http.StatusNotFound)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
 func deleteThread(w http.ResponseWriter, r *http.Request) {
 	threadIDString := r.PathValue("threadID")
 

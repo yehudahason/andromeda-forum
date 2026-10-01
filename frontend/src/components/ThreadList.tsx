@@ -95,7 +95,12 @@ export default function ThreadList({
             <button
               disabled={isDeleting}
               title="מחק אשכול"
-              onClick={() => handleDeleteThread(thread.id)}
+              onClick={() => {
+                const confirmed = confirm(
+                  "Are you sure to delete this Thread?",
+                );
+                if (confirmed) handleDeleteThread(thread.id);
+              }}
               className="absolute top-1 left-3 cursor-pointer"
             >
               <img className="w-3 h-3.5" src={`${baseUrl}delete.png`} alt="" />

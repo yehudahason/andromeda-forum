@@ -8,7 +8,7 @@ import type { CreateForumData } from "../fetchMethods/createForum";
 
 export default function Home() {
   const [showMenu, setShowMenu] = useState<boolean>(false);
-  const [dataU, setDataU] = useState<CreateForumData>();
+  const [dataU, setDataU] = useState<CreateForumData | undefined>();
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["forums", showMenu],
     queryFn: () => getForums(),
