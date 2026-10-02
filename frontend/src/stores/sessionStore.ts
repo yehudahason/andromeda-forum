@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Session } from "../Home";
+import type { Session } from "../Login";
 
 type SessionStore = {
   session: Session | null;

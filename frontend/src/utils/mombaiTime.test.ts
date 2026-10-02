@@ -82,7 +82,7 @@ describe("formatDate", () => {
   });
 
   it("returns DD-MM-YY for more than one year ago", () => {
-    const now = setTestTime();
+    // const now = setTestTime();
 
     const date = new Date("2025-07-15T12:00:00+05:30");
 

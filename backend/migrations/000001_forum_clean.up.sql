@@ -39,7 +39,7 @@ CREATE TABLE threads (
   last_post_title TEXT NOT NULL DEFAULT '',
   last_post_author_id UUID,
   last_post_date TIMESTAMPTZ,
-  NOTIFY BOOLEAN NOT NULL DEFAULT FALSE,
+  notify BOOLEAN NOT NULL DEFAULT FALSE,
   sticky BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
@@ -64,7 +64,7 @@ CREATE TABLE replies (
   -- New replies are still required to have an author by trigger.
   user_id UUID,
   post TEXT NOT NULL,
-  NOTIFY BOOLEAN NOT NULL DEFAULT FALSE,
+  notify BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp(),
   CONSTRAINT replies_thread_id_fk FOREIGN KEY (thread_id) REFERENCES threads (id) ON DELETE CASCADE,
@@ -105,7 +105,7 @@ CREATE INDEX idx_threads_forum_sticky_last_post ON threads (
 
 CREATE INDEX idx_threads_notify ON threads (id)
 WHERE
-NOTIFY = TRUE;
+notify = TRUE;
 
 CREATE INDEX idx_replies_thread_id ON replies (thread_id);
 

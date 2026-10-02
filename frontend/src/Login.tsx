@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { authClient } from "./lib/auth.ts";
 import { useSessionStore } from "./stores/sessionStore.ts";
-import { loadSession } from "./lib/loadSession.ts";
 import { useNavigate } from "react-router-dom";
 import { useUserStore } from "./stores/userStore";
 import Or from "./components/Or.tsx";
@@ -47,10 +46,6 @@ export default function Login({ setIsLogin, signUp }: LoginProps) {
     });
     setUser(await getMe());
   };
-
-  useEffect(() => {
-    loadSession();
-  }, []);
 
   // Save current active element to restore focus when modal unmounts/closes
   useEffect(() => {
@@ -112,32 +107,44 @@ export default function Login({ setIsLogin, signUp }: LoginProps) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setMsg("");
+
     try {
-      const result = isSignUp
-        ? await authClient.signUp.email({
-            name: username || email.split("@")[0] || "User",
-            email,
-            password,
-          })
-        : await authClient.signIn.email({
-            email,
-            password,
-          });
+      if (isSignUp) {
+        const result = await authClient.signUp.email({
+          name: username || email.split("@")[0] || "User",
+          email,
+          password,
+          callbackURL: "/",
+        });
+
+        if (result.error) {
+          setMsg(result.error.message);
+          return;
+        }
+
+        setMsg("Confirm email");
+        return;
+      }
+
+      const result = await authClient.signIn.email({
+        email,
+        password,
+      });
 
       if (result.error) {
-        setMsg(result.error?.message);
+        setMsg(result.error.message);
         return;
       }
 
       const sessionResult = await authClient.getSession();
 
-      if (sessionResult.data?.session && sessionResult.data?.user) {
+      if (sessionResult.data?.session) {
         setSession(sessionResult.data.session);
+        setUser(await getMe());
       }
-      setUser(await getMe());
     } catch (e) {
       if (e instanceof Error) {
-        console.log(e);
+        console.error(e);
         setMsg(e.message);
       }
     }

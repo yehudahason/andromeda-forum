@@ -68,7 +68,7 @@ export default function ForumList({
           {/* Edit Forum button */}
           <button
             title="ערוך פורום"
-            className="absolute top-12 left-2"
+            className="absolute pl-2 z-20 pr-8 cursor-pointer top-12 left-2"
             onClick={() => {
               setShowMenu((prev) => !prev);
               setDataU({
@@ -91,7 +91,7 @@ export default function ForumList({
               );
               if (confirmed) handleDeleteForum(+forum.id);
             }}
-            className="absolute top-2 left-3 cursor-pointer"
+            className="absolute top-2 z-20 cursor-pointer pl-2 pr-8 left-3 cursor-pointer"
           >
             <img className="w-4 h-4" src={`${baseUrl}delete.png`} alt="" />
           </button>

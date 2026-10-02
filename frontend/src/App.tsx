@@ -11,8 +11,13 @@ import UploadPage from "./pages/UploadPage";
 import EditThread from "./pages/EditThread";
 import EditReply from "./pages/EditReply";
 import NewPosts from "./pages/NewPosts";
+import { useEffect } from "react";
+import { loadSession } from "./lib/loadSession";
 
 export default function App() {
+  useEffect(() => {
+    loadSession();
+  }, []);
   return (
     <Routes>
       <Route path="/" element={<Home />} />

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { getMe } from "../utils/getMe";
 import { GetAvatar } from "../utils/GetAvatar.tsx";
@@ -51,25 +51,25 @@ export default function Header() {
       console.log(error);
     }
   }
-  useEffect(() => {
-    async function loadUser() {
-      try {
-        const result = await getMe();
-        console.log("getMe:", result);
+  // useEffect(() => {
+  //   async function loadUser() {
+  //     try {
+  //       const result = await getMe();
+  //       console.log("getMe:", result);
 
-        if (result) {
-          setUser(result);
-        } else {
-          setUser(null);
-        }
-      } catch (error) {
-        console.error("loadUser:", error);
-        setUser(null);
-      }
-    }
+  //       if (result) {
+  //         setUser(result);
+  //       } else {
+  //         setUser(null);
+  //       }
+  //     } catch (error) {
+  //       console.error("loadUser:", error);
+  //       setUser(null);
+  //     }
+  //   }
 
-    loadUser();
-  }, [setUser]);
+  //   loadUser();
+  // }, [setUser]);
   return (
     <div className="flex flex-col">
       <header className="bg-black w-full h-20">
