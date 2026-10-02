@@ -13,11 +13,35 @@ import EditReply from "./pages/EditReply";
 import NewPosts from "./pages/NewPosts";
 import { useEffect } from "react";
 import { loadSession } from "./lib/loadSession";
+import { useUserStore } from "./stores/userStore";
+
+import { getMe } from "./utils/getMe";
 
 export default function App() {
+  const setUser = useUserStore((state) => state.setUser);
   useEffect(() => {
     loadSession();
   }, []);
+
+  useEffect(() => {
+    async function loadUser() {
+      try {
+        const result = await getMe();
+        console.log("getMe:", result);
+
+        if (result) {
+          setUser(result);
+        } else {
+          setUser(null);
+        }
+      } catch (error) {
+        console.error("loadUser:", error);
+        setUser(null);
+      }
+    }
+
+    loadUser();
+  }, [setUser]);
   return (
     <Routes>
       <Route path="/" element={<Home />} />
