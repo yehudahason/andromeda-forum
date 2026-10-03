@@ -36,11 +36,11 @@ func getLatestPosts(w http.ResponseWriter, r *http.Request) {
 		f.name AS forum_name,
 
 		posts.open_user_id,
-		COALESCE(open_user.name, '') AS open_user_name,
+		COALESCE(open_user.name, 'Deleted user') AS open_user_name,
+
 		open_user.image AS open_user_image,
 
-		posts.last_reply_user_id,
-		COALESCE(last_reply_user.name, '') AS last_reply_user_name,
+		posts.last_reply_user_id, COALESCE(last_reply_user.name, 'Deleted user') AS last_reply_user_name,
 
 		posts.thread_title,
 		posts.thread_content,
